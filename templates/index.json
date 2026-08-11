@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "image_banner": {
@@ -32,13 +41,100 @@
         "show_text_below": false
       }
     },
+    "featured_collection": {
+      "type": "featured-collection",
+      "disabled": true,
+      "settings": {
+        "title": "Bestseller",
+        "heading_size": "h2",
+        "description": "",
+        "show_description": false,
+        "description_style": "uppercase",
+        "collection": "featured-collection",
+        "products_to_show": 8,
+        "columns_desktop": 3,
+        "full_width": true,
+        "show_view_all": true,
+        "view_all_style": "solid",
+        "enable_desktop_slider": true,
+        "color_scheme": "scheme-1",
+        "image_ratio": "portrait",
+        "image_shape": "default",
+        "show_secondary_image": true,
+        "show_vendor": true,
+        "show_rating": false,
+        "quick_add": "standard",
+        "columns_mobile": "2",
+        "swipe_on_mobile": true,
+        "padding_top": 60,
+        "padding_bottom": 60
+      }
+    },
+    "signature_carousel": {
+      "type": "signature-carousel",
+      "blocks": {
+        "block_1": {
+          "type": "perfume",
+          "settings": {
+            "product": "ambre-intense-100ml",
+            "custom_image": "",
+            "custom_title": ""
+          }
+        },
+        "block_2": {
+          "type": "perfume",
+          "settings": {
+            "product": "florence-orchidia-100ml",
+            "custom_image": "",
+            "custom_title": ""
+          }
+        },
+        "block_3": {
+          "type": "perfume",
+          "settings": {
+            "product": "mystique-island-100ml",
+            "custom_image": "",
+            "custom_title": ""
+          }
+        },
+        "block_4": {
+          "type": "perfume",
+          "settings": {
+            "product": "fresh-woodscape-100ml",
+            "custom_image": "",
+            "custom_title": ""
+          }
+        },
+        "block_5": {
+          "type": "perfume",
+          "settings": {
+            "product": "yameni-yakud-non-alcoholic-perfume-100ml",
+            "custom_image": "",
+            "custom_title": ""
+          }
+        }
+      },
+      "block_order": [
+        "block_1",
+        "block_2",
+        "block_3",
+        "block_4",
+        "block_5"
+      ],
+      "settings": {
+        "eyebrow": "Discover Your Signature",
+        "title": "The Signature Collection",
+        "padding_top": 64,
+        "padding_bottom": 60
+      }
+    },
     "shop_by_category": {
       "type": "shop-by-category",
       "blocks": {
         "cat_1": {
           "type": "category_card",
           "settings": {
-            "collection": "",
+            "collection": "men-3",
             "custom_title": "Discovery sets",
             "custom_link": ""
           }
@@ -75,42 +171,14 @@
         "cat_4"
       ],
       "settings": {
-        "full_width": true,
         "title": "Shop by category",
-        "subheading": "Express your personality by choosing emblematic pieces for the Maison's fragrance wardrobe.",
+        "subheading": "<p>Express your personality by choosing emblematic pieces for the Maison's fragrance wardrobe.</p>",
         "header_alignment": "left",
+        "full_width": true,
         "columns_desktop": 4,
         "columns_mobile": "2",
         "image_ratio": "portrait",
         "color_scheme": "scheme-1",
-        "padding_top": 60,
-        "padding_bottom": 60
-      }
-    },
-    "featured_collection": {
-      "type": "featured-collection",
-      "settings": {
-        "title": "Bestseller",
-        "heading_size": "h2",
-        "description": "",
-        "show_description": false,
-        "description_style": "uppercase",
-        "collection": "featured-collection",
-        "products_to_show": 8,
-        "columns_desktop": 3,
-        "full_width": true,
-        "show_view_all": true,
-        "view_all_style": "solid",
-        "enable_desktop_slider": true,
-        "color_scheme": "scheme-1",
-        "image_ratio": "portrait",
-        "image_shape": "default",
-        "show_secondary_image": true,
-        "show_vendor": true,
-        "show_rating": false,
-        "quick_add": "standard",
-        "columns_mobile": "2",
-        "swipe_on_mobile": true,
         "padding_top": 60,
         "padding_bottom": 60
       }
@@ -180,9 +248,9 @@
           "type": "review",
           "settings": {
             "rating": 5,
-            "quote": "This fragrance is absolutely stunning — the longevity and projection are unmatched. Worth every penny.",
+            "quote": "This fragrance is absolutely stunning \u2014 the longevity and projection are unmatched. Worth every penny.",
             "name": "Aisha Khan",
-            "detail": "Verified Buyer — Oudh Eternal"
+            "detail": "Verified Buyer \u2014 Oudh Eternal"
           }
         },
         "review_2": {
@@ -191,7 +259,7 @@
             "rating": 5,
             "quote": "Rich, warm and long lasting. I get compliments every single time I wear it.",
             "name": "Rohan Mehta",
-            "detail": "Verified Buyer — Baccarat Rouge 540"
+            "detail": "Verified Buyer \u2014 Baccarat Rouge 540"
           }
         },
         "review_3": {
@@ -200,7 +268,7 @@
             "rating": 4,
             "quote": "Beautifully crafted scent and the packaging feels genuinely premium. My new everyday fragrance.",
             "name": "Sara Ali",
-            "detail": "Verified Buyer — Fresh Woodscape"
+            "detail": "Verified Buyer \u2014 Fresh Woodscape"
           }
         }
       },
@@ -321,6 +389,7 @@
         "slide_bpwrUF",
         "slide_fC7Yec"
       ],
+      "disabled": true,
       "settings": {
         "layout": "grid",
         "slide_height": "medium",
@@ -433,6 +502,7 @@
         "slide_LdJbmg",
         "slide_CYwWcz"
       ],
+      "disabled": true,
       "settings": {
         "layout": "grid",
         "slide_height": "medium",
@@ -488,8 +558,9 @@
   },
   "order": [
     "image_banner",
-    "shop_by_category",
     "featured_collection",
+    "signature_carousel",
+    "shop_by_category",
     "product_carousel_duo_trio",
     "our_promise",
     "custom_liquid_N8KmWf",

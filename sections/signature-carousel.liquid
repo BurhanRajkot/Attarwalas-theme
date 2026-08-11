@@ -1,0 +1,467 @@
+{{ 'section-signature-carousel.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="signature-carousel-wrapper section-{{ section.id }}-padding">
+    {%- if section.settings.eyebrow != blank or section.settings.title != blank -%}
+      <div class="signature-carousel__heading">
+        {%- if section.settings.eyebrow != blank -%}
+          <div class="signature-carousel__eyebrow">{{ section.settings.eyebrow }}</div>
+        {%- endif -%}
+        {%- if section.settings.title != blank -%}
+          <h2>{{ section.settings.title }}</h2>
+        {%- endif -%}
+        <div class="signature-carousel__line"></div>
+      </div>
+    {%- endif -%}
+
+    {%- assign product_blocks = section.blocks | where: 'type', 'perfume' -%}
+
+    {%- if product_blocks.size == 0 -%}
+      <p class="signature-carousel__empty">Add a product block to feature a fragrance in this carousel.</p>
+    {%- else -%}
+      <signature-carousel class="signature-carousel__carousel" data-total="{{ product_blocks.size }}">
+        {%- if product_blocks.size > 1 -%}
+          <button type="button" class="signature-carousel__arrow signature-carousel__arrow--prev" aria-label="Previous fragrance" data-carousel-prev>&#8249;</button>
+        {%- endif -%}
+
+        <div class="signature-carousel__viewport" data-carousel-viewport>
+          <div class="signature-carousel__track{% if product_blocks.size == 1 %} signature-carousel__track--static{% endif %}" data-carousel-track>
+            {%- for block in product_blocks -%}
+              {%- liquid
+                assign product = block.settings.product
+                assign card_title = block.settings.custom_title
+                if card_title == blank and product != blank
+                  assign card_title = product.title
+                endif
+
+                assign card_image = block.settings.custom_image
+                if card_image == blank and product != blank and product.featured_image != nil
+                  assign card_image = product.featured_image
+                endif
+
+                assign card_url = '#'
+                if product != blank
+                  assign card_url = product.url
+                endif
+              -%}
+              <a
+                href="{{ card_url }}"
+                class="signature-carousel__product"
+                data-carousel-slide
+                data-index="{{ forloop.index0 }}"
+                {{ block.shopify_attributes }}
+              >
+                <div class="signature-carousel__image">
+                  {%- if card_image != blank -%}
+                    {{
+                      card_image
+                      | image_url: width: 900
+                      | image_tag:
+                        loading: 'lazy',
+                        widths: '300, 450, 600, 900',
+                        sizes: '(min-width: 750px) 30vw, 40vw',
+                        alt: card_title
+                    }}
+                  {%- else -%}
+                    {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                  {%- endif -%}
+                </div>
+                <div class="signature-carousel__info">
+                  <h3>{{ card_title | default: 'Select a product' }}</h3>
+                </div>
+              </a>
+            {%- endfor -%}
+          </div>
+        </div>
+
+        {%- if product_blocks.size > 1 -%}
+          <button type="button" class="signature-carousel__arrow signature-carousel__arrow--next" aria-label="Next fragrance" data-carousel-next>&#8250;</button>
+        {%- endif -%}
+      </signature-carousel>
+
+      {%- if product_blocks.size > 1 -%}
+        <div class="signature-carousel__dots" data-carousel-dots></div>
+      {%- endif -%}
+    {%- endif -%}
+</div>
+
+<script>
+  (function () {
+    if (customElements.get('signature-carousel')) return;
+
+    class SignatureCarousel extends HTMLElement {
+      constructor() {
+        super();
+
+        this.viewport = this.querySelector('[data-carousel-viewport]');
+        this.track = this.querySelector('[data-carousel-track]');
+        this.originals = Array.from(this.querySelectorAll('[data-carousel-slide]'));
+        this.prevBtn = this.querySelector('[data-carousel-prev]');
+        this.nextBtn = this.querySelector('[data-carousel-next]');
+        this.dotsWrap = this.closest('.signature-carousel-wrapper').querySelector('[data-carousel-dots]');
+
+        this.n = this.originals.length;
+        if (!this.track || this.n < 1) return;
+
+        if (this.n === 1) {
+          return;
+        }
+
+        this.setupDots();
+        this.setupClones();
+        this.bindNav();
+        this.bindDrag();
+        this.bindClicks();
+        this.bindKeyboard();
+        this.bindResize();
+
+        this.measure();
+        this.render();
+        this.start();
+
+        window.addEventListener('load', () => {
+          this.measure();
+          this.render();
+        });
+      }
+
+      setupDots() {
+        this.dots = [];
+        if (!this.dotsWrap) return;
+        this.dotsWrap.innerHTML = '';
+        for (var d = 0; d < this.n; d++) {
+          var dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'signature-carousel__dot';
+          dot.setAttribute('aria-label', 'Go to fragrance ' + (d + 1));
+          this.dotsWrap.appendChild(dot);
+          this.dots.push(dot);
+        }
+      }
+
+      setupClones() {
+        var SETS = 5;
+        this.mid = 2;
+
+        this.track.innerHTML = '';
+        for (var s = 0; s < SETS; s++) {
+          for (var i = 0; i < this.n; i++) {
+            var clone = this.originals[i].cloneNode(true);
+            clone.setAttribute('data-real', i);
+            this.track.appendChild(clone);
+          }
+        }
+
+        this.items = Array.from(this.track.children);
+        this.base = this.mid * this.n;
+        this.pos = this.base;
+        this.target = this.base;
+        this.itemW = 1;
+        this.halfView = 0;
+        this.lastReal = -1;
+      }
+
+      measure() {
+        this.itemW = this.items[0].getBoundingClientRect().width || 1;
+        this.halfView = this.viewport.clientWidth / 2;
+      }
+
+      smoothstep(t) {
+        return t * t * (3 - 2 * t);
+      }
+
+      render() {
+        var x = this.halfView - this.itemW / 2 - this.pos * this.itemW;
+        this.track.style.transform = 'translate3d(' + x + 'px, 0, 0)';
+
+        for (var i = 0; i < this.items.length; i++) {
+          var el = this.items[i];
+          var dist = Math.abs(i - this.pos);
+
+          if (dist > 3.6) {
+            if (el.style.visibility !== 'hidden') el.style.visibility = 'hidden';
+            continue;
+          }
+          if (el.style.visibility === 'hidden') el.style.visibility = 'visible';
+
+          var near = this.smoothstep(Math.min(dist, 1));
+          var far = Math.min(Math.max(dist - 1, 0), 2);
+          var scale = 1 - near * 0.44 - far * 0.03;
+          var opacity = 1 - near * 0.74 - far * 0.07;
+
+          el.style.transform = 'scale(' + scale.toFixed(4) + ')';
+          el.style.opacity = (opacity < 0 ? 0 : opacity).toFixed(3);
+          el.style.zIndex = dist < 0.5 ? 10 : 1;
+        }
+
+        var real = ((Math.round(this.pos) % this.n) + this.n) % this.n;
+        if (real !== this.lastReal && this.dots.length) {
+          for (var k = 0; k < this.n; k++) {
+            this.dots[k].classList.toggle('signature-carousel__dot--active', k === real);
+          }
+          this.lastReal = real;
+        }
+      }
+
+      wrap() {
+        while (this.pos > this.base + this.n) {
+          this.pos -= this.n;
+          this.target -= this.n;
+          this.dragStartPos -= this.n;
+        }
+        while (this.pos < this.base - this.n) {
+          this.pos += this.n;
+          this.target += this.n;
+          this.dragStartPos += this.n;
+        }
+      }
+
+      tick() {
+        if (!this.dragging) {
+          var diff = this.target - this.pos;
+          if (Math.abs(diff) < 0.0008) {
+            this.pos = this.target;
+            this.wrap();
+            this.render();
+            this.raf = null;
+            return;
+          }
+          this.pos += diff * 0.135;
+        }
+        this.wrap();
+        this.render();
+        this.raf = requestAnimationFrame(() => this.tick());
+      }
+
+      start() {
+        if (!this.raf) this.raf = requestAnimationFrame(() => this.tick());
+      }
+
+      go(delta) {
+        this.target = Math.round(this.target) + delta;
+        this.start();
+      }
+
+      bindNav() {
+        if (this.nextBtn) this.nextBtn.addEventListener('click', () => this.go(1));
+        if (this.prevBtn) this.prevBtn.addEventListener('click', () => this.go(-1));
+
+        this.dots.forEach((dotEl, index) => {
+          dotEl.addEventListener('click', () => {
+            var current = Math.round(this.target);
+            var currentReal = ((current % this.n) + this.n) % this.n;
+            var step = index - currentReal;
+            if (step > this.n / 2) step -= this.n;
+            if (step < -this.n / 2) step += this.n;
+            this.target = current + step;
+            this.start();
+          });
+        });
+      }
+
+      bindDrag() {
+        this.dragging = false;
+        this.dragStartPos = this.base;
+        this.pointerId = null;
+        this.startX = 0;
+        this.lastX = 0;
+        this.lastT = 0;
+        this.velocity = 0;
+        this.moved = 0;
+
+        this.viewport.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+          this.dragging = true;
+          this.pointerId = e.pointerId;
+          this.startX = e.clientX;
+          this.lastX = e.clientX;
+          this.lastT = e.timeStamp || Date.now();
+          this.velocity = 0;
+          this.moved = 0;
+          this.dragStartPos = this.pos;
+          this.target = this.pos;
+
+          this.viewport.classList.add('signature-carousel--grabbing');
+          try {
+            this.viewport.setPointerCapture(e.pointerId);
+          } catch (err) {}
+
+          this.start();
+        });
+
+        this.viewport.addEventListener('pointermove', (e) => {
+          if (!this.dragging || e.pointerId !== this.pointerId) return;
+
+          var dx = e.clientX - this.startX;
+          if (Math.abs(dx) > this.moved) this.moved = Math.abs(dx);
+
+          this.pos = this.dragStartPos - dx / this.itemW;
+          this.target = this.pos;
+
+          var now = e.timeStamp || Date.now();
+          var dt = now - this.lastT;
+          if (dt > 0) {
+            this.velocity = (e.clientX - this.lastX) / dt;
+            this.lastX = e.clientX;
+            this.lastT = now;
+          }
+        });
+
+        var endDrag = (e) => {
+          if (!this.dragging) return;
+          if (e && e.pointerId !== undefined && e.pointerId !== this.pointerId) return;
+
+          this.dragging = false;
+          this.viewport.classList.remove('signature-carousel--grabbing');
+          try {
+            this.viewport.releasePointerCapture(this.pointerId);
+          } catch (err) {}
+
+          var projected = this.pos - (this.velocity * 170) / this.itemW;
+          var snap = Math.round(projected);
+
+          var upper = Math.round(this.pos) + 2;
+          var lower = Math.round(this.pos) - 2;
+          if (snap > upper) snap = upper;
+          if (snap < lower) snap = lower;
+
+          this.target = snap;
+          this.start();
+        };
+
+        this.viewport.addEventListener('pointerup', endDrag);
+        this.viewport.addEventListener('pointercancel', endDrag);
+      }
+
+      bindClicks() {
+        // Real <a href> handles navigation; only swallow the click when it was actually a drag.
+        this.items.forEach((el) => {
+          el.addEventListener('click', (e) => {
+            if (this.moved > 6) {
+              e.preventDefault();
+            }
+          });
+        });
+      }
+
+      bindKeyboard() {
+        this.setAttribute('tabindex', '0');
+        this.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight') this.go(1);
+          if (e.key === 'ArrowLeft') this.go(-1);
+        });
+      }
+
+      bindResize() {
+        var resizeTimer = null;
+        window.addEventListener('resize', () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            this.measure();
+            this.render();
+          }, 80);
+        });
+      }
+    }
+
+    customElements.define('signature-carousel', SignatureCarousel);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Signature Carousel",
+  "tag": "section",
+  "class": "section section-signature-carousel",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "default": "Discover Your Signature"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "The Signature Collection"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 60
+    }
+  ],
+  "blocks": [
+    {
+      "type": "perfume",
+      "name": "Perfume",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_image",
+          "label": "Custom Image",
+          "info": "Overrides the product's default image"
+        },
+        {
+          "type": "text",
+          "id": "custom_title",
+          "label": "Custom Title",
+          "info": "Overrides the product's title"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Signature Carousel",
+      "blocks": [
+        { "type": "perfume" },
+        { "type": "perfume" },
+        { "type": "perfume" }
+      ]
+    }
+  ]
+}
+{% endschema %}
