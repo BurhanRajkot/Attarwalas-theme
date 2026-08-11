@@ -45,25 +45,26 @@
   clip-path: inset(0px);
 }
 
-.banner__media.animate--zoom-in > img:not(.zoom):not(.deferred-media__poster-button),
-.banner__media.animate--zoom-in > svg:not(.zoom):not(.deferred-media__poster-button) {
+.banner__media.animate--zoom-in>img:not(.zoom):not(.deferred-media__poster-button),
+.banner__media.animate--zoom-in>svg:not(.zoom):not(.deferred-media__poster-button) {
   position: fixed;
   height: 100vh;
 }
 
 @media screen and (max-width: 749px) {
+
   .banner--small.banner--mobile-bottom:not(.banner--adapt) .banner__media,
-  .banner--small.banner--stacked:not(.banner--mobile-bottom):not(.banner--adapt) > .banner__media {
+  .banner--small.banner--stacked:not(.banner--mobile-bottom):not(.banner--adapt)>.banner__media {
     height: 28rem;
   }
 
   .banner--medium.banner--mobile-bottom:not(.banner--adapt) .banner__media,
-  .banner--medium.banner--stacked:not(.banner--mobile-bottom):not(.banner--adapt) > .banner__media {
+  .banner--medium.banner--stacked:not(.banner--mobile-bottom):not(.banner--adapt)>.banner__media {
     height: 34rem;
   }
 
   .banner--large.banner--mobile-bottom:not(.banner--adapt) .banner__media,
-  .banner--large.banner--stacked:not(.banner--mobile-bottom):not(.banner--adapt) > .banner__media {
+  .banner--large.banner--stacked:not(.banner--mobile-bottom):not(.banner--adapt)>.banner__media {
     height: 39rem;
   }
 
@@ -170,30 +171,31 @@
   width: 50%;
 }
 
-.banner__media-half + .banner__media-half {
+.banner__media-half+.banner__media-half {
   right: 0;
   left: auto;
 }
 
-.banner__media-half.animate--fixed:first-child > img,
-.banner__media-half.animate--zoom-in:first-child > img {
+.banner__media-half.animate--fixed:first-child>img,
+.banner__media-half.animate--zoom-in:first-child>img {
   width: 50%;
 }
 
-.banner__media-half.animate--fixed:nth-child(2) > img,
-.banner__media-half.animate--zoom-in:nth-child(2) > img {
+.banner__media-half.animate--fixed:nth-child(2)>img,
+.banner__media-half.animate--zoom-in:nth-child(2)>img {
   left: 50%;
   width: 50%;
 }
 
 @media screen and (max-width: 749px) {
-  .banner--stacked .animate--fixed:first-child > img,
-  .banner--stacked .animate--zoom-in:first-child > img {
+
+  .banner--stacked .animate--fixed:first-child>img,
+  .banner--stacked .animate--zoom-in:first-child>img {
     width: 100%;
   }
 
-  .banner--stacked .banner__media-half.animate--fixed:nth-child(2) > img,
-  .banner--stacked .banner__media-half.animate--zoom-in:nth-child(2) > img {
+  .banner--stacked .banner__media-half.animate--fixed:nth-child(2)>img,
+  .banner--stacked .banner__media-half.animate--zoom-in:nth-child(2)>img {
     left: 0;
     width: 100%;
   }
@@ -202,7 +204,7 @@
     width: 100%;
   }
 
-  .banner--stacked .banner__media-half + .banner__media-half {
+  .banner--stacked .banner__media-half+.banner__media-half {
     order: 1;
   }
 }
@@ -219,6 +221,7 @@
 }
 
 @media screen and (max-width: 749px) {
+
   .banner--mobile-bottom .banner__media,
   .banner--stacked:not(.banner--mobile-bottom) .banner__media {
     position: relative;
@@ -377,6 +380,7 @@
 }
 
 @media screen and (max-width: 749px) {
+
   .banner--mobile-bottom::after,
   .banner--mobile-bottom .banner__media::after {
     display: none;
@@ -395,21 +399,21 @@
   height: 100%;
 }
 
-.banner__box > * + .banner__text {
+.banner__box>*+.banner__text {
   margin-top: 1.5rem;
 }
 
 @media screen and (min-width: 750px) {
-  .banner__box > * + .banner__text {
+  .banner__box>*+.banner__text {
     margin-top: 2rem;
   }
 }
 
-.banner__box > * + * {
+.banner__box>*+* {
   margin-top: 1rem;
 }
 
-.banner__box > *:first-child {
+.banner__box>*:first-child {
   margin-top: 0;
 }
 
@@ -437,7 +441,7 @@
   margin-bottom: 0;
 }
 
-.banner__box .banner__heading + * {
+.banner__box .banner__heading+* {
   margin-top: 1rem;
 }
 
@@ -454,14 +458,14 @@
     justify-content: flex-end;
   }
 
-  .banner--content-align-mobile-center .banner__buttons--multiple > * {
+  .banner--content-align-mobile-center .banner__buttons--multiple>* {
     flex-grow: 1;
     min-width: 22rem;
   }
 }
 
 @media screen and (min-width: 750px) {
-  .banner--content-align-center .banner__buttons--multiple > * {
+  .banner--content-align-center .banner__buttons--multiple>* {
     flex-grow: 1;
     min-width: 22rem;
   }
@@ -471,11 +475,12 @@
   }
 }
 
-.banner__box > * + .banner__buttons {
+.banner__box>*+.banner__buttons {
   margin-top: 2rem;
 }
 
 @media screen and (max-width: 749px) {
+
   .banner:not(.slideshow) .rte a,
   .banner:not(.slideshow) .inline-richtext a:hover,
   .banner:not(.slideshow) .rte a:hover {
@@ -484,9 +489,69 @@
 }
 
 @media screen and (min-width: 750px) {
+
   .banner--desktop-transparent .rte a,
   .banner--desktop-transparent .inline-richtext a:hover,
   .banner--desktop-transparent .rte a:hover {
     color: currentColor;
+  }
+}
+
+/* Homepage hero banner — full feel on desktop, comfortable on mobile */
+[id$="__image_banner"] {
+  min-height: 90vh !important;
+}
+
+@media screen and (max-width: 749px) {
+  [id$="__image_banner"] {
+    /* 72vh on mobile: hero is prominent but doesn't hide all below-fold content */
+    min-height: 72vh !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  [id$="__image_banner"] {
+    /* On very small phones keep it a bit shorter */
+    min-height: 68vh !important;
+  }
+}
+
+/* Homepage hero "Buy Now" button — bigger, and an ink fill-wipe on hover
+   instead of a color swap. Colors stay theme-driven (secondary button
+   variables) so this tracks whatever color scheme is assigned, no
+   hardcoded gold/accent. */
+[id$="__image_banner"] .banner__buttons .button--secondary {
+  min-height: 6rem;
+  min-width: 18rem;
+  padding: 0 4.6rem;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  transition:
+    color 0.45s cubic-bezier(0.65, 0, 0.35, 1),
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[id$="__image_banner"] .banner__buttons .button--secondary:before {
+  background-color: rgb(var(--color-secondary-button-text));
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+[id$="__image_banner"] .banner__buttons .button--secondary:hover {
+  color: rgb(var(--color-secondary-button));
+  transform: translateY(-0.2rem);
+}
+
+[id$="__image_banner"] .banner__buttons .button--secondary:hover:before {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [id$="__image_banner"] .banner__buttons .button--secondary,
+  [id$="__image_banner"] .banner__buttons .button--secondary:before,
+  [id$="__image_banner"] .banner__buttons .button--secondary:hover {
+    transition: none;
+    transform: none;
   }
 }

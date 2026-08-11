@@ -1,0 +1,305 @@
+{{ 'section-shop-by-category.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="color-{{ section.settings.color_scheme }} gradient shop-by-category-wrapper">
+  <div class="{% if section.settings.full_width %}shop-by-category--full-width{% else %}page-width{% endif %} isolate section-{{ section.id }}-padding">
+    {%- if section.settings.title != blank or section.settings.subheading != blank -%}
+      <div class="shop-by-category__header shop-by-category__header--{{ section.settings.header_alignment }}">
+        {%- if section.settings.title != blank -%}
+          <h2 class="shop-by-category__heading">
+            {{ section.settings.title }}
+          </h2>
+        {%- endif -%}
+        {%- if section.settings.subheading != blank -%}
+          <div class="shop-by-category__subheading">
+            {{ section.settings.subheading }}
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div
+      class="shop-by-category__grid"
+      style="--desktop-columns: {{ section.settings.columns_desktop }}; --mobile-columns: {{ section.settings.columns_mobile }};"
+    >
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign collection = block.settings.collection
+          assign card_title = block.settings.custom_title
+          if card_title == blank and collection != blank
+            assign card_title = collection.title
+          elsif card_title == blank
+            assign card_title = 'Category Name'
+          endif
+
+          assign card_link = block.settings.custom_link
+          if card_link == blank and collection != blank
+            assign card_link = collection.url
+          elsif card_link == blank
+            assign card_link = '#'
+          endif
+
+          assign card_image = block.settings.custom_image
+          if card_image == blank and collection != blank and collection.featured_image != nil
+            assign card_image = collection.featured_image
+          endif
+        -%}
+
+        <a href="{{ card_link }}" class="shop-by-category__card" data-index="{{ forloop.index0 }}" {{ block.shopify_attributes }}>
+          <div class="shop-by-category__image-wrapper shop-by-category__image-wrapper--{{ section.settings.image_ratio }}">
+            {%- if card_image != blank -%}
+              {{
+                card_image
+                | image_url: width: 900
+                | image_tag:
+                  loading: 'lazy',
+                  widths: '300, 450, 600, 900',
+                  sizes: '(min-width: 990px) 25vw, (min-width: 750px) 50vw, 50vw',
+                  alt: card_title
+              }}
+            {%- else -%}
+              {%- assign placeholder_index = forloop.index0 | modulo: 4 | plus: 1 -%}
+              {%- assign placeholder_name = 'collection-apparel-' | append: placeholder_index -%}
+              <div class="shop-by-category__placeholder">
+                {{ placeholder_name | placeholder_svg_tag: 'placeholder-svg' }}
+              </div>
+            {%- endif -%}
+          </div>
+          <div class="shop-by-category__title-wrapper">
+            <h3 class="shop-by-category__title">
+              {{ card_title }}
+            </h3>
+            <span class="shop-by-category__arrow" aria-hidden="true">&#8594;</span>
+          </div>
+        </a>
+      {%- endfor -%}
+    </div>
+
+    <script>
+      (function () {
+        var section = document.currentScript.closest('.shop-by-category-wrapper');
+        if (!section) return;
+        var cards = section.querySelectorAll('.shop-by-category__card');
+        if (!cards.length) return;
+
+        if (
+          !('IntersectionObserver' in window) ||
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ) {
+          cards.forEach(function (card) {
+            card.classList.add('shop-by-category__card--visible');
+          });
+          return;
+        }
+
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              var index = parseInt(entry.target.dataset.index, 10) || 0;
+              entry.target.style.transitionDelay = (index % 4) * 90 + 'ms';
+              entry.target.classList.add('shop-by-category__card--visible');
+              observer.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+        );
+
+        cards.forEach(function (card) {
+          observer.observe(card);
+        });
+      })();
+    </script>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Shop by Category",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Shop by category"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "header_alignment",
+      "label": "Header Alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full Width",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "label": "Columns (Desktop)",
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns (Mobile)",
+      "options": [
+        {
+          "value": "1",
+          "label": "1 column"
+        },
+        {
+          "value": "2",
+          "label": "2 columns"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image Aspect Ratio",
+      "options": [
+        {
+          "value": "portrait",
+          "label": "Portrait (4:5)"
+        },
+        {
+          "value": "square",
+          "label": "Square (1:1)"
+        },
+        {
+          "value": "landscape",
+          "label": "Landscape (4:3)"
+        }
+      ],
+      "default": "portrait"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color Scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category_card",
+      "name": "Category Card",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "text",
+          "id": "custom_title",
+          "label": "Custom Title",
+          "info": "Overrides the default collection title"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_image",
+          "label": "Custom Image",
+          "info": "Overrides the default collection featured image"
+        },
+        {
+          "type": "url",
+          "id": "custom_link",
+          "label": "Custom Link",
+          "info": "Overrides the default collection link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shop by Category",
+      "blocks": [
+        {
+          "type": "category_card",
+          "settings": {
+            "custom_title": "Discovery sets"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "custom_title": "Fresh creations"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "custom_title": "Bath & Body"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "custom_title": "Baccarat Rouge 540"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

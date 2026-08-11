@@ -21,12 +21,27 @@
   width: 100%;
   background: rgba(var(--color-foreground), 0.2);
   height: 100%;
+  transition:
+    opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0.4s,
+    z-index 0s linear 0.4s;
 }
 
 .quick-add-modal[open] {
   opacity: 1;
   visibility: visible;
   z-index: 101;
+  transition:
+    opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s,
+    z-index 0s linear 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-add-modal,
+  .quick-add-modal[open] {
+    transition: none;
+  }
 }
 
 .quick-add-modal .scroll-trigger.scroll-trigger {
@@ -43,13 +58,30 @@
   position: absolute;
   top: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(1.6rem) scale(0.97);
+  opacity: 0;
   margin: var(--modal-height-offset) auto 0;
   width: 100%;
   background-color: rgb(var(--color-background));
   overflow: hidden;
   max-width: var(--page-width);
   width: calc(100% - 3rem);
+  transition:
+    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quick-add-modal[open] .quick-add-modal__content {
+  transform: translateX(-50%) translateY(0) scale(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-add-modal__content,
+  .quick-add-modal[open] .quick-add-modal__content {
+    transition: none;
+    transform: translateX(-50%);
+  }
 }
 
 @media screen and (min-width: 750px) {

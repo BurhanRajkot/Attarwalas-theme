@@ -1,0 +1,289 @@
+{{ 'section-customer-reviews.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  #CustomerReviews-{{ section.id }} .customer-reviews__grid {
+    --reviews-columns-desktop: {{ section.settings.columns_desktop }};
+  }
+{%- endstyle -%}
+
+<div class="color-{{ section.settings.color_scheme }} gradient customer-reviews-wrapper">
+  <div
+    id="CustomerReviews-{{ section.id }}"
+    class="{% if section.settings.full_width %}customer-reviews--full-width{% else %}page-width{% endif %} section-{{ section.id }}-padding"
+  >
+    {%- if section.settings.title != blank -%}
+      <div class="customer-reviews__title-row" data-reviews-header>
+        <span class="customer-reviews__line" aria-hidden="true"></span>
+        <h2 class="customer-reviews__heading">{{ section.settings.title }}</h2>
+        <span class="customer-reviews__line" aria-hidden="true"></span>
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.subheading != blank -%}
+      <p class="customer-reviews__subheading">{{ section.settings.subheading }}</p>
+    {%- endif -%}
+
+    {%- if section.blocks.size == 0 -%}
+      <p class="customer-reviews__empty">Add review blocks in the section settings to feature customer feedback.</p>
+    {%- else -%}
+      {%- liquid
+        assign rating_total = 0
+        for block in section.blocks
+          assign rating_total = rating_total | plus: block.settings.rating
+        endfor
+        assign rating_average = rating_total | times: 1.0 | divided_by: section.blocks.size | round: 1
+        assign rating_average_rounded = rating_average | round
+      -%}
+
+      {%- if section.settings.show_summary -%}
+        <div class="customer-reviews__summary">
+          <span class="customer-reviews__stars" aria-hidden="true">
+            {%- for i in (1..5) -%}
+              <svg viewBox="0 0 24 24" class="{% if i <= rating_average_rounded %}is-filled{% endif %}">
+                <path d="M12 2.5l2.9 6.4 6.9.7-5.2 4.7 1.5 6.8L12 17.6l-6.1 3.5 1.5-6.8-5.2-4.7 6.9-.7L12 2.5z" stroke-linejoin="round"/>
+              </svg>
+            {%- endfor -%}
+          </span>
+          <span><span class="customer-reviews__summary-score">{{ rating_average }}</span> — Based on {{ section.blocks.size }} review{% if section.blocks.size != 1 %}s{% endif %}</span>
+        </div>
+      {%- endif -%}
+
+      <div class="customer-reviews__grid">
+        {%- for block in section.blocks -%}
+          <div class="customer-reviews__card" data-reviews-card data-index="{{ forloop.index0 }}" {{ block.shopify_attributes }}>
+            <svg class="customer-reviews__quote-mark" viewBox="0 0 48 36" aria-hidden="true" fill="currentColor">
+              <path d="M20.4 0v15.6c0 11.4-6.6 18.6-16.8 20.4L0 30.6c5.4-1.8 8.4-6 9-11.4H0V0h20.4zm27.6 0v15.6c0 11.4-6.6 18.6-16.8 20.4l-3.6-5.4c5.4-1.8 8.4-6 9-11.4H27.6V0H48z"/>
+            </svg>
+
+            <span class="customer-reviews__stars" aria-hidden="true">
+              {%- for i in (1..5) -%}
+                <svg viewBox="0 0 24 24" class="{% if i <= block.settings.rating %}is-filled{% endif %}">
+                  <path d="M12 2.5l2.9 6.4 6.9.7-5.2 4.7 1.5 6.8L12 17.6l-6.1 3.5 1.5-6.8-5.2-4.7 6.9-.7L12 2.5z" stroke-linejoin="round"/>
+                </svg>
+              {%- endfor -%}
+            </span>
+            <span class="visually-hidden">{{ block.settings.rating }} out of 5 stars</span>
+
+            {%- if block.settings.quote != blank -%}
+              <p class="customer-reviews__quote">&ldquo;{{ block.settings.quote }}&rdquo;</p>
+            {%- endif -%}
+
+            <div class="customer-reviews__attribution">
+              {%- if block.settings.name != blank -%}
+                {%- assign name_words = block.settings.name | split: ' ' -%}
+                {%- assign initials = name_words.first | slice: 0, 1 -%}
+                {%- if name_words.size > 1 -%}
+                  {%- assign initials = initials | append: name_words.last | slice: 0, 1 -%}
+                {%- endif -%}
+                <span class="customer-reviews__avatar" aria-hidden="true">{{ initials | upcase }}</span>
+              {%- endif -%}
+              <div class="customer-reviews__attribution-text">
+                {%- if block.settings.name != blank -%}
+                  <p class="customer-reviews__name">{{ block.settings.name }}</p>
+                {%- endif -%}
+                {%- if block.settings.detail != blank -%}
+                  <p class="customer-reviews__detail">{{ block.settings.detail }}</p>
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  (function () {
+    var section = document.getElementById('CustomerReviews-{{ section.id }}');
+    if (!section) return;
+    var header = section.querySelector('[data-reviews-header]');
+    var cards = Array.from(section.querySelectorAll('[data-reviews-card]'));
+    var targets = header ? [header].concat(cards) : cards;
+    if (!targets.length) return;
+
+    if (
+      !('IntersectionObserver' in window) ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      targets.forEach(function (el) {
+        el.classList.add(el === header ? 'customer-reviews__title-row--visible' : 'customer-reviews__card--visible');
+      });
+      return;
+    }
+
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var el = entry.target;
+          if (el === header) {
+            el.classList.add('customer-reviews__title-row--visible');
+          } else {
+            var index = parseInt(el.dataset.index, 10) || 0;
+            el.style.transitionDelay = (index % 3) * 100 + 'ms';
+            el.classList.add('customer-reviews__card--visible');
+          }
+          observer.unobserve(el);
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+    );
+
+    targets.forEach(function (el) {
+      observer.observe(el);
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Customer Reviews",
+  "tag": "section",
+  "class": "section section-customer-reviews",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "default": true,
+      "label": "Make section full width"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "default": "What Our Customers Say",
+      "label": "Heading"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_summary",
+      "default": true,
+      "label": "Show average rating summary",
+      "info": "Calculated automatically from the star ratings on the review blocks below."
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 3,
+      "label": "Desktop columns"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color Scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 60
+    }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        {
+          "type": "range",
+          "id": "rating",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5,
+          "label": "Rating"
+        },
+        {
+          "type": "textarea",
+          "id": "quote",
+          "label": "Review text",
+          "default": "This fragrance is absolutely stunning — the longevity and projection are unmatched. Worth every penny."
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Customer name",
+          "default": "Happy Customer"
+        },
+        {
+          "type": "text",
+          "id": "detail",
+          "label": "Detail",
+          "info": "E.g. \"Verified Buyer\" or the product they purchased",
+          "default": "Verified Buyer"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Customer Reviews",
+      "blocks": [
+        {
+          "type": "review",
+          "settings": {
+            "name": "Aisha Khan",
+            "detail": "Verified Buyer — Oudh Eternal"
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "name": "Rohan Mehta",
+            "detail": "Verified Buyer — Baccarat Rouge 540"
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "name": "Sara Ali",
+            "detail": "Verified Buyer — Fresh Woodscape"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

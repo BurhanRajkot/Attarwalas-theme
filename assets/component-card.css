@@ -383,27 +383,108 @@
 @media screen and (min-width: 990px) {
   .card .media.media--hover-effect > img:only-child,
   .card-wrapper .media.media--hover-effect > img:only-child {
-    transition: transform var(--duration-long) ease;
+    transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
   }
 
   .card:hover .media.media--hover-effect > img:first-child:only-child,
   .card-wrapper:hover .media.media--hover-effect > img:first-child:only-child {
-    transform: scale(1.03);
+    transform: scale(1.04);
+  }
+
+  .card .media.media--hover-effect > img:first-child:not(:only-child),
+  .card .media.media--hover-effect > img + img {
+    transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
   }
 
   .card-wrapper:hover .media.media--hover-effect > img:first-child:not(:only-child) {
     opacity: 0;
+    transform: scale(1.03);
   }
 
   .card-wrapper:hover .media.media--hover-effect > img + img {
     opacity: 1;
-    transition: transform var(--duration-long) ease;
-    transform: scale(1.03);
+    transform: scale(1.04);
   }
 
   .underline-links-hover:hover a {
     text-decoration: underline;
     text-underline-offset: 0.3rem;
+  }
+}
+
+/* Quick-add overlay: hover-revealed button + scrim over the card image,
+   used when card-product is rendered with quick_add_overlay: true.
+   .card__media is already position: absolute (see base rules above),
+   which is sufficient to anchor these absolutely-positioned children. */
+.quick-add-overlay {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1.2rem;
+  z-index: 2;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.card-wrapper:hover .quick-add-overlay,
+.card-wrapper:focus-within .quick-add-overlay {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.card__media::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.28) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.card-wrapper:hover .card__media::after,
+.card-wrapper:focus-within .card__media::after {
+  opacity: 1;
+}
+
+.quick-add-overlay .quick-add {
+  margin: 0;
+}
+
+.quick-add-overlay .quick-add__submit {
+  border-radius: 0.2rem;
+  min-width: 100%;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.18);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.25s ease;
+}
+
+.quick-add-overlay .quick-add__submit:hover {
+  transform: translateY(-0.1rem);
+  box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.24);
+}
+
+.quick-add-overlay .quick-add__submit.loading {
+  transform: scale(0.98);
+}
+
+/* Hover-to-reveal doesn't work on touch; hide the overlay so tapping a
+   card goes straight to the product page instead of showing a button
+   that can never be reached. */
+@media screen and (max-width: 749px) {
+  .quick-add-overlay,
+  .card__media::after {
+    display: none !important;
   }
 }
 

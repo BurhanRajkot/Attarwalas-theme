@@ -1,0 +1,294 @@
+{{ 'section-our-promise.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="color-{{ section.settings.color_scheme }} gradient our-promise-wrapper">
+  <div class="{% if section.settings.full_width %}our-promise--full-width{% else %}page-width{% endif %} isolate section-{{ section.id }}-padding">
+    {%- if section.settings.title != blank or section.settings.subheading != blank -%}
+      <div class="our-promise__header">
+        {%- if section.settings.title != blank -%}
+          <h2 class="our-promise__heading">
+            {{ section.settings.title }}
+          </h2>
+        {%- endif -%}
+        {%- if section.settings.subheading != blank -%}
+          <div class="our-promise__subheading">
+            {{ section.settings.subheading }}
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div
+      class="our-promise__grid"
+      style="--desktop-columns: {{ section.settings.columns_desktop }};"
+    >
+      {%- for block in section.blocks -%}
+        <div
+          class="our-promise__item"
+          data-index="{{ forloop.index0 }}"
+          {{ block.shopify_attributes }}
+        >
+          <div class="our-promise__icon-wrapper">
+            {%- if block.settings.custom_icon != blank -%}
+              {{
+                block.settings.custom_icon
+                | image_url: width: 200
+                | image_tag:
+                  loading: 'lazy',
+                  widths: '50, 100, 200',
+                  alt: block.settings.title
+              }}
+            {%- else -%}
+              {%- case block.settings.icon -%}
+                {%- when 'crown' -%}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none">
+                    <path d="M2 19h20M3 19l2-10 5 4 2-7 2 7 5-4 2 10H3z" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                {%- when 'care' -%}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none">
+                    <circle cx="12" cy="6" r="2.5" stroke-width="1.4"/>
+                    <path d="M12 11c-2.5-2.5-6.5-1-6.5 2 0 3.5 6.5 7.5 6.5 7.5s6.5-4 6.5-7.5c0-3-4-4.5-6.5-2z" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                {%- when 'shipping' -%}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none">
+                    <rect x="1" y="3" width="15" height="13" rx="1" stroke-width="1.4"/>
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="5.5" cy="18.5" r="2.5" stroke-width="1.4"/>
+                    <circle cx="18.5" cy="18.5" r="2.5" stroke-width="1.4"/>
+                  </svg>
+                {%- when 'long_lasting' -%}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke-width="1.4"/>
+                    <polyline points="12 6 12 12 16 14" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                {%- when 'purity' -%}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                {%- else -%}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none">
+                    <path d="M2 19h20M3 19l2-10 5 4 2-7 2 7 5-4 2 10H3z" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+              {%- endcase -%}
+            {%- endif -%}
+          </div>
+
+          {%- if block.settings.title != blank -%}
+            <h3 class="our-promise__title">
+              {{ block.settings.title }}
+            </h3>
+          {%- endif -%}
+
+          {%- if block.settings.text != blank -%}
+            <div class="our-promise__text">
+              {{ block.settings.text }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <script>
+      (function () {
+        var section = document.currentScript.closest('.our-promise-wrapper');
+        if (!section) return;
+        var items = section.querySelectorAll('.our-promise__item');
+        if (!items.length) return;
+
+        if (
+          !('IntersectionObserver' in window) ||
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ) {
+          items.forEach(function (item) {
+            item.classList.add('our-promise__item--visible');
+          });
+          return;
+        }
+
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              var index = parseInt(entry.target.dataset.index, 10) || 0;
+              entry.target.style.transitionDelay = (index % 3) * 120 + 'ms';
+              entry.target.classList.add('our-promise__item--visible');
+              observer.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+        );
+
+        items.forEach(function (item) {
+          observer.observe(item);
+        });
+      })();
+    </script>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Our Promise",
+  "tag": "section",
+  "class": "section section-our-promise",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "default": false,
+      "label": "Make section full width"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "default": "Our Promise to You",
+      "label": "Heading"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 3,
+      "label": "Desktop Columns"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color Scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 60
+    }
+  ],
+  "blocks": [
+    {
+      "type": "promise",
+      "name": "Promise Item",
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "options": [
+            {
+              "value": "crown",
+              "label": "Crown (Heritage / Craftsmanship)"
+            },
+            {
+              "value": "care",
+              "label": "Heart / Care (Customer Support)"
+            },
+            {
+              "value": "shipping",
+              "label": "Truck (Fast Shipping)"
+            },
+            {
+              "value": "long_lasting",
+              "label": "Clock (18-Hour Longevity)"
+            },
+            {
+              "value": "purity",
+              "label": "Shield (Purity / Non-Alcoholic)"
+            }
+          ],
+          "default": "crown",
+          "label": "Icon"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_icon",
+          "label": "Custom Icon Image",
+          "info": "Optional. Overrides selected SVG icon"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "default": "Legacy of Craftsmanship",
+          "label": "Heading"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "default": "Rooted in heritage and driven by innovation, ATTARWALAS redefines fragrance creation with a harmonious blend of tradition and modernity.",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Our Promise",
+      "blocks": [
+        {
+          "type": "promise",
+          "settings": {
+            "icon": "crown",
+            "title": "Legacy of Craftsmanship",
+            "text": "Rooted in heritage and driven by innovation, ATTARWALAS redefines fragrance creation with a harmonious blend of tradition and modernity."
+          }
+        },
+        {
+          "type": "promise",
+          "settings": {
+            "icon": "care",
+            "title": "Exceptional Care, Always",
+            "text": "Your satisfaction is our priority. ATTARWALAS offers hassle-free returns and exceptional customer support, ensuring every interaction with us is a delight."
+          }
+        },
+        {
+          "type": "promise",
+          "settings": {
+            "icon": "shipping",
+            "title": "Fast Shipping Across India",
+            "text": "Enjoy the beauty of ATTARWALAS no matter where you are in India. We offer fast shipping, ensuring your favorite scents arrive at your doorstep with care."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

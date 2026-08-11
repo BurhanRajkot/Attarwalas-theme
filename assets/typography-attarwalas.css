@@ -1,0 +1,362 @@
+/* ==========================================================================
+   ATTARWALAS — Premium Fragrance Typography System
+   Heading font : Cormorant Garamond (elegant serif — luxury / fragrance)
+   Body font    : DM Sans (clean, modern sans-serif — legible & refined)
+   ========================================================================== */
+
+/* ─── 1. CSS Custom Properties override ─────────────────────────────────── */
+:root {
+  --attarwalas-font-heading: 'Cormorant Garamond', Georgia, serif;
+  --attarwalas-font-body:    'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Letter spacing — tight for headings, slightly open for body */
+  --attarwalas-ls-heading:  -0.01em;
+  --attarwalas-ls-body:      0.01em;
+  --attarwalas-ls-caps:      0.12em;
+
+  /* Line heights */
+  --attarwalas-lh-heading:  1.15;
+  --attarwalas-lh-body:     1.65;
+
+  /* Override Dawn's font CSS variables so ALL components inherit cleanly */
+  --font-heading-family: 'Cormorant Garamond', Georgia, serif;
+  --font-heading-style:  normal;
+  --font-heading-weight: 500;
+
+  --font-body-family:  'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body-style:   normal;
+  --font-body-weight:  400;
+  --font-body-weight-bold: 600;
+}
+
+/* ─── 2. Base body ──────────────────────────────────────────────────────── */
+body {
+  font-family: var(--attarwalas-font-body) !important;
+  font-weight: 400;
+  letter-spacing: var(--attarwalas-ls-body);
+  line-height: var(--attarwalas-lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── 3. All headings ───────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+.h0, .h1, .h2, .h3, .h4, .h5 {
+  font-family: var(--attarwalas-font-heading) !important;
+  font-weight: 500;
+  letter-spacing: var(--attarwalas-ls-heading);
+  line-height: var(--attarwalas-lh-heading);
+  font-style: normal;
+}
+
+/* h1 — Hero / Page Titles */
+h1, .h1 {
+  font-size: clamp(3.6rem, 5.5vw, 6.4rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* h2 — Section Headings */
+h2, .h2 {
+  font-size: clamp(2.8rem, 3.5vw, 4.8rem);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+/* h3 — Sub-headings / Card Titles */
+h3, .h3 {
+  font-size: clamp(2.2rem, 2.5vw, 3.2rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* h4 — Small titles, product names on cards */
+h4, .h4 {
+  font-size: clamp(1.8rem, 2vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+/* h5 / h6 — Labels, captions in heading style */
+h5, .h5 {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: var(--attarwalas-ls-caps);
+  text-transform: uppercase;
+}
+
+h6 {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: var(--attarwalas-ls-caps);
+  text-transform: uppercase;
+  color: rgba(var(--color-foreground), 0.6);
+}
+
+/* ─── 4. Body text, paragraphs, rte ─────────────────────────────────────── */
+p,
+.rte p,
+li,
+.text-body {
+  font-family: var(--attarwalas-font-body);
+  font-size: 1.5rem;
+  line-height: var(--attarwalas-lh-body);
+  letter-spacing: var(--attarwalas-ls-body);
+  color: rgba(var(--color-foreground), 0.8);
+}
+
+@media screen and (min-width: 750px) {
+  p,
+  .rte p,
+  li,
+  .text-body {
+    font-size: 1.6rem;
+  }
+}
+
+/* ─── 5. Navigation — clean, tight sans-serif ────────────────────────────── */
+.header__menu-item,
+.header__menu-item span,
+.list-menu__item,
+nav a,
+.mega-menu a {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ─── 6. Buttons ────────────────────────────────────────────────────────── */
+.button,
+button:not([class]),
+.shopify-payment-button__button {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ─── 7. Product titles on cards ─────────────────────────────────────────── */
+.card__heading,
+.card__heading a,
+.card-information__text,
+.full-unstyled-link {
+  font-family: var(--attarwalas-font-heading) !important;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* ─── 8. Price text ─────────────────────────────────────────────────────── */
+.price,
+.price__sale,
+.price-item,
+.price__regular {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ─── 9. Form inputs, labels ─────────────────────────────────────────────── */
+input,
+select,
+textarea,
+.field__input,
+.form__label,
+.select__select,
+label {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.4rem;
+  letter-spacing: 0.01em;
+}
+
+/* ─── 10. Announcement bar ─────────────────────────────────────────────── */
+.announcement-bar p,
+.announcement-bar a,
+.announcement-bar__message {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.45rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ─── 11. Footer ────────────────────────────────────────────────────────── */
+.footer__heading,
+.footer__column-header {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.footer a,
+.footer p,
+.footer li,
+.footer__content {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+}
+
+/* ─── 12. Section-specific fixes ────────────────────────────────────────── */
+
+/* Rich text section */
+.rich-text__heading {
+  font-family: var(--attarwalas-font-heading) !important;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+/* Featured collection section title */
+.featured-collection .collection-hero__title,
+.collection__title {
+  font-family: var(--attarwalas-font-heading) !important;
+}
+
+/* Slideshow overlay text */
+.slideshow__text,
+.banner__text,
+.image-banner-text {
+  font-family: var(--attarwalas-font-heading) !important;
+}
+
+/* Breadcrumbs */
+.breadcrumbs a,
+.breadcrumbs span {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+}
+
+/* Caption overrides */
+.caption,
+.caption-with-letter-spacing {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Cart + Drawer */
+.cart-drawer__heading,
+.cart-drawer__title {
+  font-family: var(--attarwalas-font-heading) !important;
+  font-weight: 500;
+  font-size: 2.4rem;
+  letter-spacing: -0.01em;
+}
+
+/* Shop By Category section — already uses --font-heading-family, this re-enforces it */
+.shop-by-category__heading {
+  font-family: var(--attarwalas-font-heading) !important;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.shop-by-category__subheading {
+  font-family: var(--attarwalas-font-body) !important;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.shop-by-category__title {
+  font-family: var(--attarwalas-font-heading) !important;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Our Promise section */
+.our-promise__heading,
+.our-promise__title {
+  font-family: var(--attarwalas-font-heading) !important;
+}
+
+.our-promise__text,
+.our-promise__subheading {
+  font-family: var(--attarwalas-font-body) !important;
+}
+
+/* ─── 13. rte (Rich Text Editor) block ──────────────────────────────────── */
+.rte h1, .rte h2, .rte h3, .rte h4 {
+  font-family: var(--attarwalas-font-heading) !important;
+}
+
+.rte strong {
+  font-weight: 600;
+}
+
+/* ─── 14. Product page specifics ─────────────────────────────────────────── */
+.product__title {
+  font-family: var(--attarwalas-font-heading) !important;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.8rem, 3.5vw, 4.4rem);
+  line-height: 1.1;
+}
+
+.product__vendor {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--color-foreground), 0.55);
+}
+
+.product__description,
+.product__description p {
+  font-family: var(--attarwalas-font-body) !important;
+  font-size: 1.55rem;
+  line-height: 1.7;
+  color: rgba(var(--color-foreground), 0.75);
+}
+
+/* ─── 15. Mobile type scale — very small phones (under 480px) ──────────────
+   clamp() values are viewport-relative so they look fine at 390px+ but can
+   still be a touch large at 375px (iPhone SE). These caps prevent overflow. */
+@media screen and (max-width: 480px) {
+  h1, .h1 {
+    font-size: clamp(3.2rem, 8.5vw, 5rem);
+  }
+
+  h2, .h2 {
+    font-size: clamp(2.4rem, 7vw, 4rem);
+  }
+
+  h3, .h3 {
+    font-size: clamp(2rem, 5.5vw, 3rem);
+  }
+
+  h4, .h4 {
+    font-size: clamp(1.7rem, 4.5vw, 2.2rem);
+  }
+
+  /* Product page title on mobile */
+  .product__title {
+    font-size: clamp(2.4rem, 7vw, 3.5rem);
+  }
+
+  /* Prevent the shop-by-category heading from overflowing */
+  .shop-by-category__heading {
+    font-size: clamp(2.2rem, 6.5vw, 3.2rem);
+  }
+
+  /* Body text comfortable at 14px on small screens */
+  p, .rte p, li, .text-body {
+    font-size: 1.4rem;
+  }
+
+  /* Nav items slightly smaller on mobile drawer */
+  .header__menu-item,
+  .header__menu-item span,
+  .list-menu__item {
+    font-size: 1.2rem;
+  }
+}

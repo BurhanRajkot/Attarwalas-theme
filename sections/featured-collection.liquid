@@ -36,6 +36,306 @@
       padding-bottom: {{ section.settings.padding_bottom }}px;
     }
   }
+
+  #collection-{{ section.id }} .collection__title {
+    text-align: center;
+  }
+
+  #collection-{{ section.id }} .collection__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  #collection-{{ section.id }} .collection__title-row .title {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  #collection-{{ section.id }} .collection__title-line {
+    flex: 1 1 auto;
+    height: 1px;
+    max-width: 22rem;
+    background: rgba(var(--color-foreground), 0.25);
+  }
+
+  /* Duo & Trio exact dimensions and styling for Bestsellers */
+  #collection-{{ section.id }} .card--card,
+  #collection-{{ section.id }} .card--card:after {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  #collection-{{ section.id }} .card__inner {
+    background: #f7f6f4;
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  #collection-{{ section.id }} .card__inner.ratio {
+    padding-bottom: 0 !important;
+  }
+
+  #collection-{{ section.id }} .card__media {
+    --image-padding: 0px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute;
+    inset: 0;
+    border-radius: 0 !important;
+    background-color: #f7f6f4;
+  }
+
+  /* Ultra-smooth secondary image hover cross-fade dissolve & subtle zoom */
+  #collection-{{ section.id }} .card__media img,
+  #collection-{{ section.id }} .media img {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transition:
+      opacity 0.65s cubic-bezier(0.25, 1, 0.5, 1),
+      transform 0.75s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    will-change: opacity, transform;
+  }
+
+  #collection-{{ section.id }} .card-wrapper:hover .card__media img:only-child {
+    transform: scale(1.04) !important;
+  }
+
+  #collection-{{ section.id }} .media.media--hover-effect > img:first-child:not(:only-child) {
+    opacity: 1 !important;
+    z-index: 1;
+  }
+
+  #collection-{{ section.id }} .media.media--hover-effect > img + img {
+    opacity: 0 !important;
+    z-index: 2;
+    transform: scale(1.03) !important;
+  }
+
+  #collection-{{ section.id }} .card-wrapper:hover .media.media--hover-effect > img:first-child:not(:only-child),
+  #collection-{{ section.id }} .card-wrapper:focus-within .media.media--hover-effect > img:first-child:not(:only-child) {
+    opacity: 0 !important;
+    transform: scale(1.03) !important;
+  }
+
+  #collection-{{ section.id }} .card-wrapper:hover .media.media--hover-effect > img + img,
+  #collection-{{ section.id }} .card-wrapper:focus-within .media.media--hover-effect > img + img {
+    opacity: 1 !important;
+    transform: scale(1.04) !important;
+  }
+
+  #collection-{{ section.id }} .card--card.card--media > .card__content {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 1.6rem;
+  }
+
+  /* Quick add: a compact bar that rises just above the image's bottom
+     edge, not flush against it, with room on either side — closer to
+     Naseem's smaller-footprint treatment than an edge-to-edge bar. */
+  #collection-{{ section.id }} .quick-add-overlay {
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 2;
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  #collection-{{ section.id }} .card-wrapper:hover .quick-add-overlay,
+  #collection-{{ section.id }} .card-wrapper:focus-within .quick-add-overlay {
+    clip-path: inset(0% 0 0 0);
+    pointer-events: auto;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .quick-add {
+    margin: 0;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 0.3rem;
+    padding: 1.1rem;
+    font-size: 1.05rem;
+    letter-spacing: 0.12rem;
+    text-transform: uppercase;
+    background: rgb(var(--color-button));
+    color: rgb(var(--color-button-text));
+    box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.12);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit:hover {
+    background: rgba(var(--color-button), 0.9);
+    box-shadow: 0 0.5rem 1.4rem rgba(0, 0, 0, 0.18);
+  }
+
+  /* Spark/reflection sweep on hover — a soft diagonal band of light
+     glides across the button once, rather than looping or glowing. */
+  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image: linear-gradient(
+      115deg,
+      transparent 42%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 58%
+    );
+    background-size: 260% 100%;
+    background-position: 150% 0;
+    background-repeat: no-repeat;
+    transition: background-position 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit:hover:after {
+    background-position: -60% 0;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit span {
+    position: relative;
+    z-index: 2;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit.loading {
+    color: transparent;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .loading__spinner {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .loading__spinner .path {
+    stroke: rgb(var(--color-button-text));
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .loading__spinner.hidden {
+    display: inline-block !important;
+  }
+
+  #collection-{{ section.id }} .quick-add-overlay .loading__spinner:not(.hidden) {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #collection-{{ section.id }} .quick-add-overlay {
+      transition: none;
+    }
+  }
+
+  /* Plain text badge instead of a filled pill, to match Duo & Trio's
+     understated top-left label treatment. */
+  #collection-{{ section.id }} .card__badge .badge {
+    background: none;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--color-foreground));
+  }
+
+  /* The generic .h5 utility (small uppercase caption sizing) rides along
+     with .card__heading here, which is why the title was reading tiny
+     next to the image — give it a real title size instead. */
+  #collection-{{ section.id }} .card__heading {
+    font-size: clamp(1.9rem, 1.9vw, 2.3rem);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin-bottom: 0.7rem;
+  }
+
+  #collection-{{ section.id }} .card-information .caption-with-letter-spacing {
+    font-size: 1.15rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+
+  #collection-{{ section.id }} .price {
+    font-size: 1.7rem !important;
+  }
+
+  /* ── Breathing room ───────────────────────────────────
+     Give the Bestseller cards real air between them instead of the
+     8px site-wide grid gutter — tight spacing is what was reading as
+     cluttered next to competitor references. */
+  #collection-{{ section.id }} {
+    --grid-desktop-horizontal-spacing: 4rem;
+    --grid-desktop-vertical-spacing: 5rem;
+    --grid-mobile-horizontal-spacing: 2rem;
+    --grid-mobile-vertical-spacing: 3rem;
+  }
+
+  @media screen and (min-width: 990px) {
+    #collection-{{ section.id }} slider-component.slider-component-full-width {
+      --desktop-margin-left-first-item: 4rem;
+    }
+
+    #collection-{{ section.id }} .slider-component-full-width .slider--desktop {
+      scroll-padding-left: 4rem;
+    }
+
+    #collection-{{ section.id }} .slider-component-full-width .slider--desktop .slider__slide:first-child {
+      margin-left: 4rem;
+      scroll-margin-left: 4rem;
+    }
+
+    #collection-{{ section.id }} .slider-component-full-width .slider--desktop:after {
+      padding-left: 4rem;
+    }
+  }
+
+  /* ── Mobile UX fixes ─────────────────────────────────── */
+
+  /* On mobile view (< 750px), completely hide the quick-add popup/overlay button
+     so tapping the card goes straight to the product page. */
+  @media screen and (max-width: 749px) {
+    #collection-{{ section.id }} .quick-add-overlay {
+      display: none !important;
+    }
+
+    #collection-{{ section.id }} .card__inner {
+      aspect-ratio: 3 / 4 !important;
+    }
+
+    #collection-{{ section.id }} .card--card.card--media > .card__content {
+      padding-top: 1rem;
+    }
+
+    #collection-{{ section.id }} .card__heading {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+    }
+  }
+
+  /* Very small phones — keep cards usable */
+  @media screen and (max-width: 480px) {
+    #collection-{{ section.id }} .card__inner {
+      aspect-ratio: 3 / 4 !important;
+    }
+  }
 {%- endstyle -%}
 
 {%- liquid
@@ -68,9 +368,13 @@
   >
     <div class="collection__title title-wrapper title-wrapper--no-top-margin page-width{% if show_mobile_slider %} title-wrapper--self-padded-tablet-down{% endif %}{% if show_desktop_slider %} collection__title--desktop-slider{% endif %}">
       {%- if section.settings.title != blank -%}
-        <h2 class="title inline-richtext {{ section.settings.heading_size }}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
-          {{ section.settings.title }}
-        </h2>
+        <div class="collection__title-row{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+          <span class="collection__title-line" aria-hidden="true"></span>
+          <h2 class="title inline-richtext {{ section.settings.heading_size }}">
+            {{ section.settings.title }}
+          </h2>
+          <span class="collection__title-line" aria-hidden="true"></span>
+        </div>
       {%- endif -%}
       {%- if section.settings.description != blank
         or section.settings.show_description
@@ -111,7 +415,8 @@
               show_vendor: section.settings.show_vendor,
               show_rating: section.settings.show_rating,
               section_id: section.id,
-              quick_add: section.settings.quick_add
+              quick_add: section.settings.quick_add,
+              quick_add_overlay: true
             %}
           </li>
         {%- else -%}
@@ -202,7 +507,7 @@
     {
       "type": "inline_richtext",
       "id": "title",
-      "default": "Featured collection",
+      "default": "t:sections.featured-collection.settings.title.default",
       "label": "t:sections.featured-collection.settings.title.label"
     },
     {
@@ -218,8 +523,12 @@
           "label": "t:sections.all.heading_size.options__2.label"
         },
         {
-          "value": "h0",
+          "value": "hxl",
           "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hx2",
+          "label": "t:sections.all.heading_size.options__4.label"
         }
       ],
       "default": "h1",
@@ -233,13 +542,12 @@
     {
       "type": "checkbox",
       "id": "show_description",
-      "label": "t:sections.featured-collection.settings.show_description.label",
-      "default": false
+      "default": false,
+      "label": "t:sections.featured-collection.settings.show_description.label"
     },
     {
       "type": "select",
       "id": "description_style",
-      "label": "t:sections.featured-collection.settings.description_style.label",
       "options": [
         {
           "value": "body",
@@ -254,7 +562,8 @@
           "label": "t:sections.featured-collection.settings.description_style.options__3.label"
         }
       ],
-      "default": "body"
+      "default": "body",
+      "label": "t:sections.featured-collection.settings.description_style.label"
     },
     {
       "type": "collection",
@@ -282,8 +591,8 @@
     {
       "type": "checkbox",
       "id": "full_width",
-      "label": "t:sections.featured-collection.settings.full_width.label",
-      "default": false
+      "default": false,
+      "label": "t:sections.featured-collection.settings.full_width.label"
     },
     {
       "type": "checkbox",
@@ -294,7 +603,6 @@
     {
       "type": "select",
       "id": "view_all_style",
-      "label": "t:sections.featured-collection.settings.view_all_style.label",
       "options": [
         {
           "value": "link",
@@ -309,13 +617,14 @@
           "label": "t:sections.featured-collection.settings.view_all_style.options__3.label"
         }
       ],
-      "default": "solid"
+      "default": "solid",
+      "label": "t:sections.featured-collection.settings.view_all_style.label"
     },
     {
       "type": "checkbox",
       "id": "enable_desktop_slider",
-      "label": "t:sections.featured-collection.settings.enable_desktop_slider.label",
-      "default": false
+      "default": false,
+      "label": "t:sections.featured-collection.settings.enable_desktop_slider.label"
     },
     {
       "type": "color_scheme",
@@ -386,8 +695,7 @@
         }
       ],
       "default": "default",
-      "label": "t:sections.all.image_shape.label",
-      "info": "t:sections.all.image_shape.info"
+      "label": "t:sections.all.image_shape.label"
     },
     {
       "type": "checkbox",
@@ -405,27 +713,26 @@
       "type": "checkbox",
       "id": "show_rating",
       "default": false,
-      "label": "t:sections.featured-collection.settings.show_rating.label",
-      "info": "t:sections.featured-collection.settings.show_rating.info"
+      "label": "t:sections.featured-collection.settings.show_rating.label"
     },
     {
       "type": "select",
       "id": "quick_add",
       "default": "none",
-      "label": "t:sections.main-collection-product-grid.settings.quick_add.label",
-      "info": "t:sections.main-collection-product-grid.settings.quick_add.info",
+      "label": "t:sections.featured-collection.settings.quick_add.label",
+      "info": "t:sections.featured-collection.settings.quick_add.info",
       "options": [
         {
           "value": "none",
-          "label": "t:sections.main-collection-product-grid.settings.quick_add.options.option_1"
+          "label": "t:sections.featured-collection.settings.quick_add.options.option_1"
         },
         {
           "value": "standard",
-          "label": "t:sections.main-collection-product-grid.settings.quick_add.options.option_2"
+          "label": "t:sections.featured-collection.settings.quick_add.options.option_2"
         },
         {
           "value": "bulk",
-          "label": "t:sections.main-collection-product-grid.settings.quick_add.options.option_3"
+          "label": "t:sections.featured-collection.settings.quick_add.options.option_3"
         }
       ]
     },
