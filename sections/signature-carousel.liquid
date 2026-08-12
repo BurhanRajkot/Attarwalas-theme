@@ -138,6 +138,20 @@
         });
       }
 
+      connectedCallback() {
+        if (this.n > 1) this.start();
+      }
+
+      disconnectedCallback() {
+        if (this.raf) {
+          cancelAnimationFrame(this.raf);
+          this.raf = null;
+        }
+        if (this.resizeObserver) {
+          this.resizeObserver.disconnect();
+        }
+      }
+
       setupDots() {
         this.dots = [];
         if (!this.dotsWrap) return;
@@ -368,13 +382,20 @@
 
       bindResize() {
         var resizeTimer = null;
-        window.addEventListener('resize', () => {
+        var remeasure = () => {
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(() => {
             this.measure();
             this.render();
           }, 80);
-        });
+        };
+
+        window.addEventListener('resize', remeasure);
+
+        if (window.ResizeObserver) {
+          this.resizeObserver = new ResizeObserver(remeasure);
+          this.resizeObserver.observe(this.viewport);
+        }
       }
     }
 

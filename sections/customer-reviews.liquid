@@ -36,68 +36,73 @@
     {%- endif -%}
 
     {%- if section.blocks.size == 0 -%}
-      <p class="customer-reviews__empty">Add review blocks in the section settings to feature customer feedback.</p>
+      <p class="customer-reviews__empty">Add video blocks in the section settings to feature customer videos.</p>
     {%- else -%}
-      {%- liquid
-        assign rating_total = 0
-        for block in section.blocks
-          assign rating_total = rating_total | plus: block.settings.rating
-        endfor
-        assign rating_average = rating_total | times: 1.0 | divided_by: section.blocks.size | round: 1
-        assign rating_average_rounded = rating_average | round
-      -%}
-
-      {%- if section.settings.show_summary -%}
-        <div class="customer-reviews__summary">
-          <span class="customer-reviews__stars" aria-hidden="true">
-            {%- for i in (1..5) -%}
-              <svg viewBox="0 0 24 24" class="{% if i <= rating_average_rounded %}is-filled{% endif %}">
-                <path d="M12 2.5l2.9 6.4 6.9.7-5.2 4.7 1.5 6.8L12 17.6l-6.1 3.5 1.5-6.8-5.2-4.7 6.9-.7L12 2.5z" stroke-linejoin="round"/>
-              </svg>
-            {%- endfor -%}
-          </span>
-          <span><span class="customer-reviews__summary-score">{{ rating_average }}</span> — Based on {{ section.blocks.size }} review{% if section.blocks.size != 1 %}s{% endif %}</span>
-        </div>
-      {%- endif -%}
-
       <div class="customer-reviews__grid">
         {%- for block in section.blocks -%}
           <div class="customer-reviews__card" data-reviews-card data-index="{{ forloop.index0 }}" {{ block.shopify_attributes }}>
-            <svg class="customer-reviews__quote-mark" viewBox="0 0 48 36" aria-hidden="true" fill="currentColor">
-              <path d="M20.4 0v15.6c0 11.4-6.6 18.6-16.8 20.4L0 30.6c5.4-1.8 8.4-6 9-11.4H0V0h20.4zm27.6 0v15.6c0 11.4-6.6 18.6-16.8 20.4l-3.6-5.4c5.4-1.8 8.4-6 9-11.4H27.6V0H48z"/>
-            </svg>
+            <div class="customer-reviews__video-wrap">
+              {%- if block.settings.video != blank -%}
+                <video
+                  class="customer-reviews__video"
+                  data-reviews-video
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  {%- if block.settings.video.preview_image -%}
+                    poster="{{ block.settings.video.preview_image | image_url: width: 700 }}"
+                  {%- endif -%}
+                >
+                  {%- for source in block.settings.video.sources -%}
+                    <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                  {%- endfor -%}
+                </video>
 
-            <span class="customer-reviews__stars" aria-hidden="true">
-              {%- for i in (1..5) -%}
-                <svg viewBox="0 0 24 24" class="{% if i <= block.settings.rating %}is-filled{% endif %}">
-                  <path d="M12 2.5l2.9 6.4 6.9.7-5.2 4.7 1.5 6.8L12 17.6l-6.1 3.5 1.5-6.8-5.2-4.7 6.9-.7L12 2.5z" stroke-linejoin="round"/>
-                </svg>
-              {%- endfor -%}
-            </span>
-            <span class="visually-hidden">{{ block.settings.rating }} out of 5 stars</span>
+                <button
+                  type="button"
+                  class="customer-reviews__mute-toggle"
+                  data-mute-toggle
+                  aria-label="Unmute video"
+                  aria-pressed="false"
+                >
+                  <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon>
+                    <line x1="16" y1="9" x2="21" y2="14"></line>
+                    <line x1="21" y1="9" x2="16" y2="14"></line>
+                  </svg>
+                  <svg class="icon-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon>
+                    <path d="M16 8.5a4.5 4.5 0 0 1 0 7"></path>
+                    <path d="M18.5 6a8 8 0 0 1 0 12"></path>
+                  </svg>
+                </button>
 
-            {%- if block.settings.quote != blank -%}
-              <p class="customer-reviews__quote">&ldquo;{{ block.settings.quote }}&rdquo;</p>
-            {%- endif -%}
-
-            <div class="customer-reviews__attribution">
-              {%- if block.settings.name != blank -%}
-                {%- assign name_words = block.settings.name | split: ' ' -%}
-                {%- assign initials = name_words.first | slice: 0, 1 -%}
-                {%- if name_words.size > 1 -%}
-                  {%- assign initials = initials | append: name_words.last | slice: 0, 1 -%}
+                {%- if block.settings.customer_name != blank -%}
+                  <span class="customer-reviews__video-caption">{{ block.settings.customer_name }}</span>
                 {%- endif -%}
-                <span class="customer-reviews__avatar" aria-hidden="true">{{ initials | upcase }}</span>
+              {%- else -%}
+                <div class="customer-reviews__video-placeholder">Add a video in this block's settings</div>
               {%- endif -%}
-              <div class="customer-reviews__attribution-text">
-                {%- if block.settings.name != blank -%}
-                  <p class="customer-reviews__name">{{ block.settings.name }}</p>
-                {%- endif -%}
-                {%- if block.settings.detail != blank -%}
-                  <p class="customer-reviews__detail">{{ block.settings.detail }}</p>
-                {%- endif -%}
-              </div>
             </div>
+
+            {%- if block.settings.product != blank -%}
+              {%- assign featured_product = block.settings.product -%}
+              <a href="{{ featured_product.url }}" class="customer-reviews__product">
+                {%- if featured_product.featured_image != blank -%}
+                  <img
+                    src="{{ featured_product.featured_image | image_url: width: 160 }}"
+                    alt="{{ featured_product.featured_image.alt | default: featured_product.title | escape }}"
+                    width="64"
+                    height="64"
+                    loading="lazy"
+                    class="customer-reviews__product-image"
+                  >
+                {%- endif -%}
+                <span class="customer-reviews__product-title">{{ featured_product.title }}</span>
+                <span class="customer-reviews__product-price">{{ featured_product.price | money }}</span>
+              </a>
+            {%- endif -%}
           </div>
         {%- endfor -%}
       </div>
@@ -109,41 +114,88 @@
   (function () {
     var section = document.getElementById('CustomerReviews-{{ section.id }}');
     if (!section) return;
+
     var header = section.querySelector('[data-reviews-header]');
     var cards = Array.from(section.querySelectorAll('[data-reviews-card]'));
-    var targets = header ? [header].concat(cards) : cards;
-    if (!targets.length) return;
+    var revealTargets = header ? [header].concat(cards) : cards;
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (
-      !('IntersectionObserver' in window) ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      targets.forEach(function (el) {
-        el.classList.add(el === header ? 'customer-reviews__title-row--visible' : 'customer-reviews__card--visible');
+    if (revealTargets.length) {
+      if (!('IntersectionObserver' in window) || reducedMotion) {
+        revealTargets.forEach(function (el) {
+          el.classList.add(el === header ? 'customer-reviews__title-row--visible' : 'customer-reviews__card--visible');
+        });
+      } else {
+        var revealObserver = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              var el = entry.target;
+              if (el === header) {
+                el.classList.add('customer-reviews__title-row--visible');
+              } else {
+                var index = parseInt(el.dataset.index, 10) || 0;
+                el.style.transitionDelay = (index % 3) * 100 + 'ms';
+                el.classList.add('customer-reviews__card--visible');
+              }
+              revealObserver.unobserve(el);
+            });
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+        );
+
+        revealTargets.forEach(function (el) {
+          revealObserver.observe(el);
+        });
+      }
+    }
+
+    var videos = Array.from(section.querySelectorAll('[data-reviews-video]'));
+    if (!videos.length) return;
+
+    videos.forEach(function (video) {
+      var wrap = video.closest('.customer-reviews__video-wrap');
+      var toggle = wrap ? wrap.querySelector('[data-mute-toggle]') : null;
+      if (!toggle) return;
+
+      toggle.addEventListener('click', function () {
+        video.muted = !video.muted;
+        toggle.setAttribute('aria-pressed', String(!video.muted));
+        toggle.setAttribute('aria-label', video.muted ? 'Unmute video' : 'Mute video');
+        wrap.classList.toggle('is-unmuted', !video.muted);
+      });
+    });
+
+    if (reducedMotion) {
+      videos.forEach(function (video) {
+        video.controls = true;
       });
       return;
     }
 
-    var observer = new IntersectionObserver(
+    if (!('IntersectionObserver' in window)) {
+      videos.forEach(function (video) {
+        video.play().catch(function () {});
+      });
+      return;
+    }
+
+    var videoObserver = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          var el = entry.target;
-          if (el === header) {
-            el.classList.add('customer-reviews__title-row--visible');
+          var video = entry.target;
+          if (entry.isIntersecting) {
+            video.play().catch(function () {});
           } else {
-            var index = parseInt(el.dataset.index, 10) || 0;
-            el.style.transitionDelay = (index % 3) * 100 + 'ms';
-            el.classList.add('customer-reviews__card--visible');
+            video.pause();
           }
-          observer.unobserve(el);
         });
       },
-      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+      { threshold: 0.5 }
     );
 
-    targets.forEach(function (el) {
-      observer.observe(el);
+    videos.forEach(function (video) {
+      videoObserver.observe(video);
     });
   })();
 </script>
@@ -175,19 +227,12 @@
       "label": "Subheading"
     },
     {
-      "type": "checkbox",
-      "id": "show_summary",
-      "default": true,
-      "label": "Show average rating summary",
-      "info": "Calculated automatically from the star ratings on the review blocks below."
-    },
-    {
       "type": "range",
       "id": "columns_desktop",
       "min": 2,
-      "max": 4,
+      "max": 5,
       "step": 1,
-      "default": 3,
+      "default": 4,
       "label": "Desktop columns"
     },
     {
@@ -223,36 +268,26 @@
   ],
   "blocks": [
     {
-      "type": "review",
-      "name": "Review",
+      "type": "video_review",
+      "name": "Video review",
       "settings": [
         {
-          "type": "range",
-          "id": "rating",
-          "min": 1,
-          "max": 5,
-          "step": 1,
-          "default": 5,
-          "label": "Rating"
+          "type": "video",
+          "id": "video",
+          "label": "Customer video"
         },
         {
-          "type": "textarea",
-          "id": "quote",
-          "label": "Review text",
-          "default": "This fragrance is absolutely stunning — the longevity and projection are unmatched. Worth every penny."
+          "type": "product",
+          "id": "product",
+          "label": "Featured product",
+          "info": "Its image, title and price are shown below the video."
         },
         {
           "type": "text",
-          "id": "name",
+          "id": "customer_name",
           "label": "Customer name",
+          "info": "Optional — shown as a caption over the video.",
           "default": "Happy Customer"
-        },
-        {
-          "type": "text",
-          "id": "detail",
-          "label": "Detail",
-          "info": "E.g. \"Verified Buyer\" or the product they purchased",
-          "default": "Verified Buyer"
         }
       ]
     }
@@ -262,24 +297,21 @@
       "name": "Customer Reviews",
       "blocks": [
         {
-          "type": "review",
+          "type": "video_review",
           "settings": {
-            "name": "Aisha Khan",
-            "detail": "Verified Buyer — Oudh Eternal"
+            "customer_name": "Aisha Khan"
           }
         },
         {
-          "type": "review",
+          "type": "video_review",
           "settings": {
-            "name": "Rohan Mehta",
-            "detail": "Verified Buyer — Baccarat Rouge 540"
+            "customer_name": "Rohan Mehta"
           }
         },
         {
-          "type": "review",
+          "type": "video_review",
           "settings": {
-            "name": "Sara Ali",
-            "detail": "Verified Buyer — Fresh Woodscape"
+            "customer_name": "Sara Ali"
           }
         }
       ]

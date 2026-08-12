@@ -77,7 +77,6 @@
           "type": "perfume",
           "settings": {
             "product": "ambre-intense-100ml",
-            "custom_image": "",
             "custom_title": ""
           }
         },
@@ -85,7 +84,6 @@
           "type": "perfume",
           "settings": {
             "product": "florence-orchidia-100ml",
-            "custom_image": "",
             "custom_title": ""
           }
         },
@@ -93,7 +91,6 @@
           "type": "perfume",
           "settings": {
             "product": "mystique-island-100ml",
-            "custom_image": "",
             "custom_title": ""
           }
         },
@@ -101,7 +98,6 @@
           "type": "perfume",
           "settings": {
             "product": "fresh-woodscape-100ml",
-            "custom_image": "",
             "custom_title": ""
           }
         },
@@ -109,7 +105,6 @@
           "type": "perfume",
           "settings": {
             "product": "yameni-yakud-non-alcoholic-perfume-100ml",
-            "custom_image": "",
             "custom_title": ""
           }
         }
@@ -245,30 +240,21 @@
       "type": "customer-reviews",
       "blocks": {
         "review_1": {
-          "type": "review",
+          "type": "video_review",
           "settings": {
-            "rating": 5,
-            "quote": "This fragrance is absolutely stunning \u2014 the longevity and projection are unmatched. Worth every penny.",
-            "name": "Aisha Khan",
-            "detail": "Verified Buyer \u2014 Oudh Eternal"
+            "customer_name": "Aisha Khan"
           }
         },
         "review_2": {
-          "type": "review",
+          "type": "video_review",
           "settings": {
-            "rating": 5,
-            "quote": "Rich, warm and long lasting. I get compliments every single time I wear it.",
-            "name": "Rohan Mehta",
-            "detail": "Verified Buyer \u2014 Baccarat Rouge 540"
+            "customer_name": "Rohan Mehta"
           }
         },
         "review_3": {
-          "type": "review",
+          "type": "video_review",
           "settings": {
-            "rating": 4,
-            "quote": "Beautifully crafted scent and the packaging feels genuinely premium. My new everyday fragrance.",
-            "name": "Sara Ali",
-            "detail": "Verified Buyer \u2014 Fresh Woodscape"
+            "customer_name": "Sara Ali"
           }
         }
       },
@@ -281,8 +267,7 @@
         "full_width": true,
         "title": "What Our Customers Say",
         "subheading": "",
-        "show_summary": true,
-        "columns_desktop": 3,
+        "columns_desktop": 4,
         "color_scheme": "scheme-1",
         "padding_top": 60,
         "padding_bottom": 60

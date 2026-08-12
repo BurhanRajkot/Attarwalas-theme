@@ -23,6 +23,7 @@
   font-family: Arial, sans-serif;
   font-size: 10px;
   letter-spacing: 4px;
+  text-transform: uppercase;
   color: #555555;
   margin-bottom: 10px;
 }
@@ -34,6 +35,7 @@
   line-height: 1.1;
   font-weight: 400;
   letter-spacing: 1px;
+  text-transform: uppercase;
   color: var(--sig-ink);
 }
 
@@ -146,6 +148,7 @@
   line-height: 1.2;
   font-weight: 400;
   letter-spacing: 2.5px;
+  text-transform: uppercase;
   color: var(--sig-ink);
   white-space: nowrap;
 }
