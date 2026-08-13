@@ -77,35 +77,50 @@
           "type": "perfume",
           "settings": {
             "product": "ambre-intense-100ml",
-            "custom_title": ""
+            "custom_title": "",
+            "note_1": "Amber",
+            "note_2": "Vanilla",
+            "note_3": "Sandalwood"
           }
         },
         "block_2": {
           "type": "perfume",
           "settings": {
             "product": "florence-orchidia-100ml",
-            "custom_title": ""
+            "custom_title": "",
+            "note_1": "Orchid",
+            "note_2": "Jasmine",
+            "note_3": "Musk"
           }
         },
         "block_3": {
           "type": "perfume",
           "settings": {
             "product": "mystique-island-100ml",
-            "custom_title": ""
+            "custom_title": "",
+            "note_1": "Bergamot",
+            "note_2": "Sea Salt",
+            "note_3": "Coconut"
           }
         },
         "block_4": {
           "type": "perfume",
           "settings": {
             "product": "fresh-woodscape-100ml",
-            "custom_title": ""
+            "custom_title": "",
+            "note_1": "Citrus",
+            "note_2": "Vetiver",
+            "note_3": "Cedarwood"
           }
         },
         "block_5": {
           "type": "perfume",
           "settings": {
             "product": "yameni-yakud-non-alcoholic-perfume-100ml",
-            "custom_title": ""
+            "custom_title": "",
+            "note_1": "Saffron",
+            "note_2": "Oud",
+            "note_3": "Amber"
           }
         }
       },

@@ -21,20 +21,20 @@
 
 .signature-carousel__eyebrow {
   font-family: Arial, sans-serif;
-  font-size: 10px;
-  letter-spacing: 4px;
+  font-size: 11px;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: #555555;
-  margin-bottom: 10px;
+  color: #8a7a5c;
+  margin-bottom: 12px;
 }
 
 .signature-carousel__heading h2 {
   margin: 0;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 36px;
-  line-height: 1.1;
+  font-size: 34px;
+  line-height: 1.15;
   font-weight: 400;
-  letter-spacing: 1px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--sig-ink);
 }
@@ -91,9 +91,11 @@
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.signature-carousel__image-link {
   display: block;
   text-decoration: none;
-  color: inherit;
 }
 
 .signature-carousel__image {
@@ -140,17 +142,136 @@
   text-align: center;
 }
 
+.signature-carousel__notes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 14px;
+  margin-bottom: 10px;
+}
+
+.signature-carousel__note {
+  font-family: Arial, sans-serif;
+  font-size: 10.5px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8a7a5c;
+  white-space: nowrap;
+}
+
+.signature-carousel__note + .signature-carousel__note::before {
+  content: '·';
+  display: inline-block;
+  margin: 0 6px;
+  color: #b88a2a;
+  font-size: 12px;
+  line-height: 1;
+}
+
 .signature-carousel__info h3 {
   margin: 0;
   padding: 0;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 22px;
-  line-height: 1.2;
+  font-size: 21px;
+  line-height: 1.3;
   font-weight: 400;
-  letter-spacing: 2.5px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--sig-ink);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.signature-carousel__title-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.signature-carousel__title-link:hover h3 {
+  color: var(--sig-gold);
+}
+
+.signature-carousel__buy {
+  --sig-button: #b88a2a;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  padding: 13px 36px;
+  background: var(--sig-button);
+  color: #ffffff;
+  border: 1px solid var(--sig-button);
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 10px 22px -10px rgba(184, 138, 42, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    opacity 0.2s ease,
+    visibility 0s linear 0.2s;
+}
+
+.signature-carousel__buy:disabled {
+  background: rgba(17, 17, 17, 0.18);
+  border-color: rgba(17, 17, 17, 0.18);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: not-allowed;
+}
+
+.signature-carousel__product--active .signature-carousel__buy {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.signature-carousel__buy:hover {
+  background: transparent;
+  color: var(--sig-button);
+  border-color: var(--sig-button);
+  box-shadow: 0 10px 26px -10px rgba(184, 138, 42, 0.4);
+}
+
+.signature-carousel__buy:disabled:hover {
+  background: rgba(17, 17, 17, 0.18);
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(17, 17, 17, 0.18);
+}
+
+.signature-carousel__buy.loading > .loading__spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+}
+
+.signature-carousel__buy.loading > .loading__spinner .path {
+  stroke: #ffffff;
 }
 
 .signature-carousel__arrow {
@@ -189,31 +310,6 @@
   right: 30px;
 }
 
-.signature-carousel__dots {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 7px;
-  margin-top: 22px;
-}
-
-.signature-carousel__dot {
-  width: 6px;
-  height: 6px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #c9c5be;
-  cursor: pointer;
-  transition: width 0.35s ease, background 0.35s ease;
-}
-
-.signature-carousel__dot--active {
-  width: 22px;
-  border-radius: 5px;
-  background: var(--sig-ink);
-}
-
 @media screen and (max-width: 749px) {
   .signature-carousel__heading {
     padding: 0 15px;
@@ -221,13 +317,14 @@
   }
 
   .signature-carousel__eyebrow {
-    font-size: 7px;
-    letter-spacing: 2.5px;
-    margin-bottom: 7px;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    margin-bottom: 8px;
   }
 
   .signature-carousel__heading h2 {
-    font-size: 24px;
+    font-size: 25px;
+    letter-spacing: 0.06em;
   }
 
   .signature-carousel__line {
@@ -260,8 +357,8 @@
   }
 
   .signature-carousel__info h3 {
-    font-size: 14px;
-    letter-spacing: 1.6px;
+    font-size: 13px;
+    letter-spacing: 1.2px;
   }
 
   .signature-carousel__arrow {
@@ -277,10 +374,6 @@
 
   .signature-carousel__arrow--next {
     right: 6px;
-  }
-
-  .signature-carousel__dots {
-    margin-top: 14px;
   }
 }
 

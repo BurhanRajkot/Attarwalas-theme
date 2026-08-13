@@ -1,4 +1,5 @@
 {{ 'section-signature-carousel.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -56,33 +57,81 @@
                 if product != blank
                   assign card_url = product.url
                 endif
+
+                assign buy_variant = product.selected_or_first_available_variant
+                assign signature_form_id = 'signature-carousel-form-' | append: section.id | append: '-' | append: forloop.index
               -%}
-              <a
-                href="{{ card_url }}"
-                class="signature-carousel__product"
+              <div
+                class="signature-carousel__product{% if forloop.first %} signature-carousel__product--active{% endif %}"
                 data-carousel-slide
                 data-index="{{ forloop.index0 }}"
                 {{ block.shopify_attributes }}
               >
-                <div class="signature-carousel__image">
-                  {%- if card_image != blank -%}
-                    {{
-                      card_image
-                      | image_url: width: 900
-                      | image_tag:
-                        loading: 'lazy',
-                        widths: '300, 450, 600, 900',
-                        sizes: '(min-width: 750px) 30vw, 40vw',
-                        alt: card_title
-                    }}
-                  {%- else -%}
-                    {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                <a href="{{ card_url }}" class="signature-carousel__image-link">
+                  <div class="signature-carousel__image">
+                    {%- if card_image != blank -%}
+                      {{
+                        card_image
+                        | image_url: width: 900
+                        | image_tag:
+                          loading: 'lazy',
+                          widths: '300, 450, 600, 900',
+                          sizes: '(min-width: 750px) 30vw, 40vw',
+                          alt: card_title
+                      }}
+                    {%- else -%}
+                      {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                    {%- endif -%}
+                  </div>
+                </a>
+                <div class="signature-carousel__info">
+                  {%- if block.settings.note_1 != blank or block.settings.note_2 != blank or block.settings.note_3 != blank -%}
+                    <div class="signature-carousel__notes" aria-label="Fragrance notes">
+                      {%- if block.settings.note_1 != blank -%}
+                        <span class="signature-carousel__note">{{ block.settings.note_1 }}</span>
+                      {%- endif -%}
+                      {%- if block.settings.note_2 != blank -%}
+                        <span class="signature-carousel__note">{{ block.settings.note_2 }}</span>
+                      {%- endif -%}
+                      {%- if block.settings.note_3 != blank -%}
+                        <span class="signature-carousel__note">{{ block.settings.note_3 }}</span>
+                      {%- endif -%}
+                    </div>
+                  {%- endif -%}
+                  <a href="{{ card_url }}" class="signature-carousel__title-link">
+                    <h3>{{ card_title | default: 'Select a product' }}</h3>
+                  </a>
+                  {%- if product != blank -%}
+                    <product-form data-section-id="{{ section.id }}">
+                      {%- form 'product', product, id: signature_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
+                        <input
+                          type="hidden"
+                          name="id"
+                          value="{{ buy_variant.id }}"
+                          class="product-variant-id"
+                          {% unless buy_variant.available %}disabled{% endunless %}
+                        >
+                        <button
+                          type="submit"
+                          name="add"
+                          class="signature-carousel__buy"
+                          {% unless buy_variant.available %}disabled{% endunless %}
+                        >
+                          <span>
+                            {%- if buy_variant.available -%}
+                              Buy Now
+                            {%- else -%}
+                              Sold Out
+                            {%- endif -%}
+                          </span>
+                          <span class="sold-out-message hidden">Sold Out</span>
+                          {%- render 'loading-spinner' -%}
+                        </button>
+                      {%- endform -%}
+                    </product-form>
                   {%- endif -%}
                 </div>
-                <div class="signature-carousel__info">
-                  <h3>{{ card_title | default: 'Select a product' }}</h3>
-                </div>
-              </a>
+              </div>
             {%- endfor -%}
           </div>
         </div>
@@ -91,10 +140,6 @@
           <button type="button" class="signature-carousel__arrow signature-carousel__arrow--next" aria-label="Next fragrance" data-carousel-next>&#8250;</button>
         {%- endif -%}
       </signature-carousel>
-
-      {%- if product_blocks.size > 1 -%}
-        <div class="signature-carousel__dots" data-carousel-dots></div>
-      {%- endif -%}
     {%- endif -%}
 </div>
 
@@ -111,16 +156,18 @@
         this.originals = Array.from(this.querySelectorAll('[data-carousel-slide]'));
         this.prevBtn = this.querySelector('[data-carousel-prev]');
         this.nextBtn = this.querySelector('[data-carousel-next]');
-        this.dotsWrap = this.closest('.signature-carousel-wrapper').querySelector('[data-carousel-dots]');
 
         this.n = this.originals.length;
         if (!this.track || this.n < 1) return;
 
         if (this.n === 1) {
+          if (this.originals[0]) {
+            this.originals[0].classList.add('signature-carousel__product--active');
+          }
           return;
         }
 
-        this.setupDots();
+        this.lastActiveEl = null;
         this.setupClones();
         this.bindNav();
         this.bindDrag();
@@ -152,20 +199,6 @@
         }
       }
 
-      setupDots() {
-        this.dots = [];
-        if (!this.dotsWrap) return;
-        this.dotsWrap.innerHTML = '';
-        for (var d = 0; d < this.n; d++) {
-          var dot = document.createElement('button');
-          dot.type = 'button';
-          dot.className = 'signature-carousel__dot';
-          dot.setAttribute('aria-label', 'Go to fragrance ' + (d + 1));
-          this.dotsWrap.appendChild(dot);
-          this.dots.push(dot);
-        }
-      }
-
       setupClones() {
         var SETS = 5;
         this.mid = 2;
@@ -180,12 +213,12 @@
         }
 
         this.items = Array.from(this.track.children);
+        this.items.forEach((el) => el.classList.remove('signature-carousel__product--active'));
         this.base = this.mid * this.n;
         this.pos = this.base;
         this.target = this.base;
         this.itemW = 1;
         this.halfView = 0;
-        this.lastReal = -1;
       }
 
       measure() {
@@ -221,12 +254,13 @@
           el.style.zIndex = dist < 0.5 ? 10 : 1;
         }
 
-        var real = ((Math.round(this.pos) % this.n) + this.n) % this.n;
-        if (real !== this.lastReal && this.dots.length) {
-          for (var k = 0; k < this.n; k++) {
-            this.dots[k].classList.toggle('signature-carousel__dot--active', k === real);
+        var centerEl = this.items[Math.round(this.pos)];
+        if (centerEl !== this.lastActiveEl) {
+          if (this.lastActiveEl) {
+            this.lastActiveEl.classList.remove('signature-carousel__product--active');
           }
-          this.lastReal = real;
+          centerEl.classList.add('signature-carousel__product--active');
+          this.lastActiveEl = centerEl;
         }
       }
 
@@ -272,18 +306,6 @@
       bindNav() {
         if (this.nextBtn) this.nextBtn.addEventListener('click', () => this.go(1));
         if (this.prevBtn) this.prevBtn.addEventListener('click', () => this.go(-1));
-
-        this.dots.forEach((dotEl, index) => {
-          dotEl.addEventListener('click', () => {
-            var current = Math.round(this.target);
-            var currentReal = ((current % this.n) + this.n) % this.n;
-            var step = index - currentReal;
-            if (step > this.n / 2) step -= this.n;
-            if (step < -this.n / 2) step += this.n;
-            this.target = current + step;
-            this.start();
-          });
-        });
       }
 
       bindDrag() {
@@ -301,6 +323,7 @@
 
           this.dragging = true;
           this.pointerId = e.pointerId;
+          this.pointerCaptured = false;
           this.startX = e.clientX;
           this.lastX = e.clientX;
           this.lastT = e.timeStamp || Date.now();
@@ -310,15 +333,23 @@
           this.target = this.pos;
 
           this.viewport.classList.add('signature-carousel--grabbing');
-          try {
-            this.viewport.setPointerCapture(e.pointerId);
-          } catch (err) {}
 
           this.start();
         });
 
         this.viewport.addEventListener('pointermove', (e) => {
           if (!this.dragging || e.pointerId !== this.pointerId) return;
+
+          // Only capture the pointer once a real drag starts. Pointer capture
+          // retargets the subsequent click to the capture element, so capturing
+          // on every pointerdown swallows clicks on the Buy Now button and the
+          // product links (the form submit never fires).
+          if (!this.pointerCaptured && Math.abs(e.clientX - this.startX) > 4) {
+            this.pointerCaptured = true;
+            try {
+              this.viewport.setPointerCapture(e.pointerId);
+            } catch (err) {}
+          }
 
           var dx = e.clientX - this.startX;
           if (Math.abs(dx) > this.moved) this.moved = Math.abs(dx);
@@ -341,9 +372,12 @@
 
           this.dragging = false;
           this.viewport.classList.remove('signature-carousel--grabbing');
-          try {
-            this.viewport.releasePointerCapture(this.pointerId);
-          } catch (err) {}
+          if (this.pointerCaptured) {
+            try {
+              this.viewport.releasePointerCapture(this.pointerId);
+            } catch (err) {}
+            this.pointerCaptured = false;
+          }
 
           var projected = this.pos - (this.velocity * 170) / this.itemW;
           var snap = Math.round(projected);
@@ -470,6 +504,28 @@
           "id": "custom_title",
           "label": "Custom Title",
           "info": "Overrides the product's title"
+        },
+        {
+          "type": "header",
+          "content": "Fragrance Notes"
+        },
+        {
+          "type": "text",
+          "id": "note_1",
+          "label": "Note 1",
+          "placeholder": "e.g. Saffron"
+        },
+        {
+          "type": "text",
+          "id": "note_2",
+          "label": "Note 2",
+          "placeholder": "e.g. Oud"
+        },
+        {
+          "type": "text",
+          "id": "note_3",
+          "label": "Note 3",
+          "placeholder": "e.g. Amber"
         }
       ]
     }

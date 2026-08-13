@@ -1362,6 +1362,17 @@
         "id": "social_vimeo_link",
         "label": "t:settings_schema.social-media.settings.social_vimeo_link.label",
         "placeholder": "t:settings_schema.social-media.settings.social_vimeo_link.info"
+      },
+      {
+        "type": "header",
+        "content": "WhatsApp"
+      },
+      {
+        "type": "text",
+        "id": "whatsapp_number",
+        "label": "WhatsApp number",
+        "info": "Full number with country code, digits only — e.g. 919876543210. Leave empty to hide the floating WhatsApp button.",
+        "placeholder": "919876543210"
       }
     ]
   },
