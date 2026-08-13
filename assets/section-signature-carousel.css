@@ -198,25 +198,24 @@
 }
 
 .signature-carousel__buy {
-  --sig-button: #b88a2a;
+  --sig-button: #b08d57;
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-top: 14px;
-  padding: 13px 36px;
+  padding: 12px 32px;
   background: var(--sig-button);
   color: #ffffff;
   border: 1px solid var(--sig-button);
   border-radius: 999px;
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-family: var(--font-body-family, Arial, sans-serif);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 10px 22px -10px rgba(184, 138, 42, 0.55);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -224,7 +223,6 @@
     background 0.25s ease,
     color 0.25s ease,
     border-color 0.25s ease,
-    box-shadow 0.25s ease,
     opacity 0.2s ease,
     visibility 0s linear 0.2s;
 }
@@ -252,7 +250,6 @@
   background: transparent;
   color: var(--sig-button);
   border-color: var(--sig-button);
-  box-shadow: 0 10px 26px -10px rgba(184, 138, 42, 0.4);
 }
 
 .signature-carousel__buy:disabled:hover {

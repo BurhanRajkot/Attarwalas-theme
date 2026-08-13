@@ -9,15 +9,16 @@
  */
 {
   "sections": {
-    "image_banner": {
-      "type": "image-banner",
+    "video_AeBGJd": {
+      "type": "video",
+      "name": "t:sections.video.presets.name",
       "blocks": {
         "button": {
           "type": "buttons",
           "settings": {
             "button_label_1": "Buy Now",
             "button_link_1": "shopify://products/oudh-eternal",
-            "button_style_secondary_1": true,
+            "button_style_secondary_1": false,
             "button_label_2": "",
             "button_link_2": "",
             "button_style_secondary_2": false
@@ -28,17 +29,16 @@
         "button"
       ],
       "settings": {
-        "image": "shopify://shop_images/unbox_the_purity_4320_x_2160_px.png",
-        "image_overlay_opacity": 10,
-        "image_height": "large",
-        "desktop_content_position": "bottom-center",
-        "show_text_box": false,
-        "desktop_content_alignment": "center",
-        "color_scheme": "scheme-3",
-        "image_behavior": "none",
-        "mobile_content_alignment": "center",
-        "stack_images_on_mobile": true,
-        "show_text_below": false
+        "heading": "",
+        "heading_size": "h2",
+        "enable_video_looping": false,
+        "video": "shopify://files/videos/MPEG-4 movie.mp4",
+        "video_url": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
+        "description": "",
+        "full_width": true,
+        "color_scheme": "",
+        "padding_top": 0,
+        "padding_bottom": 0
       }
     },
     "featured_collection": {
@@ -73,10 +73,22 @@
     "signature_carousel": {
       "type": "signature-carousel",
       "blocks": {
+        "perfume_NAr7hQ": {
+          "type": "perfume",
+          "settings": {
+            "product": "oudh-eternal",
+            "custom_image": "shopify://shop_images/IMG_6869.png",
+            "custom_title": "",
+            "note_1": "OUDH",
+            "note_2": "LEATHER",
+            "note_3": "CITRUS"
+          }
+        },
         "block_1": {
           "type": "perfume",
           "settings": {
             "product": "ambre-intense-100ml",
+            "custom_image": "shopify://shop_images/IMG_6867.png",
             "custom_title": "",
             "note_1": "Amber",
             "note_2": "Vanilla",
@@ -87,6 +99,7 @@
           "type": "perfume",
           "settings": {
             "product": "florence-orchidia-100ml",
+            "custom_image": "shopify://shop_images/IMG_6868.png",
             "custom_title": "",
             "note_1": "Orchid",
             "note_2": "Jasmine",
@@ -97,6 +110,7 @@
           "type": "perfume",
           "settings": {
             "product": "mystique-island-100ml",
+            "custom_image": "shopify://shop_images/IMG_6866.png",
             "custom_title": "",
             "note_1": "Bergamot",
             "note_2": "Sea Salt",
@@ -107,6 +121,7 @@
           "type": "perfume",
           "settings": {
             "product": "fresh-woodscape-100ml",
+            "custom_image": "shopify://shop_images/IMG_6870.png",
             "custom_title": "",
             "note_1": "Citrus",
             "note_2": "Vetiver",
@@ -116,7 +131,8 @@
         "block_5": {
           "type": "perfume",
           "settings": {
-            "product": "yameni-yakud-non-alcoholic-perfume-100ml",
+            "product": "yameni-yakud-2",
+            "custom_image": "shopify://shop_images/IMG_6871.png",
             "custom_title": "",
             "note_1": "Saffron",
             "note_2": "Oud",
@@ -125,6 +141,7 @@
         }
       },
       "block_order": [
+        "perfume_NAr7hQ",
         "block_1",
         "block_2",
         "block_3",
@@ -257,48 +274,56 @@
         "review_1": {
           "type": "video_review",
           "settings": {
+            "product": "ambre-intense-100ml",
             "customer_name": "Aisha Khan"
           }
         },
         "review_2": {
           "type": "video_review",
           "settings": {
+            "product": "oudh-eternal",
             "customer_name": "Rohan Mehta"
           }
         },
         "review_3": {
           "type": "video_review",
           "settings": {
+            "product": "florence-orchidia-100ml",
             "customer_name": "Sara Ali"
           }
         },
         "review_4": {
           "type": "video_review",
           "settings": {
+            "product": "mystique-island-100ml",
             "customer_name": "Priya Sharma"
           }
         },
         "review_5": {
           "type": "video_review",
           "settings": {
+            "product": "fresh-woodscape-100ml",
             "customer_name": "Arjun Patel"
           }
         },
         "review_6": {
           "type": "video_review",
           "settings": {
+            "product": "yameni-yakud-non-alcoholic-perfume-100ml",
             "customer_name": "Meera Nair"
           }
         },
         "review_7": {
           "type": "video_review",
           "settings": {
+            "product": "ambre-intense-100ml",
             "customer_name": "Karan Malhotra"
           }
         },
         "review_8": {
           "type": "video_review",
           "settings": {
+            "product": "florence-orchidia-100ml",
             "customer_name": "Zara Sheikh"
           }
         }
@@ -592,7 +617,7 @@
     }
   },
   "order": [
-    "image_banner",
+    "video_AeBGJd",
     "featured_collection",
     "signature_carousel",
     "shop_by_category",

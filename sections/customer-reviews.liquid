@@ -1,4 +1,5 @@
 {{ 'section-customer-reviews.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -36,7 +37,7 @@
     {%- endif -%}
 
     {%- if section.blocks.size == 0 -%}
-      <p class="customer-reviews__empty">Add video blocks in the section settings to feature customer videos.</p>
+      <p class="customer-reviews__empty">Add video blocks in the section settings to feature customer reviews.</p>
     {%- else -%}
       <div class="customer-reviews__carousel">
         <button
@@ -52,77 +53,95 @@
 
         <div class="customer-reviews__grid" id="CustomerReviewsTrack-{{ section.id }}">
           {%- for block in section.blocks -%}
-          <div class="customer-reviews__card" data-reviews-card data-index="{{ forloop.index0 }}" {{ block.shopify_attributes }}>
-            <div class="customer-reviews__video-wrap">
-              {%- if block.settings.video != blank -%}
-                <video
-                  class="customer-reviews__video"
-                  data-reviews-video
-                  muted
-                  loop
-                  playsinline
-                  preload="metadata"
-                  {%- if block.settings.video.preview_image -%}
-                    poster="{{ block.settings.video.preview_image | image_url: width: 700 }}"
-                  {%- endif -%}
-                >
-                  {%- for source in block.settings.video.sources -%}
-                    <source src="{{ source.url }}" type="{{ source.mime_type }}">
-                  {%- endfor -%}
-                </video>
-
-                <button
-                  type="button"
-                  class="customer-reviews__mute-toggle"
-                  data-mute-toggle
-                  aria-label="Unmute video"
-                  aria-pressed="false"
-                >
-                  <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon>
-                    <line x1="16" y1="9" x2="21" y2="14"></line>
-                    <line x1="21" y1="9" x2="16" y2="14"></line>
-                  </svg>
-                  <svg class="icon-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon>
-                    <path d="M16 8.5a4.5 4.5 0 0 1 0 7"></path>
-                    <path d="M18.5 6a8 8 0 0 1 0 12"></path>
-                  </svg>
-                </button>
-
-                {%- if block.settings.customer_name != blank -%}
-                  <span class="customer-reviews__video-caption">{{ block.settings.customer_name }}</span>
-                {%- endif -%}
-              {%- else -%}
-                <div class="customer-reviews__video-placeholder">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="5" width="14" height="14" rx="2"></rect>
-                    <polygon points="16 10 22 7 22 17 16 14 16 10"></polygon>
-                  </svg>
-                  <span>Customer video coming soon</span>
-                </div>
-              {%- endif -%}
-            </div>
-
+            {%- assign featured_product = blank -%}
             {%- if block.settings.product != blank -%}
               {%- assign featured_product = block.settings.product -%}
-              <a href="{{ featured_product.url }}" class="customer-reviews__product">
-                {%- if featured_product.featured_image != blank -%}
-                  <img
-                    src="{{ featured_product.featured_image | image_url: width: 160 }}"
-                    alt="{{ featured_product.featured_image.alt | default: featured_product.title | escape }}"
-                    width="64"
-                    height="64"
-                    loading="lazy"
-                    class="customer-reviews__product-image"
-                  >
-                {%- endif -%}
-                <span class="customer-reviews__product-title">{{ featured_product.title }}</span>
-                <span class="customer-reviews__product-price">{{ featured_product.price | money }}</span>
-              </a>
             {%- endif -%}
-          </div>
-        {%- endfor -%}
+            <button
+              type="button"
+              class="customer-reviews__card"
+              data-reviews-card
+              data-index="{{ forloop.index0 }}"
+              data-review-open
+              data-name="{{ block.settings.customer_name | default: 'Happy Customer' | escape }}"
+              data-product-url="{{ featured_product.url | default: '' | escape }}"
+              data-product-title="{{ featured_product.title | default: '' | escape }}"
+              data-product-price="{{ featured_product.price | money | default: '' | escape }}"
+              data-product-image="{{ featured_product.featured_image | image_url: width: 300 | default: '' }}"
+              data-variant-id="{{ featured_product.selected_or_first_available_variant.id | default: '' }}"
+              data-available="{{ featured_product.selected_or_first_available_variant.available | default: false }}"
+              {{ block.shopify_attributes }}
+            >
+              <div class="customer-reviews__video-wrap">
+                {%- if block.settings.video != blank -%}
+                  <video
+                    class="customer-reviews__video"
+                    data-reviews-video
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    {%- if block.settings.video.preview_image -%}
+                      poster="{{ block.settings.video.preview_image | image_url: width: 700 }}"
+                    {%- endif -%}
+                  >
+                    {%- for source in block.settings.video.sources -%}
+                      <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                    {%- endfor -%}
+                  </video>
+
+                  <span
+                    class="customer-reviews__mute-toggle"
+                    role="button"
+                    tabindex="0"
+                    data-mute-toggle
+                    aria-label="Unmute video"
+                    aria-pressed="false"
+                  >
+                    <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon>
+                      <line x1="16" y1="9" x2="21" y2="14"></line>
+                      <line x1="21" y1="9" x2="16" y2="14"></line>
+                    </svg>
+                    <svg class="icon-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon>
+                      <path d="M16 8.5a4.5 4.5 0 0 1 0 7"></path>
+                      <path d="M18.5 6a8 8 0 0 1 0 12"></path>
+                    </svg>
+                  </span>
+
+                  {%- if block.settings.customer_name != blank -%}
+                    <span class="customer-reviews__video-caption">{{ block.settings.customer_name }}</span>
+                  {%- endif -%}
+                {%- else -%}
+                  <div class="customer-reviews__video-placeholder">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="5" width="14" height="14" rx="2"></rect>
+                      <polygon points="16 10 22 7 22 17 16 14 16 10"></polygon>
+                    </svg>
+                    <span>Customer video coming soon</span>
+                  </div>
+                {%- endif -%}
+              </div>
+
+              {%- if featured_product != blank -%}
+                <span class="customer-reviews__product">
+                  {%- if featured_product.featured_image != blank -%}
+                    <img
+                      src="{{ featured_product.featured_image | image_url: width: 160 }}"
+                      alt="{{ featured_product.featured_image.alt | default: featured_product.title | escape }}"
+                      width="64"
+                      height="64"
+                      loading="lazy"
+                      class="customer-reviews__product-image"
+                    >
+                  {%- endif -%}
+                  <span class="customer-reviews__product-title">{{ featured_product.title }}</span>
+                  <span class="customer-reviews__product-price">{{ featured_product.price | money }}</span>
+                </span>
+              {%- endif -%}
+            </button>
+          {%- endfor -%}
         </div>
 
         <button
@@ -136,6 +155,77 @@
         </button>
       </div>
     {%- endif -%}
+  </div>
+</div>
+
+{%- comment -%} Review popup: plays the customer video with the product and purchase options {%- endcomment -%}
+<div class="customer-reviews__modal" data-reviews-modal aria-hidden="true">
+  <div class="customer-reviews__modal-overlay" data-modal-close></div>
+  <div
+    class="customer-reviews__modal-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Customer video review"
+  >
+    <button type="button" class="customer-reviews__modal-close" data-modal-close aria-label="Close review">
+      {% render 'icon-close' %}
+    </button>
+
+    <div class="customer-reviews__modal-media" data-modal-media></div>
+
+    <div class="customer-reviews__modal-content">
+      <div class="customer-reviews__modal-product-head" data-modal-product>
+        <a class="customer-reviews__modal-product-link" data-modal-product-link aria-label="" href="#">
+          <img src="" alt="" width="72" height="72" loading="lazy" class="customer-reviews__modal-product-image" data-modal-product-image>
+          <span class="customer-reviews__modal-product-info">
+            <span class="customer-reviews__modal-product-title" data-modal-product-title></span>
+            <span class="customer-reviews__modal-product-price" data-modal-product-price></span>
+          </span>
+        </a>
+      </div>
+
+      <product-form class="customer-reviews__product-form" data-section-id="{{ section.id }}">
+        <form method="post" action="{{ routes.cart_add_url }}" class="customer-reviews__form form" data-type="add-to-cart-form">
+          <input type="hidden" name="form_type" value="product">
+          <input type="hidden" name="utf8" value="✓">
+          <input type="hidden" name="id" value="" data-modal-variant-id>
+
+          <div class="product-form__error-message-wrapper customer-reviews__error" role="alert" hidden>
+            <svg aria-hidden="true" focusable="false" class="icon icon-error" viewBox="0 0 13 13">
+              <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"></circle>
+              <circle cx="6.5" cy="6.5" r="5.5" fill="#EB001B" stroke="#EB001B" stroke-width="0.7"></circle>
+              <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"></path>
+              <path d="M5.87413 3.17832H5.51535L5.52424 3.537L5.6245 7.58083L5.63296 7.92216H5.97439H7.02713H7.36856L7.37702 7.58083L7.47728 3.537L7.48617 3.17832H7.12739H5.87413ZM6.50076 10.0109C7.06121 10.0109 7.5317 9.57872 7.5317 9.00504C7.5317 8.43137 7.06121 7.99918 6.50076 7.99918C5.94031 7.99918 5.46982 8.43137 5.46982 9.00504C5.46982 9.57872 5.94031 10.0109 6.50076 10.0109Z" fill="white" stroke="#EB001B" stroke-width="0.7"></path>
+            </svg>
+            <span class="product-form__error-message"></span>
+          </div>
+
+          <div class="customer-reviews__buy-row">
+            <button
+              id="CustomerReviewsSubmit-{{ section.id }}"
+              type="submit"
+              name="add"
+              class="button customer-reviews__add-button"
+            >
+              <span>{{ 'products.product.add_to_cart' | t }}</span>
+              {%- render 'loading-spinner' -%}
+            </button>
+            <button
+              type="button"
+              name="buy"
+              class="button button--secondary customer-reviews__buy-button"
+              data-buy-now
+            >
+              Buy Now
+            </button>
+          </div>
+
+          <p class="customer-reviews__view-details">
+            <a href="#" data-modal-product-link data-modal-details-link>View full details</a>
+          </p>
+        </form>
+      </product-form>
+    </div>
   </div>
 </div>
 
@@ -204,19 +294,26 @@
       updateArrows();
     }
 
+    /* ---------- Mute toggles ---------- */
     var videos = Array.from(section.querySelectorAll('[data-reviews-video]'));
-    if (!videos.length) return;
-
     videos.forEach(function (video) {
       var wrap = video.closest('.customer-reviews__video-wrap');
       var toggle = wrap ? wrap.querySelector('[data-mute-toggle]') : null;
       if (!toggle) return;
 
-      toggle.addEventListener('click', function () {
-        video.muted = !video.muted;
-        toggle.setAttribute('aria-pressed', String(!video.muted));
-        toggle.setAttribute('aria-label', video.muted ? 'Unmute video' : 'Mute video');
-        wrap.classList.toggle('is-unmuted', !video.muted);
+      var setMuted = function (muted) {
+        video.muted = muted;
+        toggle.setAttribute('aria-pressed', String(!muted));
+        toggle.setAttribute('aria-label', muted ? 'Unmute video' : 'Mute video');
+        wrap.classList.toggle('is-unmuted', !muted);
+      };
+
+      toggle.addEventListener('click', function () { setMuted(!video.muted); });
+      toggle.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setMuted(!video.muted);
+        }
       });
     });
 
@@ -224,32 +321,207 @@
       videos.forEach(function (video) {
         video.controls = true;
       });
-      return;
-    }
+    } else if ('IntersectionObserver' in window) {
+      var videoObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            var video = entry.target;
+            if (entry.isIntersecting) {
+              video.play().catch(function () {});
+            } else {
+              video.pause();
+            }
+          });
+        },
+        { threshold: 0.5 }
+      );
 
-    if (!('IntersectionObserver' in window)) {
+      videos.forEach(function (video) {
+        videoObserver.observe(video);
+      });
+    } else {
       videos.forEach(function (video) {
         video.play().catch(function () {});
       });
-      return;
     }
 
-    var videoObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          var video = entry.target;
-          if (entry.isIntersecting) {
-            video.play().catch(function () {});
-          } else {
-            video.pause();
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
+    /* ---------- Review popup ---------- */
+    var modal = section.closest('section') ? section.closest('section').querySelector('[data-reviews-modal]') : null;
+    if (!modal || !cards.length) return;
 
-    videos.forEach(function (video) {
-      videoObserver.observe(video);
+    var CHECKOUT_URL = {{ routes.checkout_url | default: shop.url | append: '/checkout' | json }};
+
+    var media = modal.querySelector('[data-modal-media]');
+    var productHead = modal.querySelector('[data-modal-product]');
+    var productLinks = Array.from(modal.querySelectorAll('[data-modal-product-link]'));
+    var productImage = modal.querySelector('[data-modal-product-image]');
+    var productTitle = modal.querySelector('[data-modal-product-title]');
+    var productPrice = modal.querySelector('[data-modal-product-price]');
+    var variantInput = modal.querySelector('[data-modal-variant-id]');
+    var form = modal.querySelector('form.customer-reviews__form');
+    var errorWrapper = modal.querySelector('.customer-reviews__error');
+    var errorMessage = modal.querySelector('.product-form__error-message');
+    var addButton = modal.querySelector('.customer-reviews__add-button');
+    var buyButton = modal.querySelector('[data-buy-now]');
+    var closeButtons = modal.querySelectorAll('[data-modal-close]');
+    var modalClose = modal.querySelector('.customer-reviews__modal-close');
+    var lastFocused = null;
+    var modalVideo = null;
+    var currentAvailable = true;
+
+    var addButtonDefault = '{{ 'products.product.add_to_cart' | t | escape }}';
+
+    var showError = function (message) {
+      errorMessage.textContent = message || '';
+      errorWrapper.hidden = !message;
+    };
+
+    var openModal = function (card) {
+      var src = card.querySelector('video[data-reviews-video]');
+
+      media.innerHTML = '';
+      if (src) {
+        var clone = src.cloneNode(true);
+        clone.removeAttribute('autoplay');
+        clone.muted = false;
+        if (reducedMotion) clone.controls = true;
+        modalVideo = clone;
+        media.classList.add('is-video');
+        media.classList.remove('is-image');
+        media.appendChild(clone);
+        clone.play().catch(function () {
+          clone.muted = true;
+          clone.play().catch(function () {});
+        });
+      } else if (card.dataset.productImage) {
+        media.classList.remove('is-video');
+        media.classList.add('is-image');
+        var img = document.createElement('img');
+        img.src = card.dataset.productImage;
+        img.alt = card.dataset.productTitle || '';
+        img.loading = 'lazy';
+        media.appendChild(img);
+      } else {
+        media.classList.remove('is-video', 'is-image');
+        media.innerHTML = '<span class="customer-reviews__modal-media-placeholder">' + card.dataset.productTitle + ' — customer video coming soon</span>';
+      }
+
+      var hasProduct = !!(card.dataset.variantId && card.dataset.productTitle);
+      currentAvailable = card.dataset.available === 'true';
+
+      if (hasProduct) {
+        productLinks.forEach(function (link) {
+          link.href = card.dataset.productUrl || '#';
+        });
+        productLinks[0].setAttribute('aria-label', 'View ' + card.dataset.productTitle + ' details');
+        productImage.src = card.dataset.productImage || '';
+        productImage.alt = card.dataset.productTitle || '';
+        productTitle.textContent = card.dataset.productTitle || '';
+        productPrice.textContent = card.dataset.productPrice || '';
+        variantInput.value = card.dataset.variantId || '';
+        productHead.hidden = false;
+        form.hidden = false;
+      } else {
+        variantInput.value = '';
+        productHead.hidden = true;
+        form.hidden = true;
+      }
+
+      modal.classList.toggle('has-product', hasProduct);
+      modal.classList.toggle('no-product', !hasProduct);
+      showError();
+
+      if (hasProduct) {
+        if (currentAvailable) {
+          addButton.disabled = false;
+          addButton.querySelector('span').textContent = addButtonDefault;
+          buyButton.disabled = false;
+        } else {
+          addButton.disabled = true;
+          addButton.querySelector('span').textContent = '{{ 'products.product.sold_out' | t | escape }}';
+          buyButton.disabled = true;
+        }
+      }
+
+      lastFocused = card;
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.add('is-open');
+      document.body.classList.add('customer-reviews__modal-locked');
+      if (modalClose) modalClose.focus();
+    };
+
+    var closeModal = function () {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('customer-reviews__modal-locked');
+      if (modalVideo) {
+        modalVideo.pause();
+        modalVideo = null;
+      }
+      media.innerHTML = '';
+      if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+      lastFocused = null;
+    };
+
+    cards.forEach(function (card) {
+      card.addEventListener('click', function (event) {
+        event.preventDefault();
+        if (event.target.closest('[data-mute-toggle]')) return;
+        openModal(card);
+      });
+    });
+
+    closeButtons.forEach(function (btn) {
+      btn.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeModal();
+      });
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+        closeModal();
+      }
+    });
+
+    media.addEventListener('click', function () {
+      if (modalVideo) {
+        modalVideo.muted = !modalVideo.muted;
+      }
+    });
+
+    /* Buy Now: add the item to the cart and continue to checkout */
+    buyButton.addEventListener('click', function (event) {
+      event.preventDefault();
+      if (!variantInput || !variantInput.value || !currentAvailable) return;
+
+      buyButton.setAttribute('aria-disabled', 'true');
+      buyButton.classList.add('loading');
+
+      var config = fetchConfig('javascript');
+      config.headers['X-Requested-With'] = 'XMLHttpRequest';
+      delete config.headers['Content-Type'];
+
+      var formData = new FormData(form);
+      config.body = formData;
+
+      fetch(window.routes.cart_add_url, config)
+        .then(function (response) { return response.json(); })
+        .then(function (response) {
+          if (response.status) {
+            showError(response.description || response.message || 'Something went wrong. Please try again.');
+            buyButton.removeAttribute('aria-disabled');
+            buyButton.classList.remove('loading');
+            return;
+          }
+          window.location.href = CHECKOUT_URL;
+        })
+        .catch(function () {
+          showError('Something went wrong. Please try again.');
+          buyButton.removeAttribute('aria-disabled');
+          buyButton.classList.remove('loading');
+        });
     });
   })();
 </script>
@@ -334,7 +606,7 @@
           "type": "product",
           "id": "product",
           "label": "Featured product",
-          "info": "Its image, title and price are shown below the video."
+          "info": "Shown below the video and inside the popup with Add to cart and Buy Now options."
         },
         {
           "type": "text",
