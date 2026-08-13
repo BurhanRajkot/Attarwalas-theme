@@ -59,26 +59,128 @@
   color: rgba(var(--color-foreground), 0.6);
 }
 
-/* ---------- Grid ---------- */
-.customer-reviews__grid {
-  display: grid;
-  grid-template-columns: repeat(var(--reviews-columns-desktop, 4), 1fr);
-  gap: 2rem;
-  margin-top: 4.4rem;
-  padding: 0 1.5rem;
+/* ---------- Scroll controls ---------- */
+.customer-reviews__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.14);
+  color: rgb(var(--color-foreground));
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-@media screen and (min-width: 750px) {
-  .customer-reviews__grid {
-    padding: 0 5rem;
+.customer-reviews__arrow--prev {
+  left: 1.2rem;
+}
+
+.customer-reviews__arrow--next {
+  right: 1.2rem;
+}
+
+.customer-reviews__carousel:hover .customer-reviews__arrow,
+.customer-reviews__carousel:focus-within .customer-reviews__arrow {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .customer-reviews__arrow {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
+.customer-reviews__arrow svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.customer-reviews__arrow--prev svg {
+  transform: rotate(90deg);
+}
+
+.customer-reviews__arrow--next svg {
+  transform: rotate(-90deg);
+}
+
+.customer-reviews__arrow:hover:not(:disabled) {
+  border-color: rgb(var(--color-button));
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-label));
+}
+
+.customer-reviews__arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.customer-reviews__video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: rgba(var(--color-foreground), 0.42);
+}
+
+.customer-reviews__video-placeholder svg {
+  width: 3.2rem;
+  height: 3.2rem;
+}
+
+.customer-reviews__video-placeholder span {
+  font-size: 1.25rem;
+}
+
+/* ---------- Horizontal strip ---------- */
+.customer-reviews__carousel {
+  position: relative;
+  width: 100%;
+  margin-top: 1.6rem;
+}
+
+.customer-reviews__grid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 2rem;
+  padding: 0.4rem 0 3rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.customer-reviews__grid::-webkit-scrollbar {
+  display: none;
+}
+
 .customer-reviews__card {
+  flex: 0 0 auto;
+  width: 30rem;
+  scroll-snap-align: start;
   border-radius: 0.8rem;
   overflow: hidden;
   background: rgb(var(--color-background));
-  box-shadow: 0 0.2rem 1.2rem rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 0.3rem 0.6rem rgba(0, 0, 0, 0.08),
+    0 0.8rem 1.6rem rgba(0, 0, 0, 0.12);
   opacity: 0;
   transform: translateY(24px);
   filter: blur(6px);
@@ -119,17 +221,6 @@
   object-fit: cover;
   display: block;
   background: rgb(var(--color-background));
-}
-
-.customer-reviews__video-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 2rem;
-  text-align: center;
-  font-size: 1.3rem;
-  color: rgba(var(--color-foreground), 0.5);
 }
 
 .customer-reviews__video-caption {
@@ -230,21 +321,22 @@
 }
 
 /* ---------- Responsive ---------- */
-@media screen and (max-width: 989px) {
-  .customer-reviews__grid {
-    grid-template-columns: repeat(var(--reviews-columns-tablet, 3), 1fr);
-    row-gap: 2.8rem;
-  }
-}
-
 @media screen and (max-width: 749px) {
   .customer-reviews__heading {
     white-space: normal;
   }
 
   .customer-reviews__grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 1.4rem;
-    row-gap: 2.4rem;
+    padding: 0.4rem 0 2.6rem;
+  }
+
+  .customer-reviews__arrow {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+
+  .customer-reviews__card {
+    width: 24rem;
   }
 }

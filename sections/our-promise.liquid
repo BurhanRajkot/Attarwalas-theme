@@ -2,8 +2,8 @@
 
 {%- style -%}
   .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
   }
 
   @media screen and (min-width: 750px) {
@@ -86,17 +86,19 @@
             {%- endif -%}
           </div>
 
-          {%- if block.settings.title != blank -%}
-            <h3 class="our-promise__title">
-              {{ block.settings.title }}
-            </h3>
-          {%- endif -%}
+          <div class="our-promise__content">
+            {%- if block.settings.title != blank -%}
+              <h3 class="our-promise__title">
+                {{ block.settings.title }}
+              </h3>
+            {%- endif -%}
 
-          {%- if block.settings.text != blank -%}
-            <div class="our-promise__text">
-              {{ block.settings.text }}
-            </div>
-          {%- endif -%}
+            {%- if block.settings.text != blank -%}
+              <div class="our-promise__text">
+                {{ block.settings.text }}
+              </div>
+            {%- endif -%}
+          </div>
         </div>
       {%- endfor -%}
     </div>

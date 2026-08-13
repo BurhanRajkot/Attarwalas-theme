@@ -38,8 +38,20 @@
     {%- if section.blocks.size == 0 -%}
       <p class="customer-reviews__empty">Add video blocks in the section settings to feature customer videos.</p>
     {%- else -%}
-      <div class="customer-reviews__grid">
-        {%- for block in section.blocks -%}
+      <div class="customer-reviews__carousel">
+        <button
+          type="button"
+          class="customer-reviews__arrow customer-reviews__arrow--prev"
+          name="previous"
+          aria-label="Scroll reviews left"
+          aria-controls="CustomerReviewsTrack-{{ section.id }}"
+          disabled
+        >
+          {% render 'icon-caret' %}
+        </button>
+
+        <div class="customer-reviews__grid" id="CustomerReviewsTrack-{{ section.id }}">
+          {%- for block in section.blocks -%}
           <div class="customer-reviews__card" data-reviews-card data-index="{{ forloop.index0 }}" {{ block.shopify_attributes }}>
             <div class="customer-reviews__video-wrap">
               {%- if block.settings.video != blank -%}
@@ -82,7 +94,13 @@
                   <span class="customer-reviews__video-caption">{{ block.settings.customer_name }}</span>
                 {%- endif -%}
               {%- else -%}
-                <div class="customer-reviews__video-placeholder">Add a video in this block's settings</div>
+                <div class="customer-reviews__video-placeholder">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="14" height="14" rx="2"></rect>
+                    <polygon points="16 10 22 7 22 17 16 14 16 10"></polygon>
+                  </svg>
+                  <span>Customer video coming soon</span>
+                </div>
               {%- endif -%}
             </div>
 
@@ -105,6 +123,17 @@
             {%- endif -%}
           </div>
         {%- endfor -%}
+        </div>
+
+        <button
+          type="button"
+          class="customer-reviews__arrow customer-reviews__arrow--next"
+          name="next"
+          aria-label="Scroll reviews right"
+          aria-controls="CustomerReviewsTrack-{{ section.id }}"
+        >
+          {% render 'icon-caret' %}
+        </button>
       </div>
     {%- endif -%}
   </div>
@@ -148,6 +177,31 @@
           revealObserver.observe(el);
         });
       }
+    }
+
+    var track = section.querySelector('.customer-reviews__grid');
+    var prevButton = section.querySelector('.customer-reviews__arrow--prev');
+    var nextButton = section.querySelector('.customer-reviews__arrow--next');
+
+    if (track && (prevButton || nextButton)) {
+      var updateArrows = function () {
+        var maxScroll = track.scrollWidth - track.clientWidth;
+        if (prevButton) prevButton.disabled = track.scrollLeft <= 2;
+        if (nextButton) nextButton.disabled = track.scrollLeft >= maxScroll - 2;
+      };
+
+      var scrollByCard = function (direction) {
+        var card = track.querySelector('.customer-reviews__card');
+        var step = card ? card.offsetWidth : track.clientWidth;
+        var gap = parseFloat(getComputedStyle(track).gap || 0);
+        track.scrollBy({ left: direction * (step + gap), behavior: 'smooth' });
+      };
+
+      if (prevButton) prevButton.addEventListener('click', function () { scrollByCard(-1); });
+      if (nextButton) nextButton.addEventListener('click', function () { scrollByCard(1); });
+      track.addEventListener('scroll', updateArrows, { passive: true });
+      window.addEventListener('resize', updateArrows);
+      updateArrows();
     }
 
     var videos = Array.from(section.querySelectorAll('[data-reviews-video]'));

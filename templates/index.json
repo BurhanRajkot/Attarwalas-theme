@@ -271,12 +271,47 @@
           "settings": {
             "customer_name": "Sara Ali"
           }
+        },
+        "review_4": {
+          "type": "video_review",
+          "settings": {
+            "customer_name": "Priya Sharma"
+          }
+        },
+        "review_5": {
+          "type": "video_review",
+          "settings": {
+            "customer_name": "Arjun Patel"
+          }
+        },
+        "review_6": {
+          "type": "video_review",
+          "settings": {
+            "customer_name": "Meera Nair"
+          }
+        },
+        "review_7": {
+          "type": "video_review",
+          "settings": {
+            "customer_name": "Karan Malhotra"
+          }
+        },
+        "review_8": {
+          "type": "video_review",
+          "settings": {
+            "customer_name": "Zara Sheikh"
+          }
         }
       },
       "block_order": [
         "review_1",
         "review_2",
-        "review_3"
+        "review_3",
+        "review_4",
+        "review_5",
+        "review_6",
+        "review_7",
+        "review_8"
       ],
       "settings": {
         "full_width": true,

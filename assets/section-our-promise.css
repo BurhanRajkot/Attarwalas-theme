@@ -68,15 +68,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   width: 5.6rem;
   height: 5.6rem;
   margin-bottom: 2.2rem;
-  color: rgb(var(--color-foreground));
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  border-radius: 50%;
+  background: rgba(var(--color-button), 0.1);
+  border: 1px solid rgba(var(--color-button), 0.28);
+  color: rgb(var(--color-button));
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), background 0.4s ease, color 0.4s ease;
 }
 
 .our-promise__item:hover .our-promise__icon-wrapper {
   transform: translateY(-3px);
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-label));
 }
 
 .our-promise__icon-wrapper svg {
@@ -115,41 +121,53 @@
 /* Mobile responsiveness */
 @media screen and (max-width: 749px) {
   .our-promise__header {
-    margin-bottom: 3rem;
+    margin-bottom: 1.2rem;
   }
 
   .our-promise__heading {
-    font-size: clamp(2.4rem, 6.5vw, 3.2rem);
+    font-size: clamp(1.8rem, 5vw, 2.3rem);
   }
 
   .our-promise__grid {
     grid-template-columns: 1fr;
-    gap: 3.2rem;
+    gap: 1.8rem;
   }
 
   .our-promise__item {
-    padding: 0 0.5rem;
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    padding: 0;
+    gap: 1.4rem;
   }
 
   .our-promise__icon-wrapper {
-    margin-bottom: 1.4rem;
-    width: 4.8rem;
-    height: 4.8rem;
+    margin-bottom: 0;
+    width: 4.4rem;
+    height: 4.4rem;
   }
 
   .our-promise__icon-wrapper svg {
-    width: 3.2rem;
-    height: 3.2rem;
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .our-promise__content {
+    min-width: 0;
   }
 
   .our-promise__title {
-    font-size: 1.9rem;
-    margin-bottom: 0.8rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.4rem;
   }
 
   .our-promise__text {
-    font-size: 1.35rem;
-    line-height: 1.6;
+    font-size: 1.15rem;
+    line-height: 1.45;
     max-width: 100%;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
 }
