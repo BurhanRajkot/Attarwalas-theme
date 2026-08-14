@@ -11,14 +11,13 @@
   "sections": {
     "video_AeBGJd": {
       "type": "video",
-      "name": "t:sections.video.presets.name",
       "blocks": {
         "button": {
           "type": "buttons",
           "settings": {
             "button_label_1": "Buy Now",
             "button_link_1": "shopify://products/oudh-eternal",
-            "button_style_secondary_1": false,
+            "button_style_secondary_1": true,
             "button_label_2": "",
             "button_link_2": "",
             "button_style_secondary_2": false
@@ -28,6 +27,7 @@
       "block_order": [
         "button"
       ],
+      "name": "t:sections.video.presets.name",
       "settings": {
         "heading": "",
         "heading_size": "h2",
@@ -36,7 +36,7 @@
         "video_url": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
         "description": "",
         "full_width": true,
-        "color_scheme": "",
+        "color_scheme": "scheme-1",
         "padding_top": 0,
         "padding_bottom": 0
       }
@@ -275,56 +275,81 @@
           "type": "video_review",
           "settings": {
             "product": "ambre-intense-100ml",
-            "customer_name": "Aisha Khan"
+            "customer_name": "Aisha Khan",
+            "note_1": "Amber",
+            "note_2": "Vanilla",
+            "note_3": "Sandalwood"
           }
         },
         "review_2": {
           "type": "video_review",
           "settings": {
-            "product": "oudh-eternal",
-            "customer_name": "Rohan Mehta"
+            "video": "shopify://files/videos/editedvideo-MadewithClipchamp.mp4",
+            "product": "ambre-intense-100ml",
+            "customer_name": "Rohan Mehta",
+            "note_1": "Amber",
+            "note_2": "Vanilla",
+            "note_3": "Sandalwood"
           }
         },
         "review_3": {
           "type": "video_review",
           "settings": {
             "product": "florence-orchidia-100ml",
-            "customer_name": "Sara Ali"
+            "customer_name": "Sara Ali",
+            "note_1": "Orchid",
+            "note_2": "Jasmine",
+            "note_3": "Musk"
           }
         },
         "review_4": {
           "type": "video_review",
           "settings": {
             "product": "mystique-island-100ml",
-            "customer_name": "Priya Sharma"
+            "customer_name": "Priya Sharma",
+            "note_1": "Bergamot",
+            "note_2": "Sea Salt",
+            "note_3": "Coconut"
           }
         },
         "review_5": {
           "type": "video_review",
           "settings": {
             "product": "fresh-woodscape-100ml",
-            "customer_name": "Arjun Patel"
+            "customer_name": "Arjun Patel",
+            "note_1": "Citrus",
+            "note_2": "Vetiver",
+            "note_3": "Cedarwood"
           }
         },
         "review_6": {
           "type": "video_review",
           "settings": {
             "product": "yameni-yakud-non-alcoholic-perfume-100ml",
-            "customer_name": "Meera Nair"
+            "customer_name": "Meera Nair",
+            "note_1": "Saffron",
+            "note_2": "Oud",
+            "note_3": "Amber"
           }
         },
         "review_7": {
           "type": "video_review",
           "settings": {
             "product": "ambre-intense-100ml",
-            "customer_name": "Karan Malhotra"
+            "customer_name": "Karan Malhotra",
+            "note_1": "Amber",
+            "note_2": "Vanilla",
+            "note_3": "Sandalwood"
           }
         },
         "review_8": {
           "type": "video_review",
           "settings": {
             "product": "florence-orchidia-100ml",
-            "customer_name": "Zara Sheikh"
+            "customer_name": "Zara Sheikh",
+            "note_1": "Orchid",
+            "note_2": "Jasmine",
+            "note_3": "Musk"
           }
         }
       },

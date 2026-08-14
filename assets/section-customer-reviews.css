@@ -172,11 +172,11 @@
 }
 
 .customer-reviews__card {
+  position: relative;
   flex: 0 0 auto;
   width: 30rem;
   scroll-snap-align: start;
   border-radius: 0.8rem;
-  overflow: hidden;
   background: rgb(var(--color-background));
   box-shadow:
     0 0.3rem 0.6rem rgba(0, 0, 0, 0.08),
@@ -243,6 +243,7 @@ button.customer-reviews__card:active {
   aspect-ratio: 9 / 16;
   width: 100%;
   overflow: hidden;
+  border-radius: 0.8rem;
   background: rgba(var(--color-foreground), 0.06);
 }
 
@@ -256,9 +257,9 @@ button.customer-reviews__card:active {
 
 .customer-reviews__video-caption {
   position: absolute;
+  top: 1.2rem;
   left: 1.2rem;
-  bottom: 1.2rem;
-  z-index: 1;
+  z-index: 2;
   padding: 0.4rem 1rem;
   border-radius: 10rem;
   background: rgba(0, 0, 0, 0.45);
@@ -311,40 +312,27 @@ button.customer-reviews__card:active {
   display: block;
 }
 
-/* ---------- Product strip ---------- */
+/* ---------- Product image (peeks over the video bottom edge) ---------- */
 .customer-reviews__product {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 1.4rem 1rem 1.6rem;
-  text-align: center;
-  text-decoration: none;
-  color: inherit;
+  position: absolute;
+  left: 50%;
+  bottom: -2.4rem;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: block;
+  line-height: 0;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+button.customer-reviews__card:hover .customer-reviews__product {
+  transform: translateX(-50%) translateY(-3px);
 }
 
 .customer-reviews__product-image {
-  flex-shrink: 0;
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 0.4rem;
+  width: 9.6rem;
+  height: 9.6rem;
+  border-radius: 1rem;
   object-fit: cover;
-  background: rgba(var(--color-foreground), 0.06);
-}
-
-.customer-reviews__product-title {
-  max-width: 100%;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: rgb(var(--color-foreground));
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.customer-reviews__product-price {
-  font-size: 1.2rem;
-  color: rgba(var(--color-foreground), 0.6);
 }
 
 /* ---------- Review popup ---------- */
@@ -441,7 +429,7 @@ button.customer-reviews__card:active {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .customer-reviews__modal-media.is-image img {
@@ -515,6 +503,46 @@ button.customer-reviews__card:active {
 .customer-reviews__modal-product-price {
   font-size: 1.5rem;
   color: rgba(var(--color-foreground), 0.65);
+}
+
+.customer-reviews__modal-notes {
+  margin: 0 0 2.4rem;
+}
+
+.customer-reviews__modal-notes[hidden] {
+  display: none;
+}
+
+.customer-reviews__modal-notes-label {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--color-foreground), 0.55);
+}
+
+.customer-reviews__modal-notes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.customer-reviews__modal-note {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1.3rem;
+  border: 1px solid rgba(var(--color-foreground), 0.22);
+  border-radius: 10rem;
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8a7a5c;
+  white-space: nowrap;
+}
+
+.customer-reviews__modal-note[hidden] {
+  display: none;
 }
 
 .customer-reviews__buy-row {
@@ -602,7 +630,7 @@ body.customer-reviews__modal-locked {
 
   .customer-reviews__modal-media video {
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
   }
 
   .customer-reviews__modal-content {

@@ -237,12 +237,18 @@
         for (var i = 0; i < this.items.length; i++) {
           var el = this.items[i];
           var dist = Math.abs(i - this.pos);
+          var isNear = dist <= 3.6;
 
-          if (dist > 3.6) {
-            if (el.style.visibility !== 'hidden') el.style.visibility = 'hidden';
-            continue;
+          /* Only slides near the centre are visible and only those carry the will-change
+             hint, so the compositor holds ~8 layers instead of one per clone. The flag is
+             cached on the element so a settled carousel writes no styles at all. */
+          if (el._near !== isNear) {
+            el._near = isNear;
+            el.style.visibility = isNear ? 'visible' : 'hidden';
+            el.classList.toggle('signature-carousel__product--near', isNear);
           }
-          if (el.style.visibility === 'hidden') el.style.visibility = 'visible';
+
+          if (!isNear) continue;
 
           var near = this.smoothstep(Math.min(dist, 1));
           var far = Math.min(Math.max(dist - 1, 0), 2);

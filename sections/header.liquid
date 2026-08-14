@@ -335,7 +335,10 @@
       this.hideHeaderOnScrollUp = () => this.preventReveal = true;
 
       this.addEventListener('preventHeaderReveal', this.hideHeaderOnScrollUp);
-      window.addEventListener('scroll', this.onScrollHandler, false);
+      // Passive: onScroll never calls preventDefault, so without this flag the browser has
+      // to wait for the handler to finish before it may scroll — on every scroll event, on
+      // every page. That shows up on phones as the header stuttering under your thumb.
+      window.addEventListener('scroll', this.onScrollHandler, { passive: true });
 
       this.createObserver();
     }

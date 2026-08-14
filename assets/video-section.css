@@ -53,7 +53,7 @@
 
 .video-section__hero {
   position: relative;
-  min-height: 56vh;
+  min-height: 100vh;
   overflow: hidden;
   background: #000000;
   border: 0;
@@ -121,56 +121,139 @@
   gap: 14px;
 }
 
-.video-section__btn {
+.video-section__form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.video-section__pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 50px;
-  padding: 0 42px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  background: transparent;
-  color: #ffffff;
+  min-height: 52px;
+  padding: 15px 42px;
+  border: 1px solid rgb(var(--color-button) / 0.9);
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, rgb(var(--color-button)) 88%, #ffffff) 0%,
+    rgb(var(--color-button)) 50%,
+    color-mix(in srgb, rgb(var(--color-button)) 72%, #000000) 100%
+  );
+  background-size: 170% 170%;
+  background-position: 0% 50%;
+  color: rgb(var(--color-button-label));
   font-family: var(--font-body-family, Arial, sans-serif);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   line-height: 1;
   text-transform: uppercase;
   text-decoration: none;
+  box-shadow:
+    0 6px 24px rgb(var(--color-button) / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
   cursor: pointer;
   transition:
-    background 0.3s ease,
-    color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background-position 0.35s ease,
     border-color 0.3s ease;
   -webkit-appearance: none;
   appearance: none;
 }
 
-.video-section__btn--solid {
-  border-color: #ffffff;
-  background: #ffffff;
-  color: #141414;
+.video-section__pill::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-left: 12px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.3s ease;
 }
 
-.video-section__btn:hover {
-  border-color: #ffffff;
-  background: #ffffff;
-  color: #141414;
+.video-section__pill:hover {
+  transform: translateY(-2px);
+  background-position: 100% 50%;
+  box-shadow:
+    0 12px 32px rgb(var(--color-button) / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
 }
 
-.video-section__btn--solid:hover {
-  border-color: rgba(255, 255, 255, 0.85);
-  background: transparent;
-  color: #ffffff;
+.video-section__pill:hover::after {
+  transform: translate(2px, -2px) rotate(45deg);
 }
 
-.video-section__btn:focus-visible {
+.video-section__pill:focus-visible {
   outline: 2px solid #ffffff;
-  outline-offset: 3px;
+  outline-offset: 4px;
+}
+
+.video-section__pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.video-section__pill.loading {
+  pointer-events: none;
+}
+
+.video-section__pill.loading::after {
+  opacity: 0;
+}
+
+.video-section__pill .video-section__pill-label {
+  transition: opacity 0.15s ease;
+}
+
+.video-section__pill.loading .video-section__pill-label {
+  opacity: 0;
+}
+
+.video-section__pill .loading__spinner {
+  display: none;
+  width: 20px;
+  height: 20px;
+}
+
+.video-section__pill.loading .loading__spinner {
+  display: block;
+  position: absolute;
+}
+
+.video-section__pill .loading__spinner .path {
+  stroke: rgb(var(--color-button-label));
 }
 
 @media screen and (min-width: 750px) {
   .video-section__hero {
-    min-height: 68vh;
+    min-height: 100vh;
   }
+}
+
+@media screen and (max-width: 749px) {
+  .video-section__pill {
+    min-height: 48px;
+    padding: 13px 34px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Homepage: full-screen hero video (extends behind the header, header stays on top)
+   --------------------------------------------------------------------------- */
+
+body.template-index .video-section__hero {
+  margin-top: calc(-1 * var(--aw-header-offset, 0px));
+  height: 100vh;
+  height: 100dvh;
+}
+
+body.template-index .announcement-bar-section {
+  position: relative;
+  z-index: 4;
 }

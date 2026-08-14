@@ -7,7 +7,12 @@
   {% render 'loading-spinner' %}
 {% endcomment %}
 
-{{ 'component-loading-spinner.css' | asset_url | stylesheet_tag }}
+{%- comment -%}
+  component-loading-spinner.css is loaded once in theme.liquid rather than here. This snippet
+  is rendered many times per page (once per add-to-cart button, product card, etc.) and a
+  stylesheet_tag inside it emitted one render-blocking <link> for every single render — nine
+  of them on the homepage alone, all for the same 998-byte file.
+{%- endcomment -%}
 
 <div class="{% if class %}{{ class }}{% else %}loading__spinner hidden{% endif %}">
   <svg

@@ -1,6 +1,5 @@
 {{ 'section-product-carousel.css' | asset_url | stylesheet_tag }}
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
-<script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -93,43 +92,6 @@
                         {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
                       {%- endif -%}
                     </a>
-                    {%- if product.selected_or_first_available_variant.available == false -%}
-                      {%- comment -%} sold out: link to product instead of quick add {%- endcomment -%}
-                      <a
-                        href="{{ product.url }}"
-                        class="product-carousel__cart-btn"
-                        aria-label="{{ product.title | escape }}"
-                      >
-                        {% render 'icon-cart' %}
-                      </a>
-                    {%- elsif product.has_only_default_variant -%}
-                      <product-form>
-                        {%- form 'product', product, class: 'product-carousel__form', novalidate: 'novalidate' -%}
-                          <input
-                            type="hidden"
-                            name="id"
-                            value="{{ product.selected_or_first_available_variant.id }}"
-                          >
-                          <button
-                            type="submit"
-                            name="add"
-                            class="product-carousel__cart-btn"
-                            aria-label="{{ 'products.product.add_to_cart' | t }} — {{ product.title | escape }}"
-                          >
-                            {% render 'icon-cart' %}
-                            {%- render 'loading-spinner' -%}
-                          </button>
-                        {%- endform -%}
-                      </product-form>
-                    {%- else -%}
-                      <a
-                        href="{{ product.url }}"
-                        class="product-carousel__cart-btn"
-                        aria-label="{{ product.title | escape }}"
-                      >
-                        {% render 'icon-cart' %}
-                      </a>
-                    {%- endif -%}
                   </div>
                   <div class="product-carousel__info">
                     <a href="{{ product.url }}" class="product-carousel__title">{{ product.title }}</a>

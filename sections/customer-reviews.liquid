@@ -70,6 +70,9 @@
               data-product-image="{{ featured_product.featured_image | image_url: width: 300 | default: '' }}"
               data-variant-id="{{ featured_product.selected_or_first_available_variant.id | default: '' }}"
               data-available="{{ featured_product.selected_or_first_available_variant.available | default: false }}"
+              data-note-1="{{ block.settings.note_1 | default: '' | escape }}"
+              data-note-2="{{ block.settings.note_2 | default: '' | escape }}"
+              data-note-3="{{ block.settings.note_3 | default: '' | escape }}"
               {{ block.shopify_attributes }}
             >
               <div class="customer-reviews__video-wrap">
@@ -128,16 +131,14 @@
                 <span class="customer-reviews__product">
                   {%- if featured_product.featured_image != blank -%}
                     <img
-                      src="{{ featured_product.featured_image | image_url: width: 160 }}"
+                      src="{{ featured_product.featured_image | image_url: width: 300 }}"
                       alt="{{ featured_product.featured_image.alt | default: featured_product.title | escape }}"
-                      width="64"
-                      height="64"
+                      width="96"
+                      height="96"
                       loading="lazy"
                       class="customer-reviews__product-image"
                     >
                   {%- endif -%}
-                  <span class="customer-reviews__product-title">{{ featured_product.title }}</span>
-                  <span class="customer-reviews__product-price">{{ featured_product.price | money }}</span>
                 </span>
               {%- endif -%}
             </button>
@@ -182,6 +183,15 @@
             <span class="customer-reviews__modal-product-price" data-modal-product-price></span>
           </span>
         </a>
+      </div>
+
+      <div class="customer-reviews__modal-notes" data-modal-notes hidden>
+        <p class="customer-reviews__modal-notes-label">Fragrance Notes</p>
+        <div class="customer-reviews__modal-notes-list">
+          <span class="customer-reviews__modal-note" data-modal-note-1></span>
+          <span class="customer-reviews__modal-note" data-modal-note-2></span>
+          <span class="customer-reviews__modal-note" data-modal-note-3></span>
+        </div>
       </div>
 
       <product-form class="customer-reviews__product-form" data-section-id="{{ section.id }}">
@@ -357,6 +367,8 @@
     var productImage = modal.querySelector('[data-modal-product-image]');
     var productTitle = modal.querySelector('[data-modal-product-title]');
     var productPrice = modal.querySelector('[data-modal-product-price]');
+    var notes = modal.querySelector('[data-modal-notes]');
+    var noteEls = Array.from(modal.querySelectorAll('[data-modal-note-1], [data-modal-note-2], [data-modal-note-3]'));
     var variantInput = modal.querySelector('[data-modal-variant-id]');
     var form = modal.querySelector('form.customer-reviews__form');
     var errorWrapper = modal.querySelector('.customer-reviews__error');
@@ -383,6 +395,7 @@
       if (src) {
         var clone = src.cloneNode(true);
         clone.removeAttribute('autoplay');
+        clone.removeAttribute('muted');
         clone.muted = false;
         if (reducedMotion) clone.controls = true;
         modalVideo = clone;
@@ -418,14 +431,22 @@
         productImage.alt = card.dataset.productTitle || '';
         productTitle.textContent = card.dataset.productTitle || '';
         productPrice.textContent = card.dataset.productPrice || '';
-        variantInput.value = card.dataset.variantId || '';
-        productHead.hidden = false;
-        form.hidden = false;
-      } else {
-        variantInput.value = '';
-        productHead.hidden = true;
-        form.hidden = true;
-      }
+      variantInput.value = card.dataset.variantId || '';
+      productHead.hidden = false;
+      form.hidden = false;
+    } else {
+      variantInput.value = '';
+      productHead.hidden = true;
+      form.hidden = true;
+    }
+
+    var currentNotes = [card.dataset.note1, card.dataset.note2, card.dataset.note3];
+    noteEls.forEach(function (el, index) {
+      var value = currentNotes[index] || '';
+      el.textContent = value;
+      el.hidden = !value;
+    });
+    notes.hidden = !currentNotes.some(function (value) { return value; });
 
       modal.classList.toggle('has-product', hasProduct);
       modal.classList.toggle('no-product', !hasProduct);
@@ -614,6 +635,28 @@
           "label": "Customer name",
           "info": "Optional — shown as a caption over the video.",
           "default": "Happy Customer"
+        },
+        {
+          "type": "header",
+          "content": "Fragrance Notes"
+        },
+        {
+          "type": "text",
+          "id": "note_1",
+          "label": "Note 1",
+          "placeholder": "e.g. Saffron"
+        },
+        {
+          "type": "text",
+          "id": "note_2",
+          "label": "Note 2",
+          "placeholder": "e.g. Oud"
+        },
+        {
+          "type": "text",
+          "id": "note_3",
+          "label": "Note 3",
+          "placeholder": "e.g. Amber"
         }
       ]
     }

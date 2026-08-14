@@ -15,10 +15,15 @@
       <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
     {%- endunless -%}
 
-    {%- comment -%} ATTARWALAS — Premium typography: Cormorant Garamond (headings) + DM Sans (body) {%- endcomment -%}
+    {%- comment -%}
+      ATTARWALAS — Premium typography: Cormorant Garamond (headings) + DM Sans (body).
+      Only the weights actually used by the theme are requested: Cormorant 400/500/600 as
+      static faces, DM Sans as a single variable file spanning 300–700. No italics are used
+      anywhere in the theme, so requesting them only cost downloads. 4 font files, not 12.
+    {%- endcomment -%}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300..700&display=swap">
 
     <title>
       {{ page_title }}
@@ -258,17 +263,22 @@
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
     {{ 'typography-attarwalas.css' | asset_url | stylesheet_tag }}
+    {%- comment -%}
+      Loaded once here instead of inside snippets/loading-spinner.liquid, which is rendered
+      repeatedly per page and was therefore emitting a duplicate render-blocking <link> each
+      time. Same bytes, one request.
+    {%- endcomment -%}
+    {{ 'component-loading-spinner.css' | asset_url | stylesheet_tag }}
 
-    {%- unless settings.type_body_font.system? -%}
-      {% comment %}theme-check-disable AssetPreload{% endcomment %}
-      <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
-      {% comment %}theme-check-enable AssetPreload{% endcomment %}
-    {%- endunless -%}
-    {%- unless settings.type_header_font.system? -%}
-      {% comment %}theme-check-disable AssetPreload{% endcomment %}
-      <link rel="preload" as="font" href="{{ settings.type_header_font | font_url }}" type="font/woff2" crossorigin>
-      {% comment %}theme-check-enable AssetPreload{% endcomment %}
-    {%- endunless -%}
+    {%- comment -%}
+      Dawn normally preloads the customizer's body/header fonts here. This theme overrides
+      --font-body-family / --font-heading-family in typography-attarwalas.css, so the
+      customizer font (currently BioRhyme) is never actually rendered — preloading it only
+      pulled two unused woff2 files at the highest priority, competing with the LCP image
+      and the Google Fonts above. The @font-face rules stay declared in the {% style %}
+      block above; unused @font-face costs nothing because browsers only fetch a face when
+      something references it.
+    {%- endcomment -%}
 
     {%- if localization.available_countries.size > 1 or localization.available_languages.size > 1 -%}
       {{ 'component-localization-form.css' | asset_url | stylesheet_tag: preload: true }}
@@ -291,7 +301,7 @@
     </script>
   </head>
 
-  <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">
+  <body class="template-{{ template.name }} gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">
     <a class="skip-to-content-link button visually-hidden" href="#MainContent">
       {{ 'accessibility.skip_to_text' | t }}
     </a>

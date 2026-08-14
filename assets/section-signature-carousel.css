@@ -86,11 +86,19 @@
   box-sizing: border-box;
   text-align: center;
   transform-origin: center center;
-  will-change: transform, opacity;
   backface-visibility: hidden;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* The track is built from 5 cloned sets, so there are ~30 of these in the DOM. Declaring
+   will-change on all of them permanently reserves a compositor layer — and a full texture
+   of a 430px product shot — for every one, most of which are parked far offscreen. The
+   carousel's render loop adds this class only to the handful of slides actually near the
+   centre, so the layer count tracks what is really being animated. */
+.signature-carousel__product--near {
+  will-change: transform, opacity;
 }
 
 .signature-carousel__image-link {
