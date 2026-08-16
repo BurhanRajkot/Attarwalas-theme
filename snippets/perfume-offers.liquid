@@ -1,0 +1,385 @@
+{%- liquid
+  comment
+    Compact "ticket" offer carousel — the Naseem-style row below the buy button.
+    Renders one ticket per product in the `offer` collection; each ticket links
+    to that product's offer page (the offer builder). Colors/text follow the
+    active theme scheme (CSS vars), so it always matches the site.
+  endcomment
+  assign ticket_offers = collections['offer'].products
+-%}
+
+{%- if ticket_offers != blank and ticket_offers.size > 0 -%}
+  {%- assign ticket_count = ticket_offers.size -%}
+{%- elsif request.design_mode -%}
+  {%- comment -%}
+    Placeholder tickets, so the section isn't an empty void while you're
+    building it in the theme editor. They're inert (not links) and they swap out
+    automatically once the `offer` collection has products visible to the Online
+    Store channel. Design mode ONLY — on the live storefront an empty `offer`
+    collection renders nothing at all, because dead tickets pointing at a
+    fallback URL are worse than no tickets.
+  {%- endcomment -%}
+  {%- assign ticket_count = 3 -%}
+  {%- assign design_preview = true -%}
+{%- else -%}
+  {%- assign ticket_count = 0 -%}
+{%- endif -%}
+
+{%- if ticket_count > 0 -%}
+  <style>
+    .aw-offers {
+      width: 100%;
+      padding: 0.6rem 0 1.6rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .aw-offers__wrapper {
+      position: relative;
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 0 4.4rem;
+    }
+
+    .aw-offers__track {
+      display: flex;
+      gap: 1.2rem;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      padding: 0.4rem 0.2rem 0.6rem;
+    }
+
+    .aw-offers__track::-webkit-scrollbar {
+      display: none;
+    }
+
+    .aw-offer {
+      position: relative;
+      flex: 0 0 calc((100% - 2.4rem) / 3);
+      min-width: 15rem;
+      display: block;
+      padding: 1.4rem;
+      border: 1px solid rgb(var(--color-foreground) / 0.14);
+      border-radius: 1.4rem;
+      background: rgb(var(--color-foreground) / 0.03);
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .aw-offer:hover {
+      border-color: rgb(var(--color-button));
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgb(var(--color-foreground) / 0.08);
+    }
+
+    .aw-offer__inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 14.5rem;
+      padding: 1.4rem 1rem;
+      border: 1px dotted rgb(var(--color-foreground) / 0.3);
+      border-radius: 1rem;
+      box-sizing: border-box;
+    }
+
+    .aw-offer__icon {
+      width: 2.2rem;
+      height: 2.6rem;
+      margin-bottom: 0.9rem;
+      position: relative;
+      color: rgb(var(--color-foreground));
+    }
+
+    .aw-offer__icon-body {
+      width: 1.5rem;
+      height: 1.7rem;
+      border: 0.15rem solid currentColor;
+      border-radius: 0.15rem;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .aw-offer__icon-body::after {
+      content: '';
+      position: absolute;
+      width: 0.6rem;
+      height: 0.35rem;
+      border: 0.12rem solid currentColor;
+      top: 0.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .aw-offer__icon-neck {
+      width: 0.75rem;
+      height: 0.4rem;
+      border: 0.15rem solid currentColor;
+      position: absolute;
+      top: 0.35rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgb(var(--color-background));
+    }
+
+    .aw-offer__icon-cap {
+      width: 0.95rem;
+      height: 0.3rem;
+      border: 0.15rem solid currentColor;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgb(var(--color-background));
+    }
+
+    .aw-offer__title {
+      margin: 0 0 0.4rem;
+      font-size: 1.5rem;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: rgb(var(--color-foreground));
+    }
+
+    .aw-offer__description {
+      margin: 0;
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: rgb(var(--color-foreground) / 0.65);
+    }
+
+    .aw-offer__link {
+      margin-top: 0.8rem;
+      font-size: 1.25rem;
+      line-height: 1.2;
+      font-weight: 700;
+      color: rgb(var(--color-button));
+      text-decoration: underline;
+      text-underline-offset: 0.3rem;
+      transition: opacity 0.2s ease;
+    }
+
+    .aw-offer:hover .aw-offer__link {
+      opacity: 0.75;
+    }
+
+    .aw-offers__arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3.2rem;
+      height: 3.2rem;
+      border: none;
+      border-radius: 50%;
+      background: rgb(var(--color-button));
+      color: rgb(var(--color-button-text));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0.9;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .aw-offers__arrow:hover {
+      opacity: 1;
+    }
+
+    .aw-offers__arrow:active {
+      transform: translateY(-50%) scale(0.94);
+    }
+
+    .aw-offers__arrow--left {
+      left: 0.8rem;
+    }
+
+    .aw-offers__arrow--right {
+      right: 0.8rem;
+    }
+
+    .aw-offers__arrow span {
+      display: block;
+      width: 0.8rem;
+      height: 0.8rem;
+      border-top: 0.2rem solid currentColor;
+      border-left: 0.2rem solid currentColor;
+    }
+
+    .aw-offers__arrow--left span {
+      transform: rotate(-45deg);
+      margin-left: 0.35rem;
+    }
+
+    .aw-offers__arrow--right span {
+      transform: rotate(135deg);
+      margin-right: 0.35rem;
+    }
+
+    @media screen and (max-width: 749px) {
+      .aw-offers__wrapper {
+        padding: 0 3.6rem;
+      }
+
+      .aw-offer {
+        flex: 0 0 88%;
+      }
+
+      .aw-offer__inner {
+        min-height: 12.5rem;
+      }
+    }
+  </style>
+
+  <div class="aw-offers">
+    <div class="aw-offers__wrapper">
+      <button
+        class="aw-offers__arrow aw-offers__arrow--left"
+        type="button"
+        aria-label="Previous offer"
+        data-aw-offer-prev
+      >
+        <span></span>
+      </button>
+
+      <div class="aw-offers__track" data-aw-offer-track>
+        {%- if design_preview -%}
+          <div class="aw-offer">
+            <div class="aw-offer__inner">
+              <div class="aw-offer__icon" aria-hidden="true">
+                <div class="aw-offer__icon-cap"></div>
+                <div class="aw-offer__icon-neck"></div>
+                <div class="aw-offer__icon-body"></div>
+              </div>
+              <h3 class="aw-offer__title">Get Any 2 For ₹1,999</h3>
+              <p class="aw-offer__description">Choose any 2 from the collection</p>
+              <span class="aw-offer__link">Offer for 2</span>
+            </div>
+          </div>
+          <div class="aw-offer">
+            <div class="aw-offer__inner">
+              <div class="aw-offer__icon" aria-hidden="true">
+                <div class="aw-offer__icon-cap"></div>
+                <div class="aw-offer__icon-neck"></div>
+                <div class="aw-offer__icon-body"></div>
+              </div>
+              <h3 class="aw-offer__title">Get Any 3 For ₹2,799</h3>
+              <p class="aw-offer__description">Choose any 3 from the collection</p>
+              <span class="aw-offer__link">Offer for 3</span>
+            </div>
+          </div>
+          <div class="aw-offer">
+            <div class="aw-offer__inner">
+              <div class="aw-offer__icon" aria-hidden="true">
+                <div class="aw-offer__icon-cap"></div>
+                <div class="aw-offer__icon-neck"></div>
+                <div class="aw-offer__icon-body"></div>
+              </div>
+              <h3 class="aw-offer__title">Get Any 5 For ₹3,999</h3>
+              <p class="aw-offer__description">Mix and match your favourite fragrances</p>
+              <span class="aw-offer__link">Offer for 5</span>
+            </div>
+          </div>
+        {%- else -%}
+        {%- for offer in ticket_offers -%}
+          {%- liquid
+            assign mf = offer.metafields.offer
+            assign badge_text = mf.badge.value
+            assign tagline_text = mf.tagline.value
+            assign pick_count = mf.pick_count.value | plus: 0
+            assign price_text = offer.price | money
+
+            assign discount_type = mf.discount_type.value | downcase
+            assign discount_amount = mf.discount_amount.value | plus: 0
+            assign use_discount = false
+            if discount_type == 'fixed' or discount_type == 'percent'
+              if discount_amount > 0
+                assign use_discount = true
+              endif
+            endif
+            if use_discount
+              if discount_type == 'fixed'
+                assign discount_money = discount_amount | times: 100 | money
+                assign discount_text = 'Flat ' | append: discount_money | append: ' off'
+              else
+                assign discount_text = discount_amount | append: '% off'
+              endif
+            endif
+
+            if badge_text != blank
+              assign headline = badge_text
+            elsif pick_count > 0
+              if use_discount
+                assign headline = 'Get any ' | append: pick_count | append: ' — ' | append: discount_text
+              else
+                assign headline = 'Get any ' | append: pick_count | append: ' for ' | append: price_text
+              endif
+            else
+              assign headline = price_text
+            endif
+            if tagline_text == blank
+              assign tagline_text = offer.title
+            endif
+          -%}
+
+          <a class="aw-offer" href="{{ offer.url }}">
+            <div class="aw-offer__inner">
+              <div class="aw-offer__icon" aria-hidden="true">
+                <div class="aw-offer__icon-cap"></div>
+                <div class="aw-offer__icon-neck"></div>
+                <div class="aw-offer__icon-body"></div>
+              </div>
+
+              <h3 class="aw-offer__title">{{ headline }}</h3>
+
+              <p class="aw-offer__description">{{ tagline_text }}</p>
+
+              <span class="aw-offer__link">{{ offer.title | escape }}</span>
+            </div>
+          </a>
+        {%- endfor -%}
+        {%- endif -%}
+      </div>
+
+      <button
+        class="aw-offers__arrow aw-offers__arrow--right"
+        type="button"
+        aria-label="Next offer"
+        data-aw-offer-next
+      >
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const track = document.querySelector('[data-aw-offer-track]');
+      const next = document.querySelector('[data-aw-offer-next]');
+      const prev = document.querySelector('[data-aw-offer-prev]');
+
+      if (!track || !next || !prev) return;
+
+      const getScrollAmount = () => {
+        const card = track.querySelector('.aw-offer');
+        if (!card) return 300;
+        return card.offsetWidth + 12;
+      };
+
+      next.addEventListener('click', function () {
+        track.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
+      });
+
+      prev.addEventListener('click', function () {
+        track.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
+      });
+    });
+  </script>
+{%- endif -%}

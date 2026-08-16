@@ -1,0 +1,138 @@
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign offers = section.settings.offer_products
+  if offers == blank or offers.size == 0
+    assign offers = section.settings.collection.products
+  endif
+  if offers == blank or offers.size == 0
+    assign offers = collections['offer'].products
+  endif
+-%}
+
+<div class="offer-teaser section-{{ section.id }}-padding color-{{ section.settings.color_scheme }}">
+  <div class="page-width">
+    {%- if section.settings.eyebrow != blank
+        or section.settings.title != blank
+        or section.settings.subtext != blank
+    -%}
+      <div class="offer-teaser__heading">
+        {%- if section.settings.eyebrow != blank -%}
+          <div class="offer-teaser__eyebrow">{{ section.settings.eyebrow }}</div>
+        {%- endif -%}
+        {%- if section.settings.title != blank -%}
+          <h2 class="offer-teaser__title">{{ section.settings.title }}</h2>
+        {%- endif -%}
+        {%- if section.settings.subtext != blank -%}
+          <p class="offer-teaser__subtext">{{ section.settings.subtext }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- render 'offer-strip', offer_products: offers, strip_id: section.id -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Offer Teaser",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows one card per offer product (\"Buy 2 for ₹1,999\", \"Buy 3 for ₹2,999\", …), linking to its offer page. Picks from the block's products, then the block's collection, then automatically from the \"offer\" collection. Each card's text comes from that product's offer metafields (badge, tagline and pick count)."
+    },
+    {
+      "type": "product_list",
+      "id": "offer_products",
+      "label": "Offers",
+      "limit": 12
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "…or a collection of offers",
+      "info": "Used only when no products are picked above."
+    },
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "default": "Limited time"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Today's offers"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "Pick your perfumes and pay one bundle price."
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        { "value": "scheme-1", "label": "Scheme 1" },
+        { "value": "scheme-2", "label": "Scheme 2" },
+        { "value": "scheme-3", "label": "Scheme 3" },
+        { "value": "scheme-4", "label": "Scheme 4" }
+      ],
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 64
+    }
+  ],
+  "presets": [
+    {
+      "name": "Offer Teaser"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,473 @@
+{{ 'section-offer-builder.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'offer-builder.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  comment
+    Config resolution order for every value: product metafield (namespace `offer`)
+    first, then the section setting as a fallback. Metafields let one shared
+    `product.offer` template drive many offer products; section settings let a
+    duplicated template be configured entirely in the theme editor.
+  endcomment
+
+  assign mf = product.metafields.offer
+
+  assign tagline = mf.tagline.value | default: section.settings.tagline
+  assign perks_raw = mf.perks.value | default: section.settings.perks
+  assign button_label = mf.button_label.value | default: section.settings.button_label
+  assign banner_image = mf.banner.value | default: section.settings.banner_image
+
+  assign badge_text = mf.badge.value | default: section.settings.badge
+
+  comment
+    Discount pricing: instead of a fixed bundle price, the offer can apply a
+    discount to the retail total of whatever the customer actually picks. The
+    cart price is then computed live (retail minus discount) and travels on the
+    lines as `_bundle_price` — the discount function applies it as usual.
+  endcomment
+  assign discount_type = mf.discount_type.value | default: section.settings.discount_type | downcase
+  assign discount_amount = mf.discount_amount.value | default: section.settings.discount_amount | plus: 0
+
+  assign use_discount = false
+  if discount_type != 'none' and discount_type != blank and discount_amount > 0
+    assign use_discount = true
+  endif
+
+  comment
+    Groups: a metafield-defined single group wins over editor blocks, so an offer
+    product can override a shared template without touching the customizer. The
+    `offer.collection` metafield may be a comma-separated list of collection
+    handles ("men, women, unisex") to merge several collections into one picker.
+  endcomment
+  assign mf_collection_handle = mf.collection.value | strip
+  assign mf_pick_count = mf.pick_count.value | plus: 0
+
+  assign group_blocks = section.blocks | where: 'type', 'group'
+
+  comment
+    A Pick group block counts as "configured" once it has hand-picked products
+    or a collection on it. Configured blocks WIN over the offer.collection
+    metafield — that's what lets one offer be curated by hand in the editor
+    while the others still run off the shared metafield config. Blocks that are
+    left empty change nothing, so adding a template doesn't break an offer.
+  endcomment
+  assign blocks_configured = false
+  for block in group_blocks
+    if block.settings.products != blank and block.settings.products.size > 0
+      assign blocks_configured = true
+    elsif block.settings.collection != blank
+      assign blocks_configured = true
+    endif
+  endfor
+
+  assign use_metafield_group = false
+  if mf_collection_handle != blank and mf_pick_count > 0 and blocks_configured == false
+    assign use_metafield_group = true
+  endif
+
+  # total items the customer has to pick across every group
+  assign total_pick_count = 0
+  if use_metafield_group
+    assign total_pick_count = mf_pick_count
+  else
+    for block in group_blocks
+      assign block_count = block.settings.pick_count | plus: 0
+      assign total_pick_count = total_pick_count | plus: block_count
+    endfor
+  endif
+
+  if badge_text == blank and total_pick_count > 0
+    if use_discount
+      if discount_type == 'fixed'
+        assign discount_money = discount_amount | times: 100 | money
+        assign discount_display = 'Flat ' | append: discount_money | append: ' off'
+      else
+        assign discount_display = discount_amount | append: '% off'
+      endif
+      assign badge_text = 'Get any ' | append: total_pick_count | append: ' — ' | append: discount_display
+    else
+      assign formatted_price = product.price | money
+      assign badge_text = 'Get any ' | append: total_pick_count | append: ' for ' | append: formatted_price
+    endif
+  endif
+-%}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{%- if total_pick_count == 0 -%}
+  {%- if request.design_mode -%}
+    <div class="page-width">
+      <div class="offer-builder__setup-hint">
+        <p>
+          <strong>This offer has no picker groups yet.</strong>
+          Use <em>Add block &rarr; Pick group</em> in the sidebar to add one
+          (choose the eligible collection and how many items the customer picks),
+          or set the <code>offer.collection</code> and <code>offer.pick_count</code>
+          metafields on this product.
+        </p>
+      </div>
+    </div>
+  {%- endif -%}
+{%- else -%}
+
+<offer-builder
+  id="OfferBuilder-{{ section.id }}"
+  class="offer-builder color-{{ section.settings.color_scheme }}"
+  data-offer-id="{{ product.id }}"
+  data-offer-handle="{{ product.handle }}"
+  data-offer-title="{{ product.title | escape }}"
+  data-offer-price="{{ product.price }}"
+  data-offer-price-formatted="{{ product.price | money }}"
+  data-total-pick-count="{{ total_pick_count }}"
+  data-money-format="{{ shop.money_format | strip_html | escape }}"
+  data-ready-label="{{ button_label | escape }}"
+  {% if use_discount %}
+    data-discount-type="{{ discount_type }}"
+    data-discount-amount="{{ discount_amount }}"
+  {% endif %}
+>
+  {%- if banner_image != blank -%}
+    <div class="offer-builder__banner-media{% if section.settings.banner_full_width %} offer-builder__banner-media--full{% endif %}">
+      {{
+        banner_image
+        | image_url: width: 2200
+        | image_tag:
+          loading: 'eager',
+          fetchpriority: 'high',
+          widths: '600, 900, 1200, 1600, 2200',
+          sizes: '100vw',
+          alt: product.title | escape
+      }}
+    </div>
+  {%- endif -%}
+
+  <div class="page-width section-{{ section.id }}-padding">
+    <header class="offer-builder__intro">
+      {%- if badge_text != blank -%}
+        <div class="offer-builder__badge">
+          {% render 'icon-discount' %}
+          <span>{{ badge_text }}</span>
+        </div>
+      {%- endif -%}
+
+      <h1 class="offer-builder__title">{{ product.title | escape }}</h1>
+
+      {%- if tagline != blank -%}
+        <p class="offer-builder__tagline">{{ tagline }}</p>
+      {%- endif -%}
+
+      <div class="offer-builder__price">
+        {%- if use_discount -%}
+          <span class="offer-builder__price-discount">
+            {%- if discount_type == 'fixed' -%}
+              Flat {{ discount_amount | times: 100 | money }} OFF
+            {%- else -%}
+              {{ discount_amount }}% OFF
+            {%- endif -%}
+          </span>
+          <span class="offer-builder__price-note">on any {{ total_pick_count }} perfumes</span>
+        {%- else -%}
+          <span class="offer-builder__price-now">{{ product.price | money }}</span>
+          {%- if product.compare_at_price > product.price -%}
+            <s class="offer-builder__price-was">{{ product.compare_at_price | money }}</s>
+            <span class="offer-builder__price-save">
+              Save {{ product.compare_at_price | minus: product.price | money }}
+            </span>
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+
+      {%- liquid
+        if perks_raw != blank
+          assign perks = perks_raw | newline_to_br | strip_html | split: '<br />'
+        endif
+      -%}
+      {%- if perks != blank and perks.size > 0 -%}
+        <ul class="offer-builder__perks">
+          {%- for perk in perks -%}
+            {%- if perk != blank -%}
+              <li>
+                {% render 'icon-checkmark' %}
+                <span>{{ perk | strip }}</span>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </header>
+
+    <div class="offer-builder__groups">
+      {%- if use_metafield_group -%}
+        {%- render 'offer-group',
+          group_index: 0,
+          group_heading: mf.group_heading.value,
+          group_collections: mf_collection_handle,
+          group_pick_count: mf_pick_count,
+          group_open: true,
+          offer_product: product,
+          add_label: section.settings.add_label,
+          soldout_label: section.settings.soldout_label
+        -%}
+      {%- else -%}
+        {%- for block in group_blocks -%}
+          {%- render 'offer-group',
+            group_index: forloop.index0,
+            group_heading: block.settings.heading,
+            group_products: block.settings.products,
+            group_collection: block.settings.collection,
+            group_pick_count: block.settings.pick_count,
+            group_open: block.settings.open_by_default,
+            offer_product: product,
+            add_label: section.settings.add_label,
+            soldout_label: section.settings.soldout_label,
+            block_attributes: block.shopify_attributes
+          -%}
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+
+    {%- liquid
+      # Sibling offers from the "offer" collection — lets the customer hop
+      # between "Offer for 2 / 3 / 5" without going back to the product page.
+      assign more_offers = collections['offer'].products
+      # filters aren't allowed on `render` arguments, so build the id up here
+      assign more_offers_strip_id = section.id | append: '-more'
+    -%}
+    {%- if more_offers != blank and more_offers.size > 0 -%}
+      <div class="offer-builder__more">
+        {%- render 'offer-strip',
+          offer_products: more_offers,
+          strip_heading: section.settings.more_offers_heading,
+          strip_id: more_offers_strip_id,
+          exclude_offer_id: product.id
+        -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="offer-builder__bar" data-offer-bar>
+    <div class="offer-builder__bar-inner page-width">
+      <div class="offer-builder__bar-summary">
+        <div class="offer-builder__bar-progress">
+          <span class="offer-builder__bar-count" data-offer-counter>0 / {{ total_pick_count }}</span>
+          <span class="offer-builder__bar-label">{{ section.settings.selected_label }}</span>
+        </div>
+        <p class="offer-builder__bar-picks" data-offer-picks></p>
+      </div>
+
+      <div class="offer-builder__bar-cta">
+        <div class="offer-builder__bar-pricing">
+          <span class="offer-builder__bar-price" data-offer-bar-price>{{ product.price | money }}</span>
+          <span class="offer-builder__bar-worth" data-offer-worth hidden></span>
+        </div>
+        <button type="button" class="offer-builder__bar-add button button--primary" data-offer-add disabled>
+          <span data-offer-add-label>{{ button_label }}</span>
+          {% render 'loading-spinner' %}
+        </button>
+      </div>
+    </div>
+    <p class="offer-builder__bar-error" data-offer-error hidden role="alert"></p>
+  </div>
+</offer-builder>
+
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Offer Builder",
+  "tag": "section",
+  "class": "section section--offer-builder",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "The offer product's own price is the bundle price (or set a Discount below to price it off the retail total instead). Add one \"Pick group\" block per set the customer picks from — each block takes either hand-picked products or a collection."
+    },
+    {
+      "type": "image_picker",
+      "id": "banner_image",
+      "label": "Banner image",
+      "info": "Wide promo image shown above the title. Overridden by the offer.banner metafield."
+    },
+    {
+      "type": "checkbox",
+      "id": "banner_full_width",
+      "label": "Banner spans full window width",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "badge",
+      "label": "Badge text",
+      "info": "Leave blank to auto-generate from the pick count and price."
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Tagline",
+      "default": "Mix and match your favourites and pay one bundle price."
+    },
+    {
+      "type": "textarea",
+      "id": "perks",
+      "label": "Perks (one per line)",
+      "default": "Free shipping on this offer\nMix any sizes you like"
+    },
+    {
+      "type": "header",
+      "content": "Discount"
+    },
+    {
+      "type": "select",
+      "id": "discount_type",
+      "options": [
+        { "value": "none", "label": "No discount — use the product's fixed price" },
+        { "value": "fixed", "label": "Fixed amount off (₹)" },
+        { "value": "percent", "label": "Percentage off (%)" }
+      ],
+      "default": "none",
+      "label": "Discount type"
+    },
+    {
+      "type": "number",
+      "id": "discount_amount",
+      "label": "Discount amount",
+      "default": 0,
+      "info": "In ₹ for \"Fixed amount off\", in % for \"Percentage off\". The customer's cart price = retail total of the picked perfumes minus this discount, computed live. Overridden by the offer.discount_type / offer.discount_amount metafields."
+    },
+    {
+      "type": "header",
+      "content": "Labels"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Add to cart button",
+      "default": "Add bundle to cart"
+    },
+    {
+      "type": "text",
+      "id": "add_label",
+      "label": "Product card button",
+      "default": "Add to bundle"
+    },
+    {
+      "type": "text",
+      "id": "soldout_label",
+      "label": "Sold out button",
+      "default": "Sold out"
+    },
+    {
+      "type": "text",
+      "id": "selected_label",
+      "label": "Sticky bar count label",
+      "default": "selected"
+    },
+    {
+      "type": "text",
+      "id": "more_offers_heading",
+      "label": "More offers heading",
+      "default": "More offers",
+      "info": "Shown above the other offer cards at the bottom of this page. The cards come from the \"offer\" collection automatically (the current offer is skipped)."
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        { "value": "scheme-1", "label": "Scheme 1" },
+        { "value": "scheme-2", "label": "Scheme 2" },
+        { "value": "scheme-3", "label": "Scheme 3" },
+        { "value": "scheme-4", "label": "Scheme 4" }
+      ],
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "group",
+      "name": "Pick group",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "info": "e.g. Choose 2 items from Modern Collection",
+          "default": "Choose 2 items"
+        },
+        {
+          "type": "product_list",
+          "id": "products",
+          "label": "Products",
+          "limit": 50,
+          "info": "Hand-pick exactly what the customer can choose from, in this order. Takes priority over the collection below AND over the offer.collection metafield, so this is how you curate one offer differently from the others."
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "…or an eligible collection",
+          "info": "Used only when no products are hand-picked above."
+        },
+        {
+          "type": "range",
+          "id": "pick_count",
+          "label": "Items to pick",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 2
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "label": "Expanded by default",
+          "default": true
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Offer Builder",
+      "blocks": [{ "type": "group" }]
+    }
+  ]
+}
+{% endschema %}

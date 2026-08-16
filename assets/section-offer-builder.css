@@ -1,0 +1,769 @@
+/* ==========================================================================
+   Offer Builder — "pick any N for a fixed price" bundle page
+   ========================================================================== */
+
+.offer-builder {
+  display: block;
+  position: relative;
+  /* room so nothing ends up hidden behind the sticky bar */
+  padding-bottom: 2rem;
+}
+
+.offer-builder__setup-hint {
+  margin: 4rem 0;
+  padding: 2.4rem;
+  border: 1px dashed rgb(var(--color-foreground) / 0.3);
+  border-radius: 0.8rem;
+  font-size: 1.4rem;
+  line-height: 1.6;
+}
+
+/* --------------------------------- Banner --------------------------------- */
+
+.offer-builder__banner-media {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.offer-builder__banner-media--full {
+  max-width: none;
+  padding: 0;
+}
+
+.offer-builder__banner-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------------------------------- Intro --------------------------------- */
+
+.offer-builder__intro {
+  text-align: center;
+  max-width: 70rem;
+  margin: 0 auto 4.8rem;
+}
+
+.offer-builder__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 1.6rem;
+  border: 1px solid rgb(var(--color-foreground) / 0.25);
+  border-radius: 999px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.offer-builder__badge svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.offer-builder__title {
+  margin: 1.6rem 0 0;
+  font-size: clamp(2.8rem, 5vw, 4.8rem);
+  line-height: 1.1;
+}
+
+.offer-builder__tagline {
+  margin: 1.2rem auto 0;
+  max-width: 52rem;
+  font-size: 1.5rem;
+  color: rgb(var(--color-foreground) / 0.72);
+}
+
+.offer-builder__price {
+  margin-top: 2rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.offer-builder__price-now {
+  font-size: 2.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.offer-builder__price-was {
+  font-size: 1.8rem;
+  opacity: 0.5;
+}
+
+.offer-builder__price-save {
+  font-size: 1.3rem;
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+  border-radius: 999px;
+  background: rgb(var(--color-foreground) / 0.08);
+}
+
+/* Big Naseem-style "Flat ₹1,000 OFF" / "25% OFF" callout when the offer uses
+   discount pricing instead of a fixed bundle price. */
+.offer-builder__price-discount {
+  padding: 0.7rem 2.2rem;
+  border-radius: 999px;
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-text));
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.offer-builder__price-note {
+  font-size: 1.6rem;
+  color: rgb(var(--color-foreground) / 0.75);
+}
+
+.offer-builder__perks {
+  list-style: none;
+  margin: 2.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem 2.4rem;
+}
+
+.offer-builder__perks li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.4rem;
+  color: rgb(var(--color-foreground) / 0.8);
+}
+
+.offer-builder__perks svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------- Groups -------------------------------- */
+
+.offer-group + .offer-group {
+  margin-top: 1.6rem;
+}
+
+.offer-group__details {
+  border: 1px solid rgb(var(--color-foreground) / 0.12);
+  border-radius: 1.2rem;
+  overflow: hidden;
+  background: rgb(var(--color-foreground) / 0.02);
+}
+
+/* A finished group recedes so the customer's eye lands on the one still to do */
+.offer-group--complete .offer-group__details {
+  border-color: rgb(var(--color-button) / 0.45);
+}
+
+.offer-group__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+  padding: 1.8rem 2rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.offer-group__summary::-webkit-details-marker {
+  display: none;
+}
+
+.offer-group__summary:hover {
+  background: rgb(var(--color-foreground) / 0.04);
+}
+
+.offer-group__summary-text {
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.offer-group__summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-shrink: 0;
+}
+
+.offer-group__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: rgb(var(--color-foreground) / 0.08);
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.offer-group__pill--complete {
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-text));
+}
+
+.offer-group__pill--full {
+  animation: offer-pill-shake 0.4s ease;
+}
+
+@keyframes offer-pill-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.offer-group__toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.offer-group__details[open] .offer-group__toggle svg {
+  transform: rotate(180deg);
+}
+
+.offer-group__content {
+  padding: 0 2rem 2.4rem;
+  border-top: 1px solid rgb(var(--color-foreground) / 0.08);
+}
+
+.offer-group__empty {
+  padding: 2.4rem 0;
+  text-align: center;
+  font-size: 1.4rem;
+  opacity: 0.7;
+}
+
+/* ---------------------------------- Grid ---------------------------------- */
+
+.offer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem 1.2rem;
+  padding-top: 2rem;
+}
+
+@media screen and (min-width: 750px) {
+  .offer-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3.2rem 2.4rem;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .offer-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------- Card ---------------------------------- */
+
+.offer-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1rem 1.2rem;
+  background: rgb(var(--color-background));
+  border: 1px solid rgb(var(--color-foreground) / 0.1);
+  border-radius: 1.2rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+@media (hover: hover) {
+  .offer-card:not(.offer-card--soldout):hover {
+    border-color: rgb(var(--color-foreground) / 0.28);
+    box-shadow: 0 6px 18px rgb(var(--color-foreground) / 0.07);
+    transform: translateY(-2px);
+  }
+}
+
+/* Selected reads as an accent ring rather than a plain dark border, so a full
+   group is scannable at a glance on a small screen. */
+.offer-card--selected,
+.offer-card--selected:hover {
+  border-color: rgb(var(--color-button));
+  box-shadow: 0 0 0 1px rgb(var(--color-button)),
+    0 4px 16px rgb(var(--color-foreground) / 0.1);
+}
+
+.offer-card--dimmed {
+  opacity: 0.45;
+}
+
+.offer-card--soldout {
+  opacity: 0.55;
+}
+
+.offer-card--soldout .offer-card__image {
+  filter: grayscale(1);
+}
+
+.offer-card__media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.8rem;
+  background: rgb(var(--color-foreground) / 0.03);
+}
+
+.offer-card__media img,
+.offer-card__media .placeholder-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.4s ease;
+}
+
+.offer-card:not(.offer-card--soldout):hover .offer-card__media img {
+  transform: scale(1.04);
+}
+
+.offer-card__check {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-text));
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.offer-card__check svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.offer-card--selected .offer-card__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.offer-card__body {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+  text-align: center;
+}
+
+.offer-card__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.offer-card__variant-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.offer-card__variant-label {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.offer-card__variant {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgb(var(--color-foreground) / 0.25);
+  border-radius: 0.4rem;
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-foreground));
+  font-family: inherit;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.offer-card__price {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.offer-card__add {
+  margin-top: auto;
+  width: 100%;
+  /* 4.4rem keeps the button a comfortable thumb target on phones */
+  min-height: 4.4rem;
+  padding: 1rem 0.8rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: rgb(var(--color-foreground));
+  color: rgb(var(--color-background));
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.offer-card__add[hidden] {
+  display: none;
+}
+
+.offer-card__add:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.offer-card__add:disabled {
+  background: rgb(var(--color-foreground) / 0.35);
+  cursor: not-allowed;
+}
+
+.offer-card__qty {
+  margin-top: auto;
+  width: 100%;
+  min-height: 4.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgb(var(--color-button));
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+
+.offer-card__qty[hidden] {
+  display: none;
+}
+
+.offer-card__qty-btn {
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.offer-card__qty-btn:hover {
+  background: rgb(var(--color-foreground) / 0.08);
+}
+
+.offer-card__qty-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.offer-card__qty-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------- More offers (sibling cards) ------------------ */
+
+.offer-builder__more {
+  margin-top: 4.8rem;
+  padding-top: 2.4rem;
+  border-top: 1px solid rgb(var(--color-foreground) / 0.1);
+}
+
+/* ------------------------------- Sticky bar ------------------------------- */
+
+.offer-builder__bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  background: rgb(var(--color-background));
+  border-top: 1px solid rgb(var(--color-foreground) / 0.12);
+  box-shadow: 0 -4px 20px rgb(var(--color-foreground) / 0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.offer-builder__bar--docked {
+  box-shadow: none;
+}
+
+.offer-builder__bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+  padding-top: 1.2rem;
+  padding-bottom: 1.2rem;
+}
+
+.offer-builder__bar-summary {
+  min-width: 0;
+}
+
+.offer-builder__bar-progress {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.offer-builder__bar-count {
+  font-size: 1.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.offer-builder__bar-label {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.65;
+}
+
+.offer-builder__bar-picks {
+  margin: 0.2rem 0 0;
+  max-width: 46rem;
+  font-size: 1.3rem;
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.offer-builder__bar-cta {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  flex-shrink: 0;
+}
+
+.offer-builder__bar-pricing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.3;
+}
+
+.offer-builder__bar-price {
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.offer-builder__bar-worth {
+  font-size: 1.2rem;
+  opacity: 0.75;
+}
+
+.offer-builder__bar-worth[hidden] {
+  display: none;
+}
+
+.offer-builder__bar-worth b {
+  font-weight: 600;
+}
+
+.offer-builder__bar-add {
+  min-width: 22rem;
+  min-height: 4.8rem;
+  justify-content: center;
+}
+
+.offer-builder__bar-add[disabled] {
+  cursor: not-allowed;
+}
+
+.offer-builder__bar-error {
+  margin: 0;
+  padding: 0 1.5rem 1.2rem;
+  text-align: center;
+  font-size: 1.3rem;
+  color: rgba(var(--color-error, 200 30 30) / 1);
+}
+
+.offer-builder__bar-error[hidden] {
+  display: none;
+}
+
+@media screen and (max-width: 749px) {
+  /* ---- intro: less scrolling before the customer reaches the picker ---- */
+  .offer-builder__intro {
+    margin-bottom: 2.8rem;
+  }
+
+  .offer-builder__badge {
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+  }
+
+  .offer-builder__tagline {
+    font-size: 1.4rem;
+  }
+
+  .offer-builder__perks {
+    margin-top: 1.6rem;
+    gap: 0.6rem 1.6rem;
+  }
+
+  .offer-builder__perks li {
+    font-size: 1.3rem;
+  }
+
+  .offer-builder__banner-media {
+    padding: 0 1rem;
+  }
+
+  .offer-builder__banner-media img {
+    border-radius: 0.8rem;
+  }
+
+  /* ---- groups ---- */
+  .offer-group__summary {
+    padding: 1.4rem 1.2rem;
+  }
+
+  .offer-group__summary-text {
+    font-size: 1.4rem;
+  }
+
+  .offer-group__content {
+    padding-inline: 1rem;
+  }
+
+  /* ---- cards ---- */
+  .offer-card {
+    padding: 0.8rem 0.8rem 1rem;
+    border-radius: 1rem;
+  }
+
+  .offer-card__body {
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .offer-card__title {
+    font-size: 1.3rem;
+  }
+
+  .offer-card__add {
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+  }
+
+  .offer-card__variant-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+
+  .offer-card__variant-label {
+    text-align: left;
+  }
+
+  .offer-card__variant {
+    /* 16px avoids iOS Safari zooming the page when the select is tapped */
+    font-size: 1.6rem;
+    padding: 0.8rem;
+  }
+
+  /* ---- sticky bar ---- */
+  .offer-builder__bar-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding-top: 1rem;
+    /* clear the iOS home indicator so the button isn't half off-screen */
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .offer-builder__bar-summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.2rem;
+  }
+
+  .offer-builder__bar-count {
+    font-size: 1.6rem;
+  }
+
+  .offer-builder__bar-picks {
+    max-width: 55%;
+    text-align: right;
+  }
+
+  .offer-builder__bar-cta {
+    justify-content: space-between;
+    gap: 1.2rem;
+  }
+
+  .offer-builder__bar-add {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+/* Small phones: drop the running pick list, it's ellipsised to nothing useful
+   at this width and the vertical space is better spent on the button. */
+@media screen and (max-width: 480px) {
+  .offer-builder__bar-picks {
+    display: none;
+  }
+
+  .offer-builder__bar-price {
+    font-size: 1.8rem;
+  }
+
+  .offer-grid {
+    gap: 1.2rem 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offer-card,
+  .offer-card__media img,
+  .offer-card__check {
+    transition: none;
+  }
+
+  .offer-card:not(.offer-card--soldout):hover {
+    transform: none;
+  }
+
+  .offer-group__pill--full {
+    animation: none;
+  }
+}

@@ -1,0 +1,109 @@
+{% comment %}
+  Renders the offer deals row — one card per offer product ("Buy 2 for ₹1,999",
+  "Buy 3 for ₹2,999", …), each linking through to that product's offer page.
+
+  Accepts:
+  - offer_products {Array<Product>} offers to show
+  - strip_heading {String} optional heading shown above the cards
+  - strip_id {String} unique id for this instance
+  - exclude_offer_id {Number} optional product id to skip (e.g. the offer page
+    the strip is shown on, so it never links to itself)
+  - block_attributes {String} block.shopify_attributes, when rendered from a block
+
+  Usage:
+  {% render 'offer-strip', offer_products: my_products, strip_heading: 'Offers', strip_id: 'abc' %}
+{% endcomment %}
+
+{{ 'section-offer-teaser.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign deals = offer_products | where: 'available'
+  if deals == blank or deals.size == 0
+    assign deals = offer_products
+  endif
+  if exclude_offer_id != blank
+    assign deals = deals | where: 'id', '!=', exclude_offer_id
+  endif
+-%}
+
+{%- if deals != blank and deals.size > 0 -%}
+  <div class="offer-deals" id="OfferDeals-{{ strip_id }}" {{ block_attributes }}>
+    {%- if strip_heading != blank -%}
+      <div class="offer-deals__heading">
+        {% render 'icon-discount' %}
+        <span>{{ strip_heading }}</span>
+      </div>
+    {%- endif -%}
+
+    <ul class="offer-deals__grid" role="list">
+      {%- for offer in deals -%}
+        {%- liquid
+          assign mf = offer.metafields.offer
+          assign badge_text = mf.badge.value
+          assign tagline_text = mf.tagline.value
+          assign pick_count = mf.pick_count.value | plus: 0
+          assign price_text = offer.price | money
+
+          assign discount_type = mf.discount_type.value | downcase
+          assign discount_amount = mf.discount_amount.value | plus: 0
+          assign use_discount = false
+          if discount_type == 'fixed' or discount_type == 'percent'
+            if discount_amount > 0
+              assign use_discount = true
+            endif
+          endif
+          if use_discount
+            if discount_type == 'fixed'
+              assign discount_money = discount_amount | times: 100 | money
+              assign discount_text = 'Flat ' | append: discount_money | append: ' off'
+            else
+              assign discount_text = discount_amount | append: '% OFF'
+            endif
+          endif
+        -%}
+        <li class="offer-deals__item">
+          <a class="offer-deal" href="{{ offer.url }}">
+            <span class="offer-deal__inner">
+              <span class="offer-deal__pill">
+                {% render 'icon-discount' %}
+                <span>Offer</span>
+              </span>
+
+              {%- if badge_text != blank -%}
+                <span class="offer-deal__headline">{{ badge_text }}</span>
+              {%- elsif pick_count > 0 -%}
+                <span class="offer-deal__headline">
+                  Buy&nbsp;<span class="offer-deal__count">{{ pick_count }}</span>
+                </span>
+              {%- else -%}
+                <span class="offer-deal__headline">{{ price_text }}</span>
+              {%- endif -%}
+
+              {%- if use_discount -%}
+                <span class="offer-deal__price">{{ discount_text }}</span>
+              {%- elsif pick_count > 0 -%}
+                <span class="offer-deal__price">For {{ price_text }}</span>
+              {%- endif -%}
+
+              {%- if tagline_text != blank -%}
+                <span class="offer-deal__tagline">{{ tagline_text }}</span>
+              {%- endif -%}
+
+              <span class="offer-deal__name">{{ offer.title | escape }}</span>
+
+              <span class="offer-deal__cta">
+                <span>Shop the offer</span>
+                {% render 'icon-arrow' %}
+              </span>
+            </span>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+{%- elsif request.design_mode -%}
+  <div class="offer-deals__setup-hint">
+    Pick the offer products (or a collection of them) in this block's settings to
+    show the offer deals here.
+  </div>
+{%- endif -%}

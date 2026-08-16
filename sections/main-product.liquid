@@ -459,6 +459,22 @@
                   product_form_id: product_form_id,
                   section_id: section.id
                 -%}
+              {%- when 'offer_tickets' -%}
+                {%- liquid
+                  assign strip_offers = block.settings.offer_products
+                  if strip_offers == blank or strip_offers.size == 0
+                    assign strip_offers = block.settings.collection.products
+                  endif
+                  if strip_offers == blank or strip_offers.size == 0
+                    assign strip_offers = collections['offer'].products
+                  endif
+                -%}
+                {%- render 'offer-strip',
+                  offer_products: strip_offers,
+                  strip_heading: block.settings.heading,
+                  strip_id: block.id,
+                  block_attributes: block.shopify_attributes
+                -%}
               {%- when 'rating' -%}
                 {%- if product.metafields.reviews.rating.value != blank -%}
                   <div class="rating-wrapper">
@@ -792,6 +808,34 @@
   "blocks": [
     {
       "type": "@app"
+    },
+    {
+      "type": "offer_tickets",
+      "name": "Offers",
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Shows one card per offer (e.g. \"Buy 2 for ₹1,999\") below the buy button. Each card links to that offer product's offer page. Uses the picked products, then the picked collection, then automatically the \"offer\" collection. Card text comes from the offer product's offer.badge, offer.tagline and offer.pick_count metafields."
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Offers"
+        },
+        {
+          "type": "product_list",
+          "id": "offer_products",
+          "label": "Offers",
+          "limit": 12
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "…or a collection of offers",
+          "info": "Used only when no products are picked above. Handy when you add new offers often."
+        }
+      ]
     },
     {
       "type": "text",

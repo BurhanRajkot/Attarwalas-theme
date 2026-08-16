@@ -109,6 +109,130 @@ without checking with the user first:
   on mobile) so the hero reads closer to a standard full-width hero banner rather than the
   theme's tallest built-in option or a full 100vh screen-filling banner.
 
+## Offer / "Pick Any N" bundle system
+
+Naseem-style fixed-price offers ("GET ANY 2 FOR ₹1,999").
+
+**An offer is just a product.** A real product priced at the bundle price, with
+the `offer` template suffix so it renders `templates/product.offer.json` at
+`/products/<handle>`. No app is required for any of this to work.
+
+### Files
+
+| File | Role |
+| --- | --- |
+| `templates/product.offer.json` | the offer page template (offer-builder only, no related products — the sticky bar needs to be the last thing on the page) |
+| `sections/offer-builder.liquid` | the offer page: banner image, badge/title/tagline/price/perks, one or more pick groups, sticky add-to-cart bar |
+| `snippets/offer-group.liquid` | one "Choose N items from X" accordion + its product grid |
+| `assets/offer-builder.js` | `<offer-builder>` custom element — per-group selection, live savings, `/cart/add.js` |
+| `assets/section-offer-builder.css` | offer page styles |
+| `snippets/offer-strip.liquid` | the "Buy 2 / Buy 3 / Buy 5" deal cards row (one card per offer product, each linking to its offer page) |
+| `snippets/perfume-offers.liquid` | compact Naseem-style ticket carousel used on the product template via a custom-liquid section (renders from the `offer` collection; shows sample tickets in theme-editor design mode so the look is visible before any offer products exist) |
+| `assets/section-offer-teaser.css` | deal card + teaser styles |
+| `sections/offer-teaser.liquid` | standalone section wrapper around the deal cards (homepage etc.) |
+| `sections/main-product.liquid` | hosts the **`offer_tickets` block** — this is how the deal cards get added under the buy button |
+
+The deal cards everywhere fall back automatically to the store's **`offer` collection**
+(no picker config needed): main-product's `offer_tickets` block, the homepage
+`offer-teaser` section, and the "More offers" row at the bottom of every offer page
+(`offer-builder` renders it via `offer-strip`, skipping the current offer product).
+
+### Configuring an offer
+
+Two interchangeable paths. Precedence for **who the customer can pick from** is:
+
+```
+configured Pick group block  >  offer.collection metafield  >  empty state
+```
+
+A Pick group block counts as *configured* once it has hand-picked products or a
+collection on it. An empty block changes nothing, so a template can ship with a
+block in place and still run off the metafield until someone curates it.
+Everything else (badge/tagline/banner/perks/pricing) is still **metafield wins**.
+
+1. **Theme editor** (no metafields needed). Duplicate the `offer` product template
+   per offer, then set banner/badge/tagline/perks in the section and add one
+   **Pick group** block per set (each with its own heading, pick count, and
+   either hand-picked `products` or a `collection`). Multiple groups is how
+   "choose 2 from A *and* 3 from B" works.
+
+   **Per-offer templates**: `templates/product.offer-2.json`, `-3`, `-5` exist so
+   each offer can be curated separately — hand-picking products in the shared
+   `product.offer` template would apply to every offer at once. Point each offer
+   product at its own template suffix (`offer-2` / `offer-3` / `offer-5`) in
+   admin → product → Theme template.
+2. **Metafields** (namespace `offer`, listed in
+   `~/Desktop/SHOPIFY/offer-metafields/product.json` — kept outside the theme
+   dir because the theme CLI rejects files in `config/` subfolders) —
+   `badge`, `tagline`, `banner`, `perks`, `button_label`, `discount_type` +
+   `discount_amount`, plus `collection` + `pick_count` + `group_heading` for a
+   single-group offer. Setting `collection` **and** `pick_count` drives the picker
+   whenever no Pick group block is configured, which is what lets many offer
+   products share one template. `collection` may be a **comma-separated list** of handles
+   (e.g. `men, women, unisex`) to merge several collections into one picker
+   (products deduped across them).
+
+**Store data created/published 2026-08-16 (not part of this repo):**
+- Metafield definitions under Settings > Custom data > Products (namespace
+  `offer`: `badge`, `tagline`, `collection`, `pick_count`, `group_heading`,
+  `banner`, `perks`, `button_label`, `discount_type`, `discount_amount`).
+- The `offer` collection (manual, handle `offer`).
+- Three offer products, template `offer`, tag `offer`, fixed bundle pricing:
+  `offer-for-2` ₹1,999 / `offer-for-3` ₹2,799 / `offer-for-5` ₹3,999, each with
+  `offer.collection = "men, women, unisex"`, `pick_count`, `tagline` and
+  `group_heading` set. All three products **and** the `offer` collection are
+  published to the Online Store publication
+  (`gid://shopify/Publication/113826693408`).
+- Publishing was done with a per-user OAuth app token (client id
+  `52fdcd05a37f7d2b71442b959b742f41`, client secret in the Dev Dashboard,
+  redirect `https://shopify.dev/apps/default-app-home/api/auth`): exchange the
+  `code=` from the redirect for `shpat_…` at
+  `POST /admin/oauth/access_token`, then call `publishablePublish` with
+  `input: { publicationId }` (2026-10 schema — `publicationIds` no longer
+  exists). The token must be used with the `X-Shopify-Access-Token` header.
+  Identity-exchanged `atkn_` tokens can never hold the `read_publications`
+  scope — only a real OAuth grant can.
+- `offer-for-3`'s metafields were written late (they were missing at first
+  check) — if an offer page ever renders a generic "Choose N items" heading
+  with an empty grid, its `offer.*` metafields are probably missing.
+
+`badge` and `tagline` are also what the offer deal cards display, so an offer with
+those two metafields set needs zero extra config to appear correctly on product pages.
+
+### Pricing / how the discount holds
+
+- Two pricing modes, chosen per offer via `discount_type`/`discount_amount`
+  (section settings or metafields, metafields win):
+  - **Fixed bundle price** (default): the offer product's own price, shown
+    upfront on the page.
+  - **Discount pricing** (`fixed` = ₹ off, `percent` = % off): the bundle price
+    is *computed live* as the retail total of whatever the customer picks minus
+    the discount — shown in the sticky bar as they select, and sent as
+    `_bundle_price` at add-to-cart time. The page hero shows the discount as the
+    callout (e.g. "Flat ₹1,000 OFF") instead of a fixed price.
+- The page adds the picked perfumes as **ordinary cart lines**. The offer product
+  never enters the cart — it only supplies the page and the pricing.
+- Every line of one bundle carries the same properties: `Offer` (visible, the
+  offer's name), `_bundle` (unique per add, so two bundles never merge),
+  `_bundle_price` (decimal, e.g. `1999.00`) and `_bundle_size` (unit count).
+- A **product discount function** (`~/Desktop/SHOPIFY/offer-transform-app`, a
+  separate app, NOT this repo — see `README.md`) groups those lines by `_bundle`
+  and discounts them down to `_bundle_price`. It's activated from Admin →
+  Discounts as one automatic discount that covers every offer forever; nothing
+  per-offer, because price and size travel on the cart lines.
+- The function bails out when a bundle's units no longer match `_bundle_size`, so
+  editing quantities in the cart reverts the bundle to full price.
+- **Without the discount set up, offers add at full price** — the customer is
+  over-charged, not under-charged. Set it up before linking customers to an offer.
+- `cart-transform-legacy/` in the app folder is the superseded cart-transform
+  approach; it needed an app backend to call `cartTransformCreate`, which is why
+  it was dropped.
+
+### Gotcha
+
+`{% return %}` is not a Shopify Liquid tag — early-exit guards in these sections
+use `{% if %}…{% else %}` around the whole body instead.
+
 ## Useful Shopify CLI commands
 
 ```

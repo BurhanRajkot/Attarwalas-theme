@@ -1,0 +1,35 @@
+{
+  "sections": {
+    "offer-builder": {
+      "type": "offer-builder",
+      "blocks": {
+        "group-1": {
+          "type": "group",
+          "settings": {
+            "heading": "Choose any 3 perfumes",
+            "pick_count": 3,
+            "open_by_default": true
+          }
+        }
+      },
+      "block_order": [
+        "group-1"
+      ],
+      "settings": {
+        "banner_full_width": false,
+        "tagline": "Pick any 3 and pay one bundle price.",
+        "perks": "Free shipping on this offer\nMix any sizes you like",
+        "button_label": "Add bundle to cart",
+        "add_label": "Add to bundle",
+        "soldout_label": "Sold out",
+        "selected_label": "selected",
+        "color_scheme": "scheme-1",
+        "padding_top": 40,
+        "padding_bottom": 40
+      }
+    }
+  },
+  "order": [
+    "offer-builder"
+  ]
+}
