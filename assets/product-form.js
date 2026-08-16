@@ -20,18 +20,21 @@ if (!customElements.get('product-form')) {
         evt.preventDefault();
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
 
+        const buyNowButton = evt.submitter && evt.submitter.name === 'checkout' ? evt.submitter : null;
+        const activeButton = buyNowButton || this.submitButton;
+
         this.handleErrorMessage();
 
-        this.submitButton.setAttribute('aria-disabled', true);
-        this.submitButton.classList.add('loading');
-        this.querySelector('.loading__spinner').classList.remove('hidden');
+        activeButton.setAttribute('aria-disabled', true);
+        activeButton.classList.add('loading');
+        activeButton.querySelector('.loading__spinner').classList.remove('hidden');
 
         const config = fetchConfig('javascript');
         config.headers['X-Requested-With'] = 'XMLHttpRequest';
         delete config.headers['Content-Type'];
 
         const formData = new FormData(this.form);
-        if (this.cart) {
+        if (this.cart && !buyNowButton) {
           formData.append(
             'sections',
             this.cart.getSectionsToRender().map((section) => section.id)
@@ -44,6 +47,16 @@ if (!customElements.get('product-form')) {
         fetch(`${routes.cart_add_url}`, config)
           .then((response) => response.json())
           .then((response) => {
+            if (buyNowButton) {
+              if (response.status) {
+                this.handleErrorMessage(response.description);
+                this.error = true;
+                return;
+              }
+              window.location.href = '/checkout';
+              return;
+            }
+
             if (response.status) {
               publish(PUB_SUB_EVENTS.cartError, {
                 source: 'product-form',
@@ -92,9 +105,10 @@ if (!customElements.get('product-form')) {
             console.error(e);
           })
           .finally(() => {
-            this.submitButton.classList.remove('loading');
+            if (buyNowButton) return;
+            activeButton.classList.remove('loading');
             if (this.cart && this.cart.classList.contains('is-empty')) this.cart.classList.remove('is-empty');
-            if (!this.error) this.submitButton.removeAttribute('aria-disabled');
+            if (!this.error) activeButton.removeAttribute('aria-disabled');
             this.querySelector('.loading__spinner').classList.add('hidden');
           });
       }

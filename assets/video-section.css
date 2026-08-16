@@ -60,6 +60,14 @@
   box-shadow: none;
 }
 
+.video-section__hero-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .video-section__hero video,
 .video-section__hero iframe {
   position: absolute;
@@ -228,6 +236,97 @@
   stroke: rgb(var(--color-button-label));
 }
 
+.video-section__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 15px 42px;
+  border-radius: 999px;
+  font-family: var(--font-body-family, Arial, sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.video-section__btn--outline {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%);
+  color: #ffffff;
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 8px 28px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.video-section__btn--outline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.28) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  transition: left 0.7s ease;
+}
+
+.video-section__btn--solid {
+  border: 1px solid rgb(var(--color-button));
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-label));
+  box-shadow: 0 6px 24px rgb(var(--color-button) / 0.35);
+}
+
+.video-section__btn:hover {
+  transform: translateY(-2px);
+}
+
+.video-section__btn--outline:hover {
+  border-color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.09) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 14px 36px rgba(0, 0, 0, 0.42);
+}
+
+.video-section__btn--outline:hover::before {
+  left: 140%;
+}
+
+.video-section__btn--outline:active {
+  transform: translateY(0);
+}
+
+.video-section__btn--solid:hover {
+  box-shadow: 0 12px 32px rgb(var(--color-button) / 0.5);
+}
+
+.video-section__btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+}
+
 @media screen and (min-width: 750px) {
   .video-section__hero {
     min-height: 100vh;
@@ -235,22 +334,29 @@
 }
 
 @media screen and (max-width: 749px) {
-  .video-section__pill {
+  .video-section__pill,
+  .video-section__btn {
     min-height: 48px;
     padding: 13px 34px;
     font-size: 12px;
     letter-spacing: 0.14em;
   }
+
+  .video-section__btn--outline {
+    letter-spacing: 0.22em;
+  }
 }
 
 /* ---------------------------------------------------------------------------
-   Homepage: full-screen hero video (extends behind the header, header stays on top)
+   Homepage: hero video sized so announcement bar + header + video together
+   cover exactly one viewport (the video fills everything below the header
+   group instead of running behind it as a full-screen layer)
    --------------------------------------------------------------------------- */
 
 body.template-index .video-section__hero {
-  margin-top: calc(-1 * var(--aw-header-offset, 0px));
-  height: 100vh;
-  height: 100dvh;
+  min-height: 0;
+  height: calc(100vh - var(--aw-header-offset, 0px));
+  height: calc(100dvh - var(--aw-header-offset, 0px));
 }
 
 body.template-index .announcement-bar-section {

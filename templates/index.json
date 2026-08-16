@@ -599,45 +599,19 @@
         "accessibility_info": ""
       }
     },
-    "rich_text_pxfThj": {
-      "type": "rich-text",
-      "blocks": {
-        "heading_FqzpRa": {
-          "type": "heading",
-          "settings": {
-            "heading": "Who are we?",
-            "heading_size": "h1"
-          }
-        },
-        "text_dB6Ccd": {
-          "type": "text",
-          "settings": {
-            "text": "<p>Introducing Attarwalas, a distinguished name in the fragrance industry for 26 years. We specialize in non-alcoholic perfumes, renowned for their high concentration and 18-hour longevity. </p><p>What sets us apart is our commitment to purity and tradition, ensuring every scent is crafted with the finest ingredients for an unparalleled fragrance experience.</p>"
-          }
-        }
-      },
-      "block_order": [
-        "heading_FqzpRa",
-        "text_dB6Ccd"
-      ],
-      "custom_css": [],
-      "settings": {
-        "desktop_content_position": "center",
-        "content_alignment": "center",
-        "color_scheme": "scheme-1",
-        "full_width": true,
-        "padding_top": 12,
-        "padding_bottom": 12
-      }
-    },
     "contact_form_tJcrJ4": {
       "type": "contact-form",
       "settings": {
-        "heading": "<strong>Stay in Touch Easily with our Convenient Contact Form.</strong>",
+        "eyebrow": "Contact us",
+        "heading": "<strong>Get in Touch</strong>",
         "heading_size": "h2",
-        "color_scheme": "",
-        "padding_top": 32,
-        "padding_bottom": 32
+        "description": "<p>Questions about our non-alcoholic perfumes, help with an order, or a bespoke scent consultation? We'd love to hear from you.</p>",
+        "contact_phone": "+92 300 1234567",
+        "contact_email": "care@attarwalas.com",
+        "contact_hours": "Mon – Sat: 10:00 AM – 8:00 PM",
+        "color_scheme": "scheme-1",
+        "padding_top": 16,
+        "padding_bottom": 16
       }
     }
   },
@@ -651,7 +625,6 @@
     "custom_liquid_N8KmWf",
     "slideshow_kLV8yc",
     "slideshow_8BtiqX",
-    "rich_text_pxfThj",
     "contact_form_tJcrJ4"
   ]
 }

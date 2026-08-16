@@ -930,12 +930,10 @@ a.product__text {
     grid-template-columns: repeat(4, 1fr);
   }
 
-  .product--medium .thumbnail-list {
-    grid-template-columns: repeat(5, 1fr);
-  }
-
+  .product--small .thumbnail-list,
+  .product--medium .thumbnail-list,
   .product--large .thumbnail-list {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(5.2rem, 1fr));
   }
 }
 
@@ -1471,4 +1469,1005 @@ a.product__text {
   .recipient-form > input[type='checkbox']:checked + label .icon-checkmark {
     border: none;
   }
+}
+
+/* ============================================================
+   ATTARWALAS — Product buy buttons (Add to cart / Buy Now)
+   Custom styling + micro-interactions
+   ============================================================ */
+
+.product-form__submit,
+.product-form__buy-now {
+  position: relative;
+  background-image: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.25) 45%,
+    rgba(255, 255, 255, 0.25) 55%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  background-position: 150% 0;
+  letter-spacing: 0.1rem;
+  transition:
+    background-position var(--duration-extra-longer) var(--ease-out-slow),
+    background-color var(--duration-medium) ease,
+    color var(--duration-medium) ease,
+    letter-spacing var(--duration-default) ease,
+    transform var(--duration-medium) cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow var(--duration-medium) ease;
+}
+
+.product-form__submit:before,
+.product-form__buy-now:before {
+  transition: box-shadow var(--duration-medium) ease;
+}
+
+/* --- Add to cart: gold hero CTA, sheen sweep + lift on hover --- */
+
+.product-form__submit:not([disabled]):hover {
+  background-position: -150% 0;
+  letter-spacing: 0.16rem;
+  transform: translateY(-0.2rem);
+  --shadow-vertical-offset: 0.8rem;
+  --shadow-blur-radius: 1.6rem;
+  --shadow-opacity: 0.3;
+}
+
+.product-form__submit:not([disabled]):active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: var(--duration-short);
+}
+
+.product-form__submit-icon,
+.product-form__buy-now-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* icon-cart's artwork only fills the middle ~45% of its 40x40 viewBox, so it
+   needs a larger box than icon-arrow to read at the same optical size. */
+.product-form__submit .icon-cart {
+  width: 2.8rem;
+  height: 2.8rem;
+  margin: -0.6rem 0.4rem -0.6rem -0.4rem;
+  transition: transform var(--duration-medium) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.product-form__submit:not([disabled]):hover .icon-cart {
+  transform: translateX(-0.2rem) rotate(-12deg) scale(1.15);
+}
+
+/* --- Buy now: ink slab with gold edge, melts to gold on hover --- */
+
+.product-form__buy-now {
+  background-color: rgb(var(--color-foreground));
+  color: rgb(var(--color-background));
+}
+
+.product-form__buy-now:not([disabled]):hover {
+  background-color: rgb(var(--color-button));
+  color: rgb(var(--color-button-text));
+  background-position: -150% 0;
+  letter-spacing: 0.16rem;
+  transform: translateY(-0.2rem);
+  --shadow-vertical-offset: 0.8rem;
+  --shadow-blur-radius: 1.6rem;
+  --shadow-opacity: 0.3;
+}
+
+.product-form__buy-now:not([disabled]):active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: var(--duration-short);
+}
+
+.product-form__buy-now .icon-arrow {
+  width: 1.5rem;
+  margin-right: 1rem;
+  transition: transform var(--duration-medium) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.product-form__buy-now:not([disabled]):hover .icon-arrow {
+  transform: translateX(0.4rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-form__submit,
+  .product-form__buy-now {
+    background-position: 150% 0;
+    letter-spacing: 0.1rem;
+    transition: none;
+  }
+
+  .product-form__submit:not([disabled]):hover,
+  .product-form__buy-now:not([disabled]):hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   ATTARWALAS — Product buy zone ("atelier order-sheet")
+   Hairline rules, gold accents, menu-style size list
+   Scoped to the main product page section only
+   ============================================================ */
+
+/* ---- column rhythm ---- */
+
+[id^="MainProduct-"] .product__title {
+  margin-bottom: 1.2rem;
+}
+
+[id^="MainProduct-"] .product__text.caption-with-letter-spacing {
+  color: rgba(var(--color-button), 0.9);
+  letter-spacing: 0.28em;
+  font-weight: 600;
+}
+
+/* ---- price plate ---- */
+
+[id^="MainProduct-"] [id^="price-"] {
+  border-top: 0.1rem solid rgba(var(--color-foreground), 0.14);
+  padding-top: 1.6rem;
+}
+
+[id^="MainProduct-"] .price--large {
+  font-size: clamp(2.2rem, 2.4vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+[id^="MainProduct-"] .product__tax {
+  margin-top: 0.5rem;
+  font-size: 1.15rem;
+  color: rgba(var(--color-foreground), 0.55);
+}
+
+/* ---- section labels (SIZE / QUANTITY / add-on options) ---- */
+
+[id^="MainProduct-"] .product-form__input--pill .form__label,
+[id^="MainProduct-"] .product-form__quantity .form__label,
+[id^="MainProduct-"] .gpo-label span.label-content {
+  display: block;
+  font-family: var(--font-body-family);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(var(--color-button), 0.9);
+}
+
+[id^="MainProduct-"] .product-form__input--pill .form__label {
+  width: 100%;
+  margin-bottom: 1.1rem;
+}
+
+/* ---- size chips ----
+   The price lives once, at the top of the column; the chips carry the
+   size only, so nothing is stated twice. */
+
+[id^="MainProduct-"] .product-form__input--pill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  max-width: 44rem;
+  /* breathing room between option groups (SIZE / BOX COLOUR / …) */
+  margin-bottom: 2.2rem;
+}
+
+[id^="MainProduct-"] .product-form__input--pill input[type='radio'] + label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 4.6rem;
+  margin: 0;
+  padding: 0 2.2rem;
+  border: 0.1rem solid rgba(var(--color-foreground), 0.22);
+  border-radius: 0;
+  background-color: transparent;
+  color: rgba(var(--color-foreground), 0.8);
+  font-family: var(--font-body-family);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  transition:
+    color var(--duration-default) ease,
+    border-color var(--duration-default) ease,
+    background-color var(--duration-default) ease;
+}
+
+/* Dawn hangs a shadow on this pseudo-element; nothing to draw here. */
+[id^="MainProduct-"] .product-form__input--pill input[type='radio'] + label:before {
+  display: none;
+}
+
+[id^="MainProduct-"] .product-form__input--pill input[type='radio'] + label:hover {
+  border-color: rgb(var(--color-button));
+  color: rgb(var(--color-button));
+  background-color: rgba(var(--color-button), 0.06);
+}
+
+[id^="MainProduct-"] .product-form__input--pill input[type='radio']:focus-visible + label {
+  outline: 0.2rem solid rgba(var(--color-button), 0.5);
+  outline-offset: 0.3rem;
+}
+
+[id^="MainProduct-"] .product-form__input--pill input[type='radio']:checked + label {
+  background-color: rgb(var(--color-button));
+  border-color: rgb(var(--color-button));
+  color: rgb(var(--color-button-text));
+}
+
+[id^="MainProduct-"] .product-form__input--pill input[type='radio']:checked + label::selection {
+  background-color: rgba(var(--color-background), 0.3);
+}
+
+[id^="MainProduct-"] .variant-option__value {
+  display: block;
+}
+
+[id^="MainProduct-"] .product-form__input--pill input[type='radio'].disabled + label,
+[id^="MainProduct-"] .product-form__input--pill input[type='radio']:disabled + label {
+  border-color: rgba(var(--color-foreground), 0.12);
+  color: rgba(var(--color-foreground), 0.35);
+  background-color: transparent;
+  text-decoration: line-through;
+}
+
+[id^="MainProduct-"] .product-form__input--pill input[type='radio'].disabled + label:hover,
+[id^="MainProduct-"] .product-form__input--pill input[type='radio']:disabled + label:hover {
+  border-color: rgba(var(--color-foreground), 0.12);
+  color: rgba(var(--color-foreground), 0.35);
+  background-color: transparent;
+}
+
+/* ---- quantity ----
+   Label and stepper share one baseline-aligned row instead of the label
+   floating left with a stub underline and the stepper stranded right. */
+
+[id^="MainProduct-"] .product-form__quantity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  margin: 2.4rem 0 0;
+}
+
+[id^="MainProduct-"] .product-form__quantity .form__label {
+  margin-bottom: 0;
+}
+
+[id^="MainProduct-"] .product-form__quantity .price-per-item__container {
+  flex-shrink: 0;
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity {
+  width: 15rem;
+  min-height: 5.2rem;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity:after {
+  border-radius: 0;
+  box-shadow: 0 0 0 0.1rem rgba(var(--color-foreground), 0.22);
+  transition: box-shadow var(--duration-default) ease;
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity:hover:after,
+[id^="MainProduct-"] .product-form__quantity .quantity:focus-within:after {
+  box-shadow: 0 0 0 0.1rem rgba(var(--color-button), 0.85);
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity__button {
+  width: 4.6rem;
+  color: rgba(var(--color-foreground), 0.55);
+  transition:
+    color var(--duration-default) ease,
+    background-color var(--duration-default) ease;
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity__button svg {
+  width: 1.1rem;
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity__button:hover {
+  color: rgb(var(--color-button));
+  background-color: rgba(var(--color-button), 0.1);
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity__button:active {
+  background-color: rgba(var(--color-button), 0.18);
+}
+
+[id^="MainProduct-"] .product-form__quantity .quantity__input {
+  font-family: var(--font-heading-family);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity: 1;
+}
+
+/* ---- add-on option picker (Globo Product Options, injected into
+   .product-form__buttons above the add-to-cart button) ----
+   The app ships a white card in its own sans-serif; these rules dissolve
+   that card into the page and rebuild the control in brand type.
+   Selectors are deliberately over-specific: the app's own styles are an
+   inline <style> that wins any tie on document order. */
+
+[id^="MainProduct-"] .gpo-container {
+  margin: 0 0 2.4rem;
+}
+
+/* The app lays its rows out on a -5px gutter grid, which pushed the control
+   10px wider than the size rows and buttons it sits between. */
+[id^="MainProduct-"] .gpo-app {
+  background: transparent;
+  background-image: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+  font-family: var(--font-body-family);
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-element {
+  margin: 0;
+  padding: 0;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-label {
+  margin-bottom: 1.1rem;
+}
+
+[id^="MainProduct-"] .gpo-label.required span.label-content::after {
+  color: rgb(var(--color-button));
+  margin-left: 0.4rem;
+  font-weight: 400;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-selected-values {
+  font-family: var(--font-body-family);
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  color: rgba(var(--color-foreground), 0.55);
+  margin-bottom: 0.6rem;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select {
+  position: relative;
+  background: transparent;
+  background-image: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Brand chevron, drawn rather than imported so it inherits the gold. */
+[id^="MainProduct-"] .gpo-app .gpo-select::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1.9rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-top: -0.6rem;
+  border-right: 0.15rem solid rgb(var(--color-button));
+  border-bottom: 0.15rem solid rgb(var(--color-button));
+  transform: rotate(45deg);
+  pointer-events: none;
+  transition: transform var(--duration-default) ease;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select:hover::after {
+  transform: rotate(45deg) translate(0.15rem, 0.15rem);
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select select {
+  width: 100%;
+  min-height: 5.2rem;
+  padding: 0 4.6rem 0 1.6rem;
+  background-color: transparent;
+  /* !important: the app draws its own grey caret as a pair of linear-gradient
+     background layers on the select, and sets them !important. */
+  background-image: none !important;
+  border: 0.1rem solid rgba(var(--color-foreground), 0.22);
+  border-radius: 0;
+  box-shadow: none;
+  color: rgb(var(--color-foreground));
+  font-family: var(--font-body-family);
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    border-color var(--duration-default) ease,
+    background-color var(--duration-default) ease;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select select:hover {
+  border-color: rgba(var(--color-button), 0.85);
+  background-color: rgba(var(--color-button), 0.05);
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select select:focus,
+[id^="MainProduct-"] .gpo-app .gpo-select select:focus-visible {
+  outline: 0;
+  border-color: rgb(var(--color-button));
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-button), 0.18);
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select select option {
+  color: rgb(var(--color-foreground));
+  font-family: var(--font-body-family);
+}
+
+/* .messages is only populated on validation failure, so it can always read
+   as an error rather than waiting on an app-supplied error class. */
+[id^="MainProduct-"] .gpo-app .messages:not(:empty) {
+  display: block;
+  font-family: var(--font-body-family);
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  color: #b3261e;
+  margin-top: 0.8rem;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-total {
+  font-family: var(--font-body-family);
+  letter-spacing: 0.04em;
+  margin-top: 1.2rem;
+}
+
+/* ---- action plate ---- */
+
+[id^="MainProduct-"] .product-form__buttons {
+  border-top: 0.1rem solid rgba(var(--color-foreground), 0.14);
+  padding-top: 2.4rem;
+  margin-top: 2.4rem;
+}
+
+[id^="MainProduct-"] .product-form__buttons .button {
+  min-height: 5.4rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+[id^="MainProduct-"] .product-form__submit {
+  margin-bottom: 1.2rem;
+}
+
+/* ============================================================
+   ATTARWALAS — Desktop full-bleed product layout
+   The default Dawn arrangement caps the section at the 1200px
+   page width and then gives the media only 45% of that, so on a
+   wide monitor the whole page reads as a small box floating in
+   ~270px of dead margin either side. Below, the section goes
+   edge-to-edge and splits 50/50: the image fills the left half,
+   the buy column is centred in the right half.
+   Desktop only — mobile keeps the stock stacked layout.
+   ============================================================ */
+
+@media screen and (min-width: 990px) {
+  /* The section's own padding is emitted as an inline <style> that loads
+     after this file, so this needs the extra type-selector specificity. */
+  section[id^="MainProduct-"] {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  [id^="MainProduct-"] > .page-width {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  [id^="MainProduct-"] .product.grid {
+    align-items: stretch;
+    gap: 0;
+  }
+
+  [id^="MainProduct-"] .product:not(.product--no-media) .product__media-wrapper,
+  [id^="MainProduct-"] .product:not(.product--no-media) .product__info-wrapper {
+    max-width: 50%;
+    width: 50%;
+  }
+
+  /* Both columns are the same height now, so sticky has nothing to do and
+     would only fight the vertical centring of the buy column. */
+  [id^="MainProduct-"] .product__info-container.product__column-sticky {
+    position: static;
+    top: auto;
+  }
+
+  /* ---- media half ---- */
+
+  [id^="MainProduct-"] .product:not(.product--no-media) .product__media-wrapper {
+    padding: 0;
+  }
+
+  /* position: relative both cancels the sticky behaviour above and anchors
+     the floating thumbnail strip. */
+  [id^="MainProduct-"] .product__media-wrapper media-gallery {
+    display: block;
+    position: relative;
+    top: auto;
+    padding: 0;
+  }
+
+  /* The hairline frame from global-media-settings reads as a box around the
+     product shot. Dawn also sizes the image from a padding-top aspect ratio
+     capped at (100vh - 170px); replacing that with an explicit viewport
+     height is what lets the image fill the half edge to edge. */
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container,
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container .media {
+    border: 0;
+    max-width: 100%;
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height.media-fit-contain {
+    width: 100%;
+  }
+
+  /* The section setting stays on "contain" so mobile keeps Dawn's stock,
+     uncropped media; the fill-the-half crop is applied here, at desktop
+     only. The images are square and the half is near-square, so the crop
+     amounts to a couple of percent. */
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height .media {
+    padding-top: 0;
+    height: max(50rem, calc(100vh - 12rem));
+  }
+
+  /* Thumbnails float over the foot of the image so the media stays edge to
+     edge, on a frosted plate that keeps them legible on any photo. */
+  [id^="MainProduct-"] .product__media-wrapper slider-component.thumbnail-slider {
+    position: absolute;
+    left: 50%;
+    bottom: 2.4rem;
+    transform: translateX(-50%);
+    /* an explicit width, not auto: absolutely positioned it would shrink to
+       fit and collapse the thumbnail grid to a single column */
+    width: min(46rem, calc(100% - 4.8rem));
+    padding: 0.8rem;
+    background-color: rgba(var(--color-background), 0.72);
+    backdrop-filter: blur(0.8rem);
+    -webkit-backdrop-filter: blur(0.8rem);
+    z-index: 2;
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper .thumbnail-list {
+    margin: 0;
+    padding-right: 0;
+  }
+
+  /* ---- buy half ---- */
+
+  [id^="MainProduct-"] .product:not(.product--no-media) .product__info-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 6rem 7rem;
+  }
+
+  [id^="MainProduct-"] .product__info-container {
+    width: 100%;
+    max-width: 52rem;
+  }
+
+  /* Dawn caps the form elements at 44rem while the title and price run the
+     full column width, so the buy zone sat visibly narrower than the rest.
+     One width for the whole column instead. */
+  [id^="MainProduct-"] .product__info-container .product-form__input,
+  [id^="MainProduct-"] .product__info-container .product-form__input--pill,
+  [id^="MainProduct-"] .product__info-container .product-form__buttons {
+    max-width: none;
+  }
+}
+
+@media screen and (min-width: 1600px) {
+  /* Keep the buy column from drifting to the far edge on wide monitors. */
+  [id^="MainProduct-"] .product:not(.product--no-media) .product__info-wrapper {
+    padding-left: 10rem;
+    padding-right: 10rem;
+  }
+}
+
+/* ============================================================
+   ATTARWALAS — Mobile product page refinements
+   Mobile only. The stock stacked layout reads "blocky" on a
+   phone: the gallery slides sit in bordered boxes with a boxed
+   "1 / 4" counter row, the size chips and quantity are sharp
+   rectangles, and the buy buttons stack as two full-width slabs.
+   Below, the gallery goes frameless and edge-to-edge with a
+   floating slide counter, every control is rounded into a pill,
+   and a sticky bottom add-to-cart bar takes over once the buy
+   buttons scroll out of view (Amouage/Naseem-style).
+   ============================================================ */
+
+@media screen and (max-width: 749px) {
+  /* The section's own padding is emitted as an inline <style> that loads
+     after this file, so this needs the extra type-selector specificity.
+     Top padding goes so the gallery sits flush at the top of the page;
+     the bottom clearance keeps the last content clear of the sticky bar. */
+  section[id^="MainProduct-"] {
+    padding-top: 0;
+    padding-bottom: 9rem;
+  }
+
+  /* ---- gallery: frameless, edge-to-edge ---- */
+
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container,
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container .media {
+    border: 0;
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper .global-media-settings:after {
+    content: none;
+  }
+
+  /* The stock "peek" layout shows a sliver of the next slide and offsets
+     the first one; kill both so every slide fills the viewport width. */
+  [id^="MainProduct-"] .product__media-list {
+    margin-left: 0;
+    width: 100%;
+    scroll-padding-left: 0;
+    margin-bottom: 2.4rem;
+  }
+
+  [id^="MainProduct-"] .product__media-list .product__media-item {
+    width: 100%;
+  }
+
+  [id^="MainProduct-"] .product__media-list .product__media-item:first-of-type {
+    margin-left: 0;
+  }
+
+  [id^="MainProduct-"] .product__media-list:after {
+    padding-left: 0;
+  }
+
+  /* Lightbox still opens on tap; the zoom badge just adds clutter. */
+  [id^="MainProduct-"] .product__media-icon {
+    display: none;
+  }
+
+  /* ---- gallery: floating slide counter ----
+     The stock counter row (arrows + "1 / 4") sits under the slides in a
+     boxed bar; repurpose the same element as a frosted pill floating over
+     the bottom-right corner of the image, arrows removed. */
+  [id^="MainProduct-"] .product__media-wrapper slider-component {
+    position: relative;
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper .slider-buttons {
+    position: absolute;
+    z-index: 2;
+    right: 1.2rem;
+    bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-width: 4.8rem;
+    height: 3.2rem;
+    padding: 0 1.4rem;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(var(--color-background), 0.85);
+    backdrop-filter: blur(0.8rem);
+    -webkit-backdrop-filter: blur(0.8rem);
+    box-shadow: 0 0.2rem 1.2rem rgba(var(--color-foreground), 0.12);
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper .slider-buttons .slider-button {
+    display: none;
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper .slider-buttons .slider-counter {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: rgb(var(--color-foreground));
+  }
+
+  /* ---- buy column: airier, rounded ---- */
+
+  [id^="MainProduct-"] .product__info-wrapper {
+    padding-top: 3.2rem;
+  }
+
+  [id^="MainProduct-"] .product__info-container > * + * {
+    margin: 2rem 0;
+  }
+
+  [id^="MainProduct-"] .product__title h1 {
+    font-size: 3.2rem;
+  }
+
+  /* size chips become pills */
+  [id^="MainProduct-"] .product-form__input--pill input[type='radio'] + label {
+    border-radius: 999px;
+  }
+
+  /* quantity box becomes a pill */
+  [id^="MainProduct-"] .product-form__quantity .quantity {
+    border-radius: 999px;
+  }
+
+  [id^="MainProduct-"] .product-form__quantity .quantity:after {
+    border-radius: 999px;
+  }
+
+  /* the Globo option select gets the same treatment */
+  [id^="MainProduct-"] .gpo-app .gpo-select select {
+    border-radius: 999px;
+  }
+
+  /* buy buttons become pills */
+  [id^="MainProduct-"] .product-form__buttons .button,
+  [id^="MainProduct-"] .shopify-payment-button__button--unbranded {
+    border-radius: 999px;
+  }
+
+  /* the divider above the action plate reads boxy; the spacing stays */
+  [id^="MainProduct-"] .product-form__buttons {
+    border-top: 0;
+    padding-top: 0.8rem;
+  }
+
+  /* ---- sticky add-to-cart bar ---- */
+
+  .product__sticky-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+    padding: 1.2rem 1.6rem;
+    padding-bottom: calc(1.2rem + env(safe-area-inset-bottom));
+    background-color: rgb(var(--color-background));
+    border-top: 0.1rem solid rgba(var(--color-foreground), 0.1);
+    box-shadow: 0 -0.2rem 1.2rem rgba(var(--color-foreground), 0.08);
+    transform: translateY(105%);
+    transition: transform var(--duration-default) ease;
+  }
+
+  .product__sticky-bar.is-visible {
+    transform: translateY(0);
+  }
+
+  .product__sticky-bar__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .product__sticky-bar__title {
+    font-family: var(--font-heading-family);
+    font-size: 1.5rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product__sticky-bar__price .price {
+    margin: 0.2rem 0 0;
+    font-size: 1.3rem;
+  }
+
+  .product__sticky-bar__price .price__badge {
+    display: none;
+  }
+
+  .product__sticky-bar__button {
+    flex-shrink: 0;
+    min-height: 4.8rem;
+    min-width: 13rem;
+    padding: 0 2.4rem;
+    border-radius: 999px;
+  }
+
+  .product__sticky-bar__button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .product__sticky-bar {
+    display: none;
+  }
+}
+
+/* ============================================================
+   ATTARWALAS — Desktop/tablet product page refinements
+   Mirrors the mobile treatment — pill controls, frameless media,
+   single CTA — for tablet (750–989px, stock two-column layout)
+   and desktop (>=990px, full-bleed 50/50 layout). The media
+   counter on these widths is already hidden in favour of
+   thumbnails, so the gallery work is only about removing frames.
+   ============================================================ */
+
+@media screen and (min-width: 750px) {
+  /* ---- rounded controls ---- */
+
+  [id^="MainProduct-"] .product-form__input--pill input[type='radio'] + label {
+    border-radius: 999px;
+  }
+
+  [id^="MainProduct-"] .product-form__quantity .quantity {
+    border-radius: 999px;
+  }
+
+  [id^="MainProduct-"] .product-form__quantity .quantity:after {
+    border-radius: 999px;
+  }
+
+  [id^="MainProduct-"] .gpo-app .gpo-select select {
+    border-radius: 999px;
+  }
+
+  [id^="MainProduct-"] .product-form__buttons .button,
+  [id^="MainProduct-"] .shopify-payment-button__button--unbranded {
+    border-radius: 999px;
+  }
+
+  /* the divider above the action plate reads boxy; the spacing stays */
+  [id^="MainProduct-"] .product-form__buttons {
+    border-top: 0;
+  }
+
+  /* ---- frameless media ----
+     Desktop (>=990px) already strips frames in the full-bleed block
+     above; this covers tablet, where the stock framed boxes remain. */
+
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container,
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container .media {
+    border: 0;
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper .global-media-settings:after {
+    content: none;
+  }
+
+  /* the thumbnail filmstrip loses its hairline boxes too */
+  [id^="MainProduct-"] .product__media-wrapper .thumbnail.global-media-settings {
+    border: 0;
+  }
+
+  /* Lightbox still opens on click; the zoom badge just adds clutter. */
+  [id^="MainProduct-"] .product__media-icon {
+    display: none;
+  }
+
+  /* airier block spacing in the buy column */
+  [id^="MainProduct-"] .product__info-container > * + * {
+    margin: 2rem 0;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  /* the floating thumbnail strip gets rounded corners to match the pills */
+  [id^="MainProduct-"] .product__media-wrapper slider-component.thumbnail-slider {
+    border-radius: 1.2rem;
+  }
+}
+
+/* ============================================================
+   ATTARWALAS — Buy buttons: pill-consistent ring & motion
+   The stock Dawn button draws a 1px ring (:after) and its drop
+   shadow (:before) at --buttons-radius, which the customizer
+   sets to 0 — so a square ring/shadow shows inside and behind
+   the pill. Both pseudo-elements get the pill radius. Hover is
+   a quiet lift with a neutral shadow — no glow, no ring spread.
+   ============================================================ */
+
+[id^="MainProduct-"] .product-form__buttons .button::before,
+[id^="MainProduct-"] .product-form__buttons .button::after,
+[id^="MainProduct-"] .product__sticky-bar__button::before,
+[id^="MainProduct-"] .product__sticky-bar__button::after {
+  border-radius: 999px;
+}
+
+[id^="MainProduct-"] .product-form__buttons .button,
+[id^="MainProduct-"] .product__sticky-bar__button {
+  transition:
+    box-shadow var(--duration-short) ease,
+    transform var(--duration-default) ease,
+    background-color var(--duration-default) ease,
+    color var(--duration-default) ease;
+}
+
+[id^="MainProduct-"] .product-form__buttons .button:not([disabled]):hover,
+[id^="MainProduct-"] .product__sticky-bar__button:not([disabled]):hover {
+  transform: translateY(-0.2rem);
+  box-shadow: 0 0.5rem 1.2rem rgba(var(--color-shadow), 0.16);
+}
+
+[id^="MainProduct-"] .product-form__buttons .button:not([disabled]):active,
+[id^="MainProduct-"] .product__sticky-bar__button:not([disabled]):active {
+  transform: translateY(0);
+  box-shadow: 0 0.2rem 0.6rem rgba(var(--color-shadow), 0.12);
+  transition: transform 0.05s ease;
+}
+
+/* ---- buy now: quiet outlined secondary ----
+   The two stacked gold pills read as one big slab; the buy-now
+   becomes an outlined pill (transparent, gold text, gold hairline)
+   that fills with a faint gold tint on hover. Its stock :after
+   ring is neutralised so nothing draws a second box. */
+[id^="MainProduct-"] .product-form__buttons .product-form__buy-now {
+  background-color: transparent;
+  color: rgb(var(--color-button));
+  border: 0.1rem solid rgba(var(--color-button), 0.4);
+}
+
+[id^="MainProduct-"] .product-form__buttons .product-form__buy-now::after {
+  box-shadow: none;
+}
+
+[id^="MainProduct-"] .product-form__buttons .product-form__buy-now:not([disabled]):hover {
+  background-color: rgba(var(--color-button), 0.08);
+  border-color: rgb(var(--color-button));
+  transform: translateY(-0.1rem);
+  box-shadow: 0 0.4rem 1rem rgba(var(--color-shadow), 0.1);
+}
+
+[id^="MainProduct-"] .product-form__buttons .product-form__buy-now:not([disabled]):active {
+  transform: translateY(0);
+  box-shadow: 0 0.2rem 0.5rem rgba(var(--color-shadow), 0.08);
+}
+
+[id^="MainProduct-"] .product-form__buttons .product-form__buy-now.loading .path {
+  stroke: rgb(var(--color-button));
+}
+
+/* ---- size chips: focus ring follows the pill ----
+   A CSS outline can render as a rectangle around a pill in some
+   browsers; a box-shadow ring always follows the border-radius. */
+[id^="MainProduct-"] .product-form__input--pill input[type='radio']:focus-visible + label {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-button), 0.5);
+}
+
+/* ---- Globo option select: keep it a clean pill ----
+   The app ships its own styles for the select and its wrapper
+   (including a white card and focus rings) that can draw a
+   rectangle around the pill; the theme already dissolves the
+   card, these rules make sure nothing rectangular survives. */
+[id^="MainProduct-"] .gpo-app .gpo-select {
+  border: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select select {
+  border-radius: 999px !important;
+  outline: none !important;
+}
+
+[id^="MainProduct-"] .gpo-app .gpo-select select:focus,
+[id^="MainProduct-"] .gpo-app .gpo-select select:focus-visible {
+  outline: 0 !important;
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-button), 0.18) !important;
 }

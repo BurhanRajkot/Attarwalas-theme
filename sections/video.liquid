@@ -1,34 +1,5 @@
 {{ 'video-section.css' | asset_url | stylesheet_tag }}
-{%- comment -%}
-  The <deferred-media> markup this stylesheet targets only renders in the non-full-width
-  branch below, so on a full-width hero it was a render-blocking request for CSS that styled
-  nothing on the page.
-{%- endcomment -%}
-{%- unless section.settings.full_width -%}
-  {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
-{%- endunless -%}
-{%- comment -%}
-  Hero mode only: buttons that point at a product are rendered as real add-to-cart
-  forms so "Buy Now" adds the item and opens the cart drawer instead of navigating away.
-{%- endcomment -%}
-{%- if section.settings.full_width -%}
-  <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
-  <script>
-    (() => {
-      const isHome = document.body.classList.contains('template-index');
-      if (!isHome) return;
-      const announce = document.querySelector('.announcement-bar-section');
-      const header = document.querySelector('.section-header');
-      const setOffset = () => {
-        const a = announce ? announce.offsetHeight : 0;
-        const h = header ? header.offsetHeight : 0;
-        document.documentElement.style.setProperty('--aw-header-offset', a + h + 'px');
-      };
-      setOffset();
-      window.addEventListener('resize', setOffset);
-    })();
-  </script>
-{%- endif -%}
+{{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -87,25 +58,68 @@
     </div>
 
     {%- if section.settings.full_width -%}
-      {%- comment -%} Hero mode: full-width video as a banner, muted autoplay loop, cover-cropped, with overlay copy + premium transparent buttons. {%- endcomment -%}
-      <div class="video-section__hero" data-media-id="{{ video_id }}">
+      {%- comment -%}
+        Hero mode: full-width video as a banner, muted autoplay loop, cover-cropped, with
+        overlay copy + premium transparent buttons.
+
+        No lazy-loading or connection checks here by design: the store owner serves this
+        from a CDN with plenty of bandwidth, so the video loads eagerly at the highest
+        quality source (the HD MP4 is preferred over the adaptive HLS stream).
+      {%- endcomment -%}
+      <div class="video-section__hero" data-media-id="{{ video_id }}" data-video-hero="{{ section.id }}">
+        {%- if poster != blank -%}
+          <img
+            class="video-section__hero-poster"
+            src="{{ poster | image_url: width: 1100 }}"
+            srcset="
+              {{ poster | image_url: width: 375 }} 375w,
+              {{ poster | image_url: width: 750 }} 750w,
+              {{ poster | image_url: width: 1100 }} 1100w,
+              {{ poster | image_url: width: 1500 }} 1500w,
+              {{ poster | image_url: width: 1920 }} 1920w
+            "
+            sizes="100vw"
+            alt="{{ video_alt | escape }}"
+            fetchpriority="high"
+            decoding="async"
+          >
+        {%- endif -%}
+
         {%- if video_is_mp4 -%}
-          {{
-            section.settings.video
-            | video_tag:
-              autoplay: true,
-              loop: true,
-              muted: true,
-              playsinline: true,
-              controls: false
-          }}
+          <video
+            class="video-section__hero-video"
+            data-hero-video
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+            disablepictureinpicture
+            tabindex="-1"
+            aria-hidden="true"
+          >
+            {%- comment -%}
+              Highest-quality MP4 sources first; the adaptive HLS stream only as a
+              fallback for browsers that cannot play MP4 (e.g. older iOS Safari).
+            {%- endcomment -%}
+            {%- for source in section.settings.video.sources -%}
+              {%- if source.mime_type == 'video/mp4' -%}
+                <source src="{{ source.url }}" type="{{ source.mime_type }}">
+              {%- endif -%}
+            {%- endfor -%}
+            {%- for source in section.settings.video.sources -%}
+              {%- if source.mime_type != 'video/mp4' -%}
+                <source src="{{ source.url }}" type="{{ source.mime_type }}">
+              {%- endif -%}
+            {%- endfor -%}
+          </video>
         {%- else -%}
           <iframe
-            src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist={{ video_id }}"
-            class="js-youtube"
+            class="video-section__hero-embed"
+            src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist={{ video_id }}&playsinline=1"
+            title="{{ section.settings.description | escape }}"
             allow="autoplay; encrypted-media"
             allowfullscreen
-            title="{{ section.settings.description | escape }}"
           ></iframe>
         {%- endif -%}
         {%- if section.settings.heading != blank or section.blocks.size > 0 -%}
@@ -119,75 +133,33 @@
             {%- for block in section.blocks -%}
               {%- case block.type -%}
                 {%- when 'buttons' -%}
-                  {%- liquid
-                    assign buy_product_1 = null
-                    assign buy_product_2 = null
-                    assign buy_handle_1 = block.settings.button_link_1 | split: '/' | last
-                    assign buy_handle_2 = block.settings.button_link_2 | split: '/' | last
-                    if block.settings.button_link_1 != blank and block.settings.button_link_1 contains '/products/'
-                      assign buy_product_1 = all_products[buy_handle_1]
-                    endif
-                    if block.settings.button_link_2 != blank and block.settings.button_link_2 contains '/products/'
-                      assign buy_product_2 = all_products[buy_handle_2]
-                    endif
-                  -%}
                   <div
                     class="video-section__buttons{% if block.settings.button_label_1 != blank and block.settings.button_label_2 != blank %} video-section__buttons--multiple{% endif %}"
                     {{ block.shopify_attributes }}
                   >
                     {%- if block.settings.button_label_1 != blank -%}
-                      {%- liquid
-                        assign buy_form_id_1 = 'video-buy-' | append: section.id | append: block.id
-                      -%}
-                      {%- if buy_product_1 != null and buy_product_1.selected_or_first_available_variant.available -%}
-                        <product-form data-hide-errors="true" data-section-id="{{ section.id }}">
-                          {%- form 'product', buy_product_1, id: buy_form_id_1, class: 'video-section__form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
-                            <input type="hidden" name="id" value="{{ buy_product_1.selected_or_first_available_variant.id }}">
-                            <button type="submit" name="add" class="video-section__pill" aria-live="polite">
-                              <span class="video-section__pill-label">{{ block.settings.button_label_1 | escape }}</span>
-                              {%- render 'loading-spinner' -%}
-                            </button>
-                          {%- endform -%}
-                        </product-form>
-                      {%- else -%}
-                        <a
-                          {% if block.settings.button_link_1 == blank %}
-                            role="link" aria-disabled="true"
-                          {% else %}
-                            href="{{ block.settings.button_link_1 }}"
-                          {% endif %}
-                          class="video-section__pill"
-                        >
-                          {{- block.settings.button_label_1 | escape -}}
-                        </a>
-                      {%- endif -%}
+                      <a
+                        {% if block.settings.button_link_1 == blank %}
+                          role="link" aria-disabled="true"
+                        {% else %}
+                          href="{{ block.settings.button_link_1 }}"
+                        {% endif %}
+                        class="video-section__btn{% if block.settings.button_style_secondary_1 %} video-section__btn--outline{% else %} video-section__btn--solid{% endif %}"
+                      >
+                        {{- block.settings.button_label_1 | escape -}}
+                      </a>
                     {%- endif -%}
                     {%- if block.settings.button_label_2 != blank -%}
-                      {%- liquid
-                        assign buy_form_id_2 = 'video-buy-' | append: section.id | append: block.id | append: '-2'
-                      -%}
-                      {%- if buy_product_2 != null and buy_product_2.selected_or_first_available_variant.available -%}
-                        <product-form data-hide-errors="true" data-section-id="{{ section.id }}">
-                          {%- form 'product', buy_product_2, id: buy_form_id_2, class: 'video-section__form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
-                            <input type="hidden" name="id" value="{{ buy_product_2.selected_or_first_available_variant.id }}">
-                            <button type="submit" name="add" class="video-section__pill" aria-live="polite">
-                              <span class="video-section__pill-label">{{ block.settings.button_label_2 | escape }}</span>
-                              {%- render 'loading-spinner' -%}
-                            </button>
-                          {%- endform -%}
-                        </product-form>
-                      {%- else -%}
-                        <a
-                          {% if block.settings.button_link_2 == blank %}
-                            role="link" aria-disabled="true"
-                          {% else %}
-                            href="{{ block.settings.button_link_2 }}"
-                          {% endif %}
-                          class="video-section__pill"
-                        >
-                          {{- block.settings.button_label_2 | escape -}}
-                        </a>
-                      {%- endif -%}
+                      <a
+                        {% if block.settings.button_link_2 == blank %}
+                          role="link" aria-disabled="true"
+                        {% else %}
+                          href="{{ block.settings.button_link_2 }}"
+                        {% endif %}
+                        class="video-section__btn{% if block.settings.button_style_secondary_2 %} video-section__btn--outline{% else %} video-section__btn--solid{% endif %}"
+                      >
+                        {{- block.settings.button_label_2 | escape -}}
+                      </a>
                     {%- endif -%}
                   </div>
               {%- endcase -%}
@@ -195,6 +167,35 @@
           </div>
         {%- endif -%}
       </div>
+
+      <script>
+        (function () {
+          var hero = document.querySelector('[data-video-hero="{{ section.id }}"]');
+          if (!hero) return;
+
+          var video = hero.querySelector('[data-hero-video]');
+          if (!video) return;
+
+          /* Size the hero so that announcement bar + header + video together fill
+             exactly one viewport: the hero is the first section in normal flow
+             below the header group. */
+          var setHeroOffset = function () {
+            var top = hero.getBoundingClientRect().top + window.pageYOffset;
+            hero.style.setProperty('--aw-header-offset', top + 'px');
+          };
+          setHeroOffset();
+          window.addEventListener('resize', setHeroOffset);
+          window.addEventListener('load', setHeroOffset);
+
+          /* No lazy-loading, connection checks, or scroll observers here — the video
+             is served from a fast CDN, so it simply starts playing immediately at
+             its highest-quality source. */
+          if (video) {
+            var attempt = video.play();
+            if (attempt && attempt.catch) attempt.catch(function () {});
+          }
+        })();
+      </script>
     {%- else -%}
       <deferred-media
         class="video-section__media deferred-media gradient global-media-settings{% if fix_ratio %} media-fit-cover{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"

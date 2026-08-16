@@ -60,10 +60,38 @@
     },
     "footer": {
       "type": "footer",
+      "blocks": {
+        "aw_brand": {
+          "type": "text",
+          "settings": {
+            "heading": "ATTARWALAS",
+            "subtext": "<p>Handcrafted attars and non-alcoholic perfumes, composed from the finest natural oils. Find your signature scent — from rich Oudh to fresh florals.</p>"
+          }
+        },
+        "aw_shop": {
+          "type": "link_list",
+          "settings": {
+            "heading": "Shop",
+            "menu": "main-menu"
+          }
+        },
+        "aw_care": {
+          "type": "text",
+          "settings": {
+            "heading": "Customer Care",
+            "subtext": "<p><a href=\"https://attarwalas.shiprocket.co/tracking\">Track Your Order</a></p><p><a href=\"/pages/about-us\">About Us</a></p><p><a href=\"/pages/contact\">Contact Us</a></p><p><a href=\"/policies/shipping-policy\">Shipping Policy</a></p><p><a href=\"/policies/refund-policy\">Refund Policy</a></p>"
+          }
+        }
+      },
+      "block_order": [
+        "aw_brand",
+        "aw_shop",
+        "aw_care"
+      ],
       "settings": {
-        "color_scheme": "scheme-1",
+        "color_scheme": "scheme-4",
         "newsletter_enable": true,
-        "newsletter_heading": "Subscribe to our emails",
+        "newsletter_heading": "Join the ATTARWALAS family",
         "enable_follow_on_shop": true,
         "show_social": true,
         "enable_country_selector": true,
@@ -71,7 +99,7 @@
         "payment_enable": true,
         "show_policy": true,
         "margin_top": 16,
-        "padding_top": 36,
+        "padding_top": 48,
         "padding_bottom": 36
       }
     }

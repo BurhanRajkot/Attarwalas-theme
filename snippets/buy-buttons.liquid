@@ -79,12 +79,15 @@
             id="ProductSubmitButton-{{ section_id }}"
             type="submit"
             name="add"
-            class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
+            class="product-form__submit button button--full-width button--primary"
             {% if product.selected_or_first_available_variant.available == false or quantity_rule_soldout %}
               disabled
             {% endif %}
           >
-            <span>
+            <span class="product-form__submit-icon" aria-hidden="true">
+              {%- render 'icon-cart' -%}
+            </span>
+            <span class="product-form__submit-text">
               {%- if product.selected_or_first_available_variant.available == false or quantity_rule_soldout -%}
                 {{ 'products.product.sold_out' | t }}
               {%- else -%}
@@ -94,7 +97,19 @@
             {%- render 'loading-spinner' -%}
           </button>
           {%- if show_dynamic_checkout -%}
-            {{ form | payment_button }}
+            <button
+              type="submit"
+              name="checkout"
+              class="product-form__buy-now button button--full-width"
+            >
+              <span class="product-form__buy-now-icon" aria-hidden="true">
+                {%- render 'icon-arrow' -%}
+              </span>
+              <span class="product-form__buy-now-text">
+                {{ 'products.product.buy_now' | t }}
+              </span>
+              {%- render 'loading-spinner' -%}
+            </button>
           {%- endif -%}
         </div>
       {%- endform -%}
