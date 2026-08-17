@@ -1,19 +1,30 @@
 /* ==========================================================================
    Offer Builder — "pick any N for a fixed price" bundle page
+
+   Design language (shared with component-offer-ticket.css /
+   section-offer-teaser.css): square edges — the theme's corner radius is 0
+   everywhere — gold hairlines, uppercase micro-labels in the body font, and
+   Cormorant for the display numbers.
    ========================================================================== */
 
 .offer-builder {
+  --offer-gold: var(--color-button);
+  --offer-ink: var(--color-foreground);
+  --offer-line: rgba(var(--offer-ink), 0.12);
   display: block;
   position: relative;
   /* room so nothing ends up hidden behind the sticky bar */
   padding-bottom: 2rem;
+  /* the offer page renders on its own clean white ground — no cream/peach
+     tint leaking in from the scheme's gradient background */
+  --color-background: 255, 255, 255;
+  background: rgb(255, 255, 255);
 }
 
 .offer-builder__setup-hint {
   margin: 4rem 0;
   padding: 2.4rem;
-  border: 1px dashed rgb(var(--color-foreground) / 0.3);
-  border-radius: 0.8rem;
+  border: 1px dashed rgba(var(--color-foreground), 0.3);
   font-size: 1.4rem;
   line-height: 1.6;
 }
@@ -41,7 +52,7 @@
 
 .offer-builder__intro {
   text-align: center;
-  max-width: 70rem;
+  max-width: 72rem;
   margin: 0 auto 4.8rem;
 }
 
@@ -50,100 +61,165 @@
   align-items: center;
   gap: 0.8rem;
   padding: 0.7rem 1.6rem;
-  border: 1px solid rgb(var(--color-foreground) / 0.25);
-  border-radius: 999px;
-  font-size: 1.2rem;
+  background: transparent;
+  border: 1px solid rgb(var(--offer-gold));
+  font-size: 1.1rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
+  color: rgb(var(--offer-gold));
 }
 
 .offer-builder__badge svg {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 .offer-builder__title {
-  margin: 1.6rem 0 0;
-  font-size: clamp(2.8rem, 5vw, 4.8rem);
-  line-height: 1.1;
+  margin: 2rem 0 0;
+  font-family: var(--font-heading-family);
+  font-weight: 400;
+  font-size: clamp(3.2rem, 5.5vw, 5.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 .offer-builder__tagline {
-  margin: 1.2rem auto 0;
+  margin: 1.4rem auto 0;
   max-width: 52rem;
   font-size: 1.5rem;
-  color: rgb(var(--color-foreground) / 0.72);
+  line-height: 1.6;
+  color: rgba(var(--offer-ink), 0.68);
 }
 
+/* --------------------------------- Pricing -------------------------------- */
+
 .offer-builder__price {
-  margin-top: 2rem;
+  margin-top: 2.4rem;
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 1.2rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.offer-builder__price-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(var(--offer-ink), 0.5);
 }
 
 .offer-builder__price-now {
-  font-size: 2.8rem;
-  font-weight: 600;
+  font-family: var(--font-heading-family);
+  font-weight: 400;
+  font-size: clamp(4rem, 7vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: rgb(var(--offer-gold));
   font-variant-numeric: tabular-nums;
 }
 
 .offer-builder__price-was {
-  font-size: 1.8rem;
-  opacity: 0.5;
+  font-size: 1.6rem;
+  color: rgba(var(--offer-ink), 0.45);
 }
 
 .offer-builder__price-save {
-  font-size: 1.3rem;
-  font-weight: 600;
+  margin-top: 0.4rem;
   padding: 0.4rem 1.2rem;
-  border-radius: 999px;
-  background: rgb(var(--color-foreground) / 0.08);
+  border: 1px solid rgba(var(--offer-gold), 0.35);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--offer-gold));
 }
 
-/* Big Naseem-style "Flat ₹1,000 OFF" / "25% OFF" callout when the offer uses
-   discount pricing instead of a fixed bundle price. */
+/* Big "Flat ₹1,000 OFF" / "25% OFF" callout when the offer uses discount
+   pricing instead of a fixed bundle price. */
 .offer-builder__price-discount {
-  padding: 0.7rem 2.2rem;
-  border-radius: 999px;
-  background: rgb(var(--color-button));
+  padding: 1rem 2.4rem;
+  background: rgb(var(--offer-gold));
   color: rgb(var(--color-button-text));
   font-size: clamp(2rem, 3.6vw, 3rem);
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .offer-builder__price-note {
-  font-size: 1.6rem;
-  color: rgb(var(--color-foreground) / 0.75);
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+  color: rgba(var(--offer-ink), 0.68);
 }
+
+/* ---------------------------------- Perks --------------------------------- */
 
 .offer-builder__perks {
   list-style: none;
-  margin: 2.4rem 0 0;
-  padding: 0;
+  margin: 2.8rem 0 0;
+  padding: 1.6rem 0;
+  border-top: 1px solid var(--offer-line);
+  border-bottom: 1px solid var(--offer-line);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.8rem 2.4rem;
+  gap: 0.8rem 3.2rem;
 }
 
 .offer-builder__perks li {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  font-size: 1.4rem;
-  color: rgb(var(--color-foreground) / 0.8);
+  gap: 0.8rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--offer-ink), 0.7);
 }
 
 .offer-builder__perks svg {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.3rem;
+  height: 1.3rem;
   flex-shrink: 0;
+  color: rgb(var(--offer-gold));
+}
+
+/* ------------------------------- How it works ----------------------------- */
+
+.offer-builder__steps {
+  list-style: none;
+  margin: 0 0 4rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--offer-line);
+  border: 1px solid var(--offer-line);
+}
+
+.offer-builder__step {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.6rem 2rem;
+  background: rgb(var(--color-background));
+}
+
+.offer-builder__step-num {
+  font-family: var(--font-heading-family);
+  font-size: 2.4rem;
+  line-height: 1;
+  color: rgb(var(--offer-gold));
+}
+
+.offer-builder__step-text {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: rgba(var(--offer-ink), 0.75);
 }
 
 /* ---------------------------------- Groups -------------------------------- */
@@ -153,15 +229,13 @@
 }
 
 .offer-group__details {
-  border: 1px solid rgb(var(--color-foreground) / 0.12);
-  border-radius: 1.2rem;
-  overflow: hidden;
-  background: rgb(var(--color-foreground) / 0.02);
+  border: 1px solid var(--offer-line);
+  background: rgb(var(--color-background));
 }
 
-/* A finished group recedes so the customer's eye lands on the one still to do */
+/* A finished group picks up the gold edge so progress is obvious at a glance */
 .offer-group--complete .offer-group__details {
-  border-color: rgb(var(--color-button) / 0.45);
+  border-color: rgb(var(--offer-gold));
 }
 
 .offer-group__summary {
@@ -169,7 +243,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.6rem;
-  padding: 1.8rem 2rem;
+  padding: 2rem 2.4rem;
   cursor: pointer;
   list-style: none;
   user-select: none;
@@ -181,19 +255,34 @@
 }
 
 .offer-group__summary:hover {
-  background: rgb(var(--color-foreground) / 0.04);
+  background: rgba(var(--offer-gold), 0.05);
+}
+
+.offer-group__summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
 }
 
 .offer-group__summary-text {
-  font-size: 1.6rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: var(--font-heading-family);
+  font-size: 2.2rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.offer-group__summary-hint {
+  font-size: 1.2rem;
+  letter-spacing: 0.02em;
+  color: rgba(var(--offer-ink), 0.55);
 }
 
 .offer-group__summary-meta {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
+  gap: 1.4rem;
   flex-shrink: 0;
 }
 
@@ -201,18 +290,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 5.4rem;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
-  background: rgb(var(--color-foreground) / 0.08);
+  min-width: 5.6rem;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid rgb(var(--offer-gold));
+  background: transparent;
   font-size: 1.3rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  color: rgb(var(--offer-gold));
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .offer-group__pill--complete {
-  background: rgb(var(--color-button));
+  background: rgb(var(--offer-gold));
+  border-color: rgb(var(--offer-gold));
   color: rgb(var(--color-button-text));
 }
 
@@ -233,6 +325,16 @@
   }
 }
 
+.offer-group__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border: 1px solid var(--offer-line);
+  color: rgba(var(--offer-ink), 0.7);
+}
+
 .offer-group__toggle svg {
   width: 1.1rem;
   height: 1.1rem;
@@ -244,30 +346,94 @@
 }
 
 .offer-group__content {
-  padding: 0 2rem 2.4rem;
-  border-top: 1px solid rgb(var(--color-foreground) / 0.08);
+  padding: 0 2.4rem 2.8rem;
+  border-top: 1px solid var(--offer-line);
 }
 
 .offer-group__empty {
   padding: 2.4rem 0;
   text-align: center;
   font-size: 1.4rem;
-  opacity: 0.7;
+  color: rgba(var(--offer-ink), 0.6);
 }
 
 /* ---------------------------------- Grid ---------------------------------- */
 
+.offer-grid-wrap {
+  position: relative;
+}
+
+/* Mobile: a horizontal swipe row — one card plus a peek of the next — with
+   prev/next arrows instead of the two-column stack. Desktop keeps the plain
+   grid. */
 .offer-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.6rem 1.2rem;
-  padding-top: 2rem;
+  display: flex;
+  align-items: stretch;
+  gap: 1.2rem;
+  padding-top: 2.4rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.offer-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.offer-grid__nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  padding-top: 2.4rem;
+}
+
+.offer-grid__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border: 1px solid rgba(var(--offer-ink), 0.3);
+  border-radius: 0;
+  background: rgb(var(--color-background));
+  color: rgb(var(--offer-ink));
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.offer-grid__arrow:hover:not(:disabled) {
+  background: rgb(var(--offer-gold));
+  border-color: rgb(var(--offer-gold));
+  color: rgb(var(--color-button-text));
+}
+
+.offer-grid__arrow:disabled {
+  border-color: rgba(var(--offer-ink), 0.15);
+  color: rgba(var(--offer-ink), 0.3);
+  cursor: default;
+}
+
+.offer-grid__arrow svg {
+  width: 1.5rem;
+  height: 1.1rem;
+}
+
+.offer-grid__arrow--prev svg {
+  transform: rotate(180deg);
 }
 
 @media screen and (min-width: 750px) {
   .offer-grid {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 3.2rem 2.4rem;
+    gap: 2.8rem 2rem;
+    overflow: visible;
+  }
+
+  .offer-grid__nav {
+    display: none;
   }
 }
 
@@ -283,33 +449,31 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 1rem 1rem 1.2rem;
+  padding: 1.2rem 1.2rem 1.4rem;
   background: rgb(var(--color-background));
-  border: 1px solid rgb(var(--color-foreground) / 0.1);
-  border-radius: 1.2rem;
+  border: 1px solid var(--offer-line);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease,
     transform 0.2s ease;
 }
 
 @media (hover: hover) {
   .offer-card:not(.offer-card--soldout):hover {
-    border-color: rgb(var(--color-foreground) / 0.28);
-    box-shadow: 0 6px 18px rgb(var(--color-foreground) / 0.07);
+    border-color: rgba(var(--offer-gold), 0.5);
+    box-shadow: 0 1rem 2.4rem rgba(var(--offer-ink), 0.08);
     transform: translateY(-2px);
   }
 }
 
-/* Selected reads as an accent ring rather than a plain dark border, so a full
-   group is scannable at a glance on a small screen. */
+/* Selected reads as a gold ring, so a full group is scannable at a glance */
 .offer-card--selected,
 .offer-card--selected:hover {
-  border-color: rgb(var(--color-button));
-  box-shadow: 0 0 0 1px rgb(var(--color-button)),
-    0 4px 16px rgb(var(--color-foreground) / 0.1);
+  border-color: rgb(var(--offer-gold));
+  box-shadow: inset 0 0 0 1px rgb(var(--offer-gold)),
+    0 0.8rem 2rem rgba(var(--offer-ink), 0.08);
 }
 
 .offer-card--dimmed {
-  opacity: 0.45;
+  opacity: 0.4;
 }
 
 .offer-card--soldout {
@@ -327,8 +491,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 0.8rem;
-  background: rgb(var(--color-foreground) / 0.03);
+  background: rgb(var(--color-background));
 }
 
 .offer-card__media img,
@@ -345,18 +508,17 @@
 
 .offer-card__check {
   position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  width: 2.6rem;
-  height: 2.6rem;
+  top: 0;
+  right: 0;
+  width: 2.8rem;
+  height: 2.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: rgb(var(--color-button));
+  background: rgb(var(--offer-gold));
   color: rgb(var(--color-button-text));
   opacity: 0;
-  transform: scale(0.6);
+  transform: translateY(-100%);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
@@ -367,7 +529,7 @@
 
 .offer-card--selected .offer-card__check {
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0);
 }
 
 .offer-card__body {
@@ -376,15 +538,17 @@
   flex-direction: column;
   align-items: center;
   gap: 0.8rem;
-  margin-top: 1.2rem;
+  margin-top: 1.4rem;
   text-align: center;
 }
 
 .offer-card__title {
   margin: 0;
-  font-size: 1.5rem;
+  font-family: var(--font-heading-family);
+  font-size: 1.7rem;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .offer-card__variant-row {
@@ -395,10 +559,10 @@
 }
 
 .offer-card__variant-label {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.7;
+  letter-spacing: 0.1em;
+  color: rgba(var(--offer-ink), 0.55);
   white-space: nowrap;
 }
 
@@ -406,20 +570,29 @@
   flex: 1;
   min-width: 0;
   padding: 0.7rem 0.9rem;
-  border: 1px solid rgb(var(--color-foreground) / 0.25);
-  border-radius: 0.4rem;
+  border: 1px solid rgba(var(--offer-ink), 0.2);
+  border-radius: 0;
   background-color: rgb(var(--color-background));
-  color: rgb(var(--color-foreground));
+  color: rgb(var(--offer-ink));
   font-family: inherit;
   font-size: 1.3rem;
   cursor: pointer;
 }
 
-.offer-card__price {
-  font-size: 1.5rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+.offer-card__variant:focus-visible {
+  outline: 1px solid rgb(var(--offer-gold));
+  outline-offset: 1px;
 }
+
+.offer-card__price {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(var(--offer-ink), 0.8);
+}
+
+/* --------------------------- Card button + stepper ------------------------- */
 
 .offer-card__add {
   margin-top: auto;
@@ -427,17 +600,17 @@
   /* 4.4rem keeps the button a comfortable thumb target on phones */
   min-height: 4.4rem;
   padding: 1rem 0.8rem;
-  border: none;
-  border-radius: 0.6rem;
-  background: rgb(var(--color-foreground));
-  color: rgb(var(--color-background));
+  border: 1px solid rgb(var(--offer-ink));
+  border-radius: 0;
+  background: transparent;
+  color: rgb(var(--offer-ink));
   font-family: inherit;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
 .offer-card__add[hidden] {
@@ -445,11 +618,19 @@
 }
 
 .offer-card__add:hover:not(:disabled) {
-  opacity: 0.85;
+  background: rgb(var(--offer-gold));
+  border-color: rgb(var(--offer-gold));
+  color: rgb(var(--color-button-text));
+}
+
+.offer-card__add:focus-visible {
+  outline: 2px solid rgb(var(--offer-gold));
+  outline-offset: 2px;
 }
 
 .offer-card__add:disabled {
-  background: rgb(var(--color-foreground) / 0.35);
+  border-color: rgba(var(--offer-ink), 0.2);
+  color: rgba(var(--offer-ink), 0.4);
   cursor: not-allowed;
 }
 
@@ -460,9 +641,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid rgb(var(--color-button));
-  border-radius: 0.6rem;
-  overflow: hidden;
+  border: 1px solid rgb(var(--offer-gold));
+  background: rgb(var(--color-background));
+  color: rgb(var(--offer-gold));
 }
 
 .offer-card__qty[hidden] {
@@ -470,8 +651,8 @@
 }
 
 .offer-card__qty-btn {
-  width: 4rem;
-  height: 4rem;
+  width: 4.2rem;
+  height: 4.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -483,7 +664,7 @@
 }
 
 .offer-card__qty-btn:hover {
-  background: rgb(var(--color-foreground) / 0.08);
+  background: rgba(var(--offer-gold), 0.16);
 }
 
 .offer-card__qty-btn svg {
@@ -495,14 +676,15 @@
   font-size: 1.5rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: rgb(var(--offer-ink));
 }
 
 /* --------------------------- More offers (sibling cards) ------------------ */
 
 .offer-builder__more {
-  margin-top: 4.8rem;
-  padding-top: 2.4rem;
-  border-top: 1px solid rgb(var(--color-foreground) / 0.1);
+  margin-top: 5.6rem;
+  padding-top: 3.2rem;
+  border-top: 1px solid var(--offer-line);
 }
 
 /* ------------------------------- Sticky bar ------------------------------- */
@@ -511,9 +693,9 @@
   position: sticky;
   bottom: 0;
   z-index: 3;
-  background: rgb(var(--color-background));
-  border-top: 1px solid rgb(var(--color-foreground) / 0.12);
-  box-shadow: 0 -4px 20px rgb(var(--color-foreground) / 0.08);
+  background: rgb(var(--offer-ink));
+  color: rgb(var(--color-background));
+  box-shadow: 0 -0.6rem 2.4rem rgba(var(--offer-ink), 0.22);
   transition: box-shadow 0.2s ease;
 }
 
@@ -521,13 +703,27 @@
   box-shadow: none;
 }
 
+/* progress line — width comes from --offer-progress, set by offer-builder.js */
+.offer-builder__bar-track {
+  height: 3px;
+  background: rgba(var(--color-background), 0.14);
+}
+
+.offer-builder__bar-fill {
+  display: block;
+  height: 100%;
+  width: var(--offer-progress, 0%);
+  background: rgb(var(--offer-gold));
+  transition: width 0.25s ease;
+}
+
 .offer-builder__bar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.6rem;
-  padding-top: 1.2rem;
-  padding-bottom: 1.2rem;
+  gap: 2rem;
+  padding-top: 1.4rem;
+  padding-bottom: 1.4rem;
 }
 
 .offer-builder__bar-summary {
@@ -537,27 +733,28 @@
 .offer-builder__bar-progress {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
+  gap: 0.8rem;
 }
 
 .offer-builder__bar-count {
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .offer-builder__bar-label {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.65;
+  letter-spacing: 0.16em;
+  color: rgba(var(--color-background), 0.6);
 }
 
 .offer-builder__bar-picks {
-  margin: 0.2rem 0 0;
+  margin: 0.3rem 0 0;
   max-width: 46rem;
-  font-size: 1.3rem;
-  opacity: 0.7;
+  font-size: 1.25rem;
+  color: rgba(var(--color-background), 0.65);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -566,7 +763,7 @@
 .offer-builder__bar-cta {
   display: flex;
   align-items: center;
-  gap: 1.6rem;
+  gap: 2rem;
   flex-shrink: 0;
 }
 
@@ -578,14 +775,15 @@
 }
 
 .offer-builder__bar-price {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
 }
 
 .offer-builder__bar-worth {
   font-size: 1.2rem;
-  opacity: 0.75;
+  color: rgba(var(--color-background), 0.6);
 }
 
 .offer-builder__bar-worth[hidden] {
@@ -594,16 +792,65 @@
 
 .offer-builder__bar-worth b {
   font-weight: 600;
+  color: rgb(var(--offer-gold));
 }
 
+/* ---------------------------- Add bundle button --------------------------- */
+
 .offer-builder__bar-add {
-  min-width: 22rem;
-  min-height: 4.8rem;
+  position: relative;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  min-width: 24rem;
+  min-height: 5.2rem;
+  padding: 1rem 2.4rem;
+  border: 1px solid rgb(var(--offer-gold));
+  border-radius: 0;
+  background: rgb(var(--offer-gold));
+  color: rgb(var(--color-button-text));
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.offer-builder__bar-add:hover:not([disabled]) {
+  background: rgb(var(--color-background));
+  border-color: rgb(var(--color-background));
+  color: rgb(var(--offer-ink));
+}
+
+.offer-builder__bar-add:focus-visible {
+  outline: 2px solid rgb(var(--color-background));
+  outline-offset: 2px;
 }
 
 .offer-builder__bar-add[disabled] {
+  background: transparent;
+  border-color: rgba(var(--color-background), 0.3);
+  color: rgba(var(--color-background), 0.5);
   cursor: not-allowed;
+}
+
+.offer-builder__bar-add.loading {
+  color: transparent;
+}
+
+.offer-builder__bar-add .loading__spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  align-items: center;
+}
+
+.offer-builder__bar-add .loading__spinner .path {
+  stroke: rgb(var(--color-button-text));
 }
 
 .offer-builder__bar-error {
@@ -611,11 +858,20 @@
   padding: 0 1.5rem 1.2rem;
   text-align: center;
   font-size: 1.3rem;
-  color: rgba(var(--color-error, 200 30 30) / 1);
+  /* soft red that still reads on the dark bar */
+  color: rgb(255 154 154);
 }
 
 .offer-builder__bar-error[hidden] {
   display: none;
+}
+
+/* --------------------------------- Mobile --------------------------------- */
+
+@media screen and (max-width: 989px) {
+  .offer-builder__steps {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media screen and (max-width: 749px) {
@@ -625,8 +881,9 @@
   }
 
   .offer-builder__badge {
-    font-size: 1.1rem;
+    font-size: 1rem;
     padding: 0.6rem 1.2rem;
+    letter-spacing: 0.16em;
   }
 
   .offer-builder__tagline {
@@ -634,39 +891,55 @@
   }
 
   .offer-builder__perks {
-    margin-top: 1.6rem;
-    gap: 0.6rem 1.6rem;
+    margin-top: 2rem;
+    padding: 1.2rem 0;
+    gap: 0.8rem 2rem;
   }
 
   .offer-builder__perks li {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
+  }
+
+  .offer-builder__steps {
+    margin-bottom: 2.8rem;
+  }
+
+  .offer-builder__step {
+    padding: 1.2rem 1.6rem;
   }
 
   .offer-builder__banner-media {
     padding: 0 1rem;
   }
 
-  .offer-builder__banner-media img {
-    border-radius: 0.8rem;
-  }
-
   /* ---- groups ---- */
   .offer-group__summary {
-    padding: 1.4rem 1.2rem;
+    padding: 1.6rem 1.4rem;
   }
 
   .offer-group__summary-text {
-    font-size: 1.4rem;
+    font-size: 1.8rem;
+  }
+
+  .offer-group__summary-hint {
+    font-size: 1.1rem;
+  }
+
+  .offer-group__summary-meta {
+    gap: 0.8rem;
   }
 
   .offer-group__content {
-    padding-inline: 1rem;
+    padding-inline: 1.2rem;
   }
 
-  /* ---- cards ---- */
+  /* ---- cards: horizontal snap row on phones ---- */
   .offer-card {
+    flex: 0 0 72%;
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
     padding: 0.8rem 0.8rem 1rem;
-    border-radius: 1rem;
   }
 
   .offer-card__body {
@@ -675,12 +948,12 @@
   }
 
   .offer-card__title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
 
   .offer-card__add {
-    font-size: 1.1rem;
-    letter-spacing: 0.06em;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
   }
 
   .offer-card__variant-row {
@@ -703,10 +976,10 @@
   .offer-builder__bar-inner {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.6rem;
-    padding-top: 1rem;
+    gap: 0.8rem;
+    padding-top: 1.2rem;
     /* clear the iOS home indicator so the button isn't half off-screen */
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
   }
 
   .offer-builder__bar-summary {
@@ -732,7 +1005,10 @@
 
   .offer-builder__bar-add {
     min-width: 0;
+    min-height: 4.8rem;
     flex: 1;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
   }
 }
 
@@ -755,7 +1031,8 @@
 @media (prefers-reduced-motion: reduce) {
   .offer-card,
   .offer-card__media img,
-  .offer-card__check {
+  .offer-card__check,
+  .offer-builder__bar-fill {
     transition: none;
   }
 

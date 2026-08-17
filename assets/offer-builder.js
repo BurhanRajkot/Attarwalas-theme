@@ -19,7 +19,7 @@ function formatOfferMoney(cents, format) {
   };
 
   // Shopify money formats use {{amount}}-style placeholders; fill whichever is used.
-  return (format || '{{amount}}').replace(/\{\{\s*(\w+)\s*\}\}/, (_match, name) => {
+  let out = (format || '{{amount}}').replace(/\{\{\s*(\w+)\s*\}\}/, (_match, name) => {
     switch (name) {
       case 'amount_no_decimals':
       case 'amount_no_decimals_with_comma_separator':
@@ -27,9 +27,14 @@ function formatOfferMoney(cents, format) {
       case 'amount_with_comma_separator':
         return withCommas(value, 2).replace(/,/g, ' ').replace('.', ',').replace(/ /g, '.');
       default:
-        return withCommas(value, 2);
+        // money_without_trailing_zeros: keep the decimals only when non-zero
+        return withCommas(value, 2).replace(/\.00$/, '');
     }
   });
+
+  // The offer UI uses ₹ everywhere (same normalization the Liquid does with
+  // `replace: 'Rs.', '₹'`) so the bar price never flips back to "Rs. 699.00".
+  return out.replace(/^Rs\.\s*/, '₹').replace('₹ ', '₹');
 }
 
 if (!customElements.get('offer-builder')) {
@@ -59,6 +64,7 @@ if (!customElements.get('offer-builder')) {
         this.barPriceElement = this.querySelector('[data-offer-bar-price]');
         this.addButton = this.querySelector('[data-offer-add]');
         this.addLabel = this.querySelector('[data-offer-add-label]');
+        this.spinner = this.querySelector('[data-offer-add] .loading__spinner');
         this.errorElement = this.querySelector('[data-offer-error]');
         this.bar = this.querySelector('[data-offer-bar]');
         this.cart = document.querySelector('cart-drawer') || document.querySelector('cart-notification');
@@ -79,7 +85,14 @@ if (!customElements.get('offer-builder')) {
 
         this.addButton.addEventListener('click', () => this.addToCart());
 
+        if (!this.useDiscount && this.offerPrice <= 0) {
+          console.warn(
+            `[offer-builder] "${this.offerTitle}" has no price set in admin — add-to-cart is disabled so the bundle can't be sold for free.`
+          );
+        }
+
         this.observeBar();
+        this.setupGridScroll();
         this.render();
       }
 
@@ -232,15 +245,29 @@ if (!customElements.get('offer-builder')) {
         if (this.counter) this.counter.textContent = `${total} / ${this.totalPickCount}`;
         if (this.picksElement) this.picksElement.textContent = this.picksSummary();
 
+        // Drives the fill line across the top of the sticky bar.
+        if (this.bar) {
+          const progress = this.totalPickCount > 0 ? Math.min(100, (total / this.totalPickCount) * 100) : 0;
+          this.bar.style.setProperty('--offer-progress', `${progress}%`);
+          this.bar.classList.toggle('offer-builder__bar--ready', ready);
+        }
+
         this.renderWorth();
 
-        this.addButton.disabled = !ready;
+        // A fixed-price offer whose product has no price would travel to the
+        // cart as _bundle_price 0.00 — i.e. the discount function would hand
+        // the whole bundle over for free. Refuse to add anything instead.
+        const priced = this.useDiscount || this.offerPrice > 0;
+
+        this.addButton.disabled = !ready || !priced;
         const remaining = this.totalPickCount - total;
-        this.addLabel.textContent = ready
-          ? this.readyLabel
-          : remaining === this.totalPickCount
-            ? `Select ${this.totalPickCount} items`
-            : `Select ${remaining} more`;
+        this.addLabel.textContent = !priced
+          ? 'Offer unavailable'
+          : ready
+            ? this.readyLabel
+            : remaining === this.totalPickCount
+              ? `Select ${this.totalPickCount} items`
+              : `Select ${remaining} more`;
 
         this.hideError();
       }
@@ -297,6 +324,46 @@ if (!customElements.get('offer-builder')) {
         new IntersectionObserver((entries) => {
           this.bar.classList.toggle('offer-builder__bar--docked', entries[0].isIntersecting);
         }).observe(sentinel);
+      }
+
+      /* ------------------------- mobile grid scrolling ------------------------- */
+
+      // The pick grid is a horizontal snap row on phones; the arrows step it
+      // one card at a time and disable themselves at either end.
+      setupGridScroll() {
+        this.querySelectorAll('[data-offer-grid]').forEach((grid) => {
+          const prev = grid.parentElement.querySelector('[data-offer-grid-prev]');
+          const next = grid.parentElement.querySelector('[data-offer-grid-next]');
+          if (!prev || !next) return;
+
+          // Distance between two consecutive cards (card + gap), measured live.
+          const step = () => {
+            const cards = grid.querySelectorAll('.offer-card');
+            if (cards.length < 2) return grid.clientWidth * 0.75 || 240;
+            const a = cards[0].getBoundingClientRect();
+            const b = cards[1].getBoundingClientRect();
+            return b.left - a.left;
+          };
+
+          const update = () => {
+            if (grid.clientWidth === 0) return;
+            const atStart = grid.scrollLeft <= 2;
+            const atEnd = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 2;
+            prev.disabled = atStart;
+            next.disabled = atEnd;
+          };
+
+          const scroll = (direction) =>
+            grid.scrollBy({ left: direction * step(), behavior: 'smooth' });
+
+          prev.addEventListener('click', () => scroll(-1));
+          next.addEventListener('click', () => scroll(1));
+          grid.addEventListener('scroll', update, { passive: true });
+          window.addEventListener('resize', update);
+          // the accordion can start collapsed; re-check when it opens
+          grid.closest('details')?.addEventListener('toggle', update);
+          update();
+        });
       }
 
       /* ------------------------------- add to cart ----------------------------- */
@@ -372,6 +439,9 @@ if (!customElements.get('offer-builder')) {
       setLoading(loading) {
         this.addButton.classList.toggle('loading', loading);
         this.addButton.setAttribute('aria-busy', String(loading));
+        // the spinner ships with `hidden` on it — the button's own class isn't
+        // enough to reveal it, `.hidden` is !important
+        if (this.spinner) this.spinner.classList.toggle('hidden', !loading);
       }
 
       showError(message) {

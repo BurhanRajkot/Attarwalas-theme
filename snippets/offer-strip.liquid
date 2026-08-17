@@ -1,6 +1,7 @@
 {% comment %}
-  Renders the offer deals row — one card per offer product ("Buy 2 for ₹1,999",
-  "Buy 3 for ₹2,999", …), each linking through to that product's offer page.
+  Renders the offer deals row — one card per offer product ("Get any 2 for
+  ₹1,999", "Get any 3 …"), each linking through to that product's offer page.
+  Same coupon visual language as snippets/perfume-offers.liquid.
 
   Accepts:
   - offer_products {Array<Product>} offers to show
@@ -30,8 +31,9 @@
   <div class="offer-deals" id="OfferDeals-{{ strip_id }}" {{ block_attributes }}>
     {%- if strip_heading != blank -%}
       <div class="offer-deals__heading">
-        {% render 'icon-discount' %}
+        <span class="offer-deals__heading-rule" aria-hidden="true"></span>
         <span>{{ strip_heading }}</span>
+        <span class="offer-deals__heading-rule" aria-hidden="true"></span>
       </div>
     {%- endif -%}
 
@@ -42,7 +44,9 @@
           assign badge_text = mf.badge.value
           assign tagline_text = mf.tagline.value
           assign pick_count = mf.pick_count.value | plus: 0
-          assign price_text = offer.price | money
+
+          # ₹ reads better than the store's "Rs." money format on these cards
+          assign price_text = offer.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
 
           assign discount_type = mf.discount_type.value | downcase
           assign discount_amount = mf.discount_amount.value | plus: 0
@@ -54,11 +58,15 @@
           endif
           if use_discount
             if discount_type == 'fixed'
-              assign discount_money = discount_amount | times: 100 | money
-              assign discount_text = 'Flat ' | append: discount_money | append: ' off'
+              assign discount_money = discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
+              assign discount_text = 'Flat ' | append: discount_money | append: ' OFF'
             else
               assign discount_text = discount_amount | append: '% OFF'
             endif
+          endif
+
+          if tagline_text == blank
+            assign tagline_text = offer.title
           endif
         -%}
         <li class="offer-deals__item">
@@ -69,27 +77,35 @@
                 <span>Offer</span>
               </span>
 
-              {%- if badge_text != blank -%}
-                <span class="offer-deal__headline">{{ badge_text }}</span>
-              {%- elsif pick_count > 0 -%}
-                <span class="offer-deal__headline">
-                  Buy&nbsp;<span class="offer-deal__count">{{ pick_count }}</span>
+              {%- if pick_count > 0 -%}
+                <span class="offer-deal__count">
+                  <span class="offer-deal__count-word">Get any</span>
+                  <span class="offer-deal__count-num">{{ pick_count }}</span>
                 </span>
+              {%- elsif badge_text != blank -%}
+                <span class="offer-deal__headline">{{ badge_text }}</span>
               {%- else -%}
-                <span class="offer-deal__headline">{{ price_text }}</span>
+                <span class="offer-deal__headline">{{ offer.title | escape }}</span>
               {%- endif -%}
 
+              {%- comment -%}
+                A zero price means the offer product has no price set in admin —
+                show no price at all rather than "for ₹0".
+              {%- endcomment -%}
               {%- if use_discount -%}
-                <span class="offer-deal__price">{{ discount_text }}</span>
-              {%- elsif pick_count > 0 -%}
-                <span class="offer-deal__price">For {{ price_text }}</span>
+                <span class="offer-deal__price">
+                  <span class="offer-deal__price-value">{{ discount_text }}</span>
+                </span>
+              {%- elsif offer.price > 0 -%}
+                <span class="offer-deal__price">
+                  <span class="offer-deal__price-word">for just</span>
+                  <span class="offer-deal__price-value">{{ price_text }}</span>
+                </span>
               {%- endif -%}
 
-              {%- if tagline_text != blank -%}
-                <span class="offer-deal__tagline">{{ tagline_text }}</span>
-              {%- endif -%}
+              <span class="offer-deal__tagline">{{ tagline_text }}</span>
 
-              <span class="offer-deal__name">{{ offer.title | escape }}</span>
+              <span class="offer-deal__perf" aria-hidden="true"></span>
 
               <span class="offer-deal__cta">
                 <span>Shop the offer</span>

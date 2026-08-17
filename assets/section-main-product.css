@@ -2031,21 +2031,16 @@ a.product__text {
     height: max(50rem, calc(100vh - 12rem));
   }
 
-  /* Thumbnails float over the foot of the image so the media stays edge to
-     edge, on a frosted plate that keeps them legible on any photo. */
+  /* Thumbnails sit just below the image on a frosted plate, so the media
+     stays edge to edge without the strip ever covering the product shot. */
   [id^="MainProduct-"] .product__media-wrapper slider-component.thumbnail-slider {
-    position: absolute;
-    left: 50%;
-    bottom: 2.4rem;
-    transform: translateX(-50%);
-    /* an explicit width, not auto: absolutely positioned it would shrink to
-       fit and collapse the thumbnail grid to a single column */
+    position: static;
     width: min(46rem, calc(100% - 4.8rem));
+    margin: 1.6rem auto 0;
     padding: 0.8rem;
     background-color: rgba(var(--color-background), 0.72);
     backdrop-filter: blur(0.8rem);
     -webkit-backdrop-filter: blur(0.8rem);
-    z-index: 2;
   }
 
   [id^="MainProduct-"] .product__media-wrapper .thumbnail-list {

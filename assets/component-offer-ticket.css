@@ -1,0 +1,426 @@
+/* ==========================================================================
+   Offer tickets — the "GET ANY 2 / 3 / 5" bundle carousel
+   Rendered by snippets/perfume-offers.liquid (product page custom-liquid
+   section). Square edges + gold hairlines to match the rest of the store
+   (theme corner radius is 0 everywhere); coupon feel comes from the dashed
+   perforation rule above the CTA rather than rounded corners.
+   ========================================================================== */
+
+.aw-offers {
+  --aw-gold: var(--color-button);
+  --aw-ink: var(--color-foreground);
+  position: relative;
+  width: 100%;
+}
+
+.aw-offers__header {
+  text-align: center;
+  max-width: 60rem;
+  margin: 0 auto 3.2rem;
+}
+
+.aw-offers__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(var(--aw-gold));
+}
+
+/* hairline rules either side of the eyebrow */
+.aw-offers__eyebrow::before,
+.aw-offers__eyebrow::after {
+  content: '';
+  width: 2.8rem;
+  height: 1px;
+  background: rgba(var(--aw-gold), 0.5);
+}
+
+.aw-offers__title {
+  margin: 0;
+  font-family: var(--font-heading-family);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 3.4vw, 3.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: rgb(var(--aw-ink));
+}
+
+.aw-offers__subtitle {
+  margin: 1rem auto 0;
+  max-width: 46rem;
+  font-size: 1.4rem;
+  line-height: 1.6;
+  color: rgba(var(--aw-ink), 0.65);
+}
+
+/* --------------------------------- Carousel ------------------------------- */
+
+.aw-offers__wrapper {
+  position: relative;
+  max-width: var(--page-width, 120rem);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.aw-offers__track {
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0.4rem 0 1rem;
+}
+
+.aw-offers__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------------------------------- Ticket -------------------------------- */
+
+.aw-ticket {
+  position: relative;
+  flex: 0 0 calc((100% - 4rem) / 3);
+  min-width: 26rem;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  padding: 2.8rem 2.4rem 0;
+  background-color: rgb(var(--color-background));
+  background-image: linear-gradient(180deg, rgba(var(--aw-gold), 0.07) 0%, rgba(var(--aw-gold), 0) 42%);
+  border: 1px solid rgba(var(--aw-gold), 0.3);
+  text-decoration: none;
+  color: rgb(var(--aw-ink));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+@media (hover: hover) {
+  .aw-ticket:hover {
+    border-color: rgb(var(--aw-gold));
+    box-shadow: 0 1.6rem 3.6rem rgba(var(--aw-gold), 0.24);
+    transform: translateY(-3px);
+  }
+}
+
+.aw-ticket:focus-visible {
+  outline: 2px solid rgb(var(--aw-gold));
+  outline-offset: 3px;
+}
+
+.aw-ticket__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  text-align: center;
+  padding-bottom: 2.4rem;
+}
+
+.aw-ticket__label {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  background: rgba(var(--aw-gold), 0.12);
+  border: 1px solid rgba(var(--aw-gold), 0.35);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(var(--aw-gold));
+}
+
+.aw-ticket__count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.8rem;
+  line-height: 1;
+}
+
+.aw-ticket__count-word {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(var(--aw-ink), 0.55);
+}
+
+.aw-ticket__count-num {
+  font-family: var(--font-heading-family);
+  font-weight: 400;
+  font-size: clamp(6rem, 9vw, 8.4rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: rgb(var(--aw-gold));
+}
+
+/* Fallback headline when an offer has no pick count (shows the badge text) */
+.aw-ticket__headline {
+  margin: 1.8rem 0 0;
+  font-family: var(--font-heading-family);
+  font-weight: 500;
+  font-size: 2.6rem;
+  line-height: 1.15;
+  color: rgb(var(--aw-ink));
+}
+
+.aw-ticket__price {
+  margin-top: 1.4rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+}
+
+.aw-ticket__price-word {
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--aw-ink), 0.5);
+}
+
+.aw-ticket__price-value {
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--aw-ink));
+}
+
+.aw-ticket__tagline {
+  margin-top: 1.2rem;
+  max-width: 28rem;
+  font-size: 1.35rem;
+  line-height: 1.55;
+  color: rgba(var(--aw-ink), 0.65);
+}
+
+/* ------------------------------ Perforation ------------------------------- */
+
+.aw-ticket__perf {
+  position: relative;
+  display: block;
+  height: 0;
+  margin: 0 -2.4rem;
+  border-top: 1px dashed rgba(var(--aw-gold), 0.45);
+}
+
+/* small gold diamonds punctuating each end of the tear line */
+.aw-ticket__perf::before,
+.aw-ticket__perf::after {
+  content: '';
+  position: absolute;
+  top: -0.35rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  background: rgb(var(--aw-gold));
+  transform: rotate(45deg);
+}
+
+.aw-ticket__perf::before {
+  left: -0.35rem;
+}
+
+.aw-ticket__perf::after {
+  right: -0.35rem;
+}
+
+/* ----------------------------------- CTA ---------------------------------- */
+
+.aw-ticket__cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  /* bleed past the card's side padding so the hover fill reaches both edges */
+  margin: 0 -2.4rem;
+  height: 5.4rem;
+  overflow: hidden;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(var(--aw-gold));
+  transition: color 0.3s ease;
+}
+
+/* gold wash sweeps in from the left on hover */
+.aw-ticket__cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--aw-gold));
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.aw-ticket__cta > span,
+.aw-ticket__cta svg,
+.aw-ticket__cta .icon {
+  position: relative;
+  z-index: 1;
+}
+
+.aw-ticket__cta svg,
+.aw-ticket__cta .icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  transition: transform 0.3s ease;
+}
+
+@media (hover: hover) {
+  .aw-ticket:hover .aw-ticket__cta {
+    color: rgb(var(--color-button-text));
+  }
+
+  .aw-ticket:hover .aw-ticket__cta::before {
+    transform: scaleX(1);
+  }
+
+  .aw-ticket:hover .aw-ticket__cta svg {
+    transform: translateX(0.5rem);
+  }
+}
+
+/* ---------------------------------- Arrows -------------------------------- */
+
+.aw-offers__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4.4rem;
+  height: 4.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(var(--aw-gold), 0.45);
+  border-radius: 50%;
+  background: rgb(var(--color-background));
+  color: rgb(var(--aw-gold));
+  cursor: pointer;
+  z-index: 2;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.aw-offers__arrow:hover {
+  background: rgb(var(--aw-gold));
+  color: rgb(var(--color-button-text));
+  border-color: rgb(var(--aw-gold));
+}
+
+.aw-offers__arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+  background: rgb(var(--color-background));
+  color: rgb(var(--aw-gold));
+  border-color: rgba(var(--aw-gold), 0.45);
+}
+
+.aw-offers__arrow[hidden] {
+  display: none;
+}
+
+.aw-offers__arrow--left {
+  left: -1rem;
+}
+
+.aw-offers__arrow--right {
+  right: -1rem;
+}
+
+.aw-offers__arrow span {
+  display: block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-top: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+
+.aw-offers__arrow--left span {
+  transform: rotate(-45deg);
+  margin-left: 0.4rem;
+}
+
+.aw-offers__arrow--right span {
+  transform: rotate(135deg);
+  margin-right: 0.4rem;
+}
+
+/* --------------------------------- Mobile --------------------------------- */
+
+@media screen and (max-width: 989px) {
+  .aw-ticket {
+    flex: 0 0 calc((100% - 2rem) / 2);
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .aw-offers__header {
+    margin-bottom: 2.4rem;
+  }
+
+  .aw-offers__wrapper {
+    padding: 0 1.5rem;
+  }
+
+  .aw-offers__track {
+    gap: 1.2rem;
+    /* let the next ticket peek in so the row reads as swipeable */
+    scroll-padding-left: 1.5rem;
+  }
+
+  .aw-ticket {
+    flex: 0 0 78%;
+    min-width: 0;
+    padding: 2.2rem 1.8rem 0;
+  }
+
+  .aw-ticket__perf {
+    margin: 0 -1.8rem;
+  }
+
+  .aw-ticket__count-num {
+    font-size: 6.4rem;
+  }
+
+  .aw-ticket__cta {
+    margin: 0 -1.8rem;
+    height: 4.8rem;
+    font-size: 1.1rem;
+  }
+
+  /* swiping replaces the arrows on touch screens */
+  .aw-offers__arrow {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aw-ticket,
+  .aw-ticket__cta,
+  .aw-ticket__cta::before,
+  .aw-ticket__cta svg {
+    transition: none;
+  }
+
+  .aw-ticket:hover {
+    transform: none;
+  }
+
+  .aw-ticket:hover .aw-ticket__cta::before {
+    transform: scaleX(1);
+  }
+
+  .aw-offers__track {
+    scroll-behavior: auto;
+  }
+}

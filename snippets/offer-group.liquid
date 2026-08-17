@@ -75,7 +75,12 @@
 >
   <details class="offer-group__details" {% if group_open %}open{% endif %}>
     <summary class="offer-group__summary">
-      <span class="offer-group__summary-text">{{ heading }}</span>
+      <span class="offer-group__summary-main">
+        <span class="offer-group__summary-text">{{ heading }}</span>
+        <span class="offer-group__summary-hint">
+          Pick {{ group_pick_count }} — tap “{{ add_label | default: 'Add to bundle' }}” on the ones you want
+        </span>
+      </span>
       <span class="offer-group__summary-meta">
         <span class="offer-group__pill" data-group-counter>0 / {{ group_pick_count }}</span>
         <span class="offer-group__toggle" aria-hidden="true">
@@ -95,7 +100,16 @@
           {%- endif -%}
         </p>
       {%- else -%}
-        <div class="offer-grid">
+        <div class="offer-grid-wrap">
+          <div class="offer-grid__nav" role="group" aria-label="Browse products">
+            <button type="button" class="offer-grid__arrow offer-grid__arrow--prev" data-offer-grid-prev aria-label="Scroll left">
+              {% render 'icon-arrow' %}
+            </button>
+            <button type="button" class="offer-grid__arrow offer-grid__arrow--next" data-offer-grid-next aria-label="Scroll right">
+              {% render 'icon-arrow' %}
+            </button>
+          </div>
+          <div class="offer-grid" data-offer-grid>
           {%- for item in grid_products -%}
             {%- if forloop.index > 60 -%}
               {%- break -%}
@@ -131,7 +145,7 @@
                     | image_tag:
                       loading: 'lazy',
                       widths: '240, 360, 480, 600',
-                      sizes: '(min-width: 990px) 22vw, (min-width: 750px) 30vw, 42vw',
+                      sizes: '(min-width: 990px) 22vw, (min-width: 750px) 30vw, 56vw',
                       class: 'offer-card__image',
                       alt: item_alt
                   }}
@@ -154,7 +168,7 @@
                         <option
                           value="{{ v.id }}"
                           data-price="{{ v.price }}"
-                          data-price-formatted="{{ v.price | money }}"
+                          data-price-formatted="{{ v.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
                           data-variant-title="{{ v.title | escape }}"
                           data-available="{{ v.available }}"
                           {% if v.id == variant.id %}
@@ -171,7 +185,7 @@
                   </div>
                 {%- endunless -%}
 
-                <div class="offer-card__price" data-offer-price>{{ variant.price | money }}</div>
+                <div class="offer-card__price" data-offer-price>{{ variant.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</div>
 
                 <button
                   type="button"
@@ -200,6 +214,7 @@
               </div>
             </div>
           {%- endfor -%}
+          </div>
         </div>
       {%- endif -%}
     </div>

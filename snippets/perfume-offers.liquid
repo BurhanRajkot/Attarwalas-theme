@@ -1,11 +1,22 @@
 {%- liquid
   comment
-    Compact "ticket" offer carousel — the Naseem-style row below the buy button.
-    Renders one ticket per product in the `offer` collection; each ticket links
-    to that product's offer page (the offer builder). Colors/text follow the
-    active theme scheme (CSS vars), so it always matches the site.
+    Bundle offer tickets — the "GET ANY 2 / 3 / 5" coupon carousel shown on the
+    product page (rendered from a custom-liquid section in templates/product.json).
+
+    Renders one ticket per product in the `offer` collection; each ticket links to
+    that product's offer page (the offer builder). Colours follow the active theme
+    scheme (CSS vars), so it always matches the site.
+
+    Optional params:
+    - eyebrow  {String} small caps line above the title ('none' hides the header)
+    - heading  {String} section title
+    - subtitle {String} supporting line under the title
   endcomment
+
   assign ticket_offers = collections['offer'].products
+  assign ticket_eyebrow = eyebrow | default: 'Bundle offers'
+  assign ticket_heading = heading | default: 'Buy more, pay less'
+  assign ticket_subtitle = subtitle | default: 'Mix and match your favourite fragrances and pay one flat bundle price.'
 -%}
 
 {%- if ticket_offers != blank and ticket_offers.size > 0 -%}
@@ -26,219 +37,23 @@
 {%- endif -%}
 
 {%- if ticket_count > 0 -%}
-  <style>
-    .aw-offers {
-      width: 100%;
-      padding: 0.6rem 0 1.6rem;
-      position: relative;
-      overflow: hidden;
-    }
+  {{ 'component-offer-ticket.css' | asset_url | stylesheet_tag }}
 
-    .aw-offers__wrapper {
-      position: relative;
-      max-width: 1500px;
-      margin: 0 auto;
-      padding: 0 4.4rem;
-    }
+  <div class="aw-offers" data-aw-offers>
+    {%- if ticket_eyebrow != 'none' -%}
+      <div class="aw-offers__header">
+        {%- if ticket_eyebrow != blank -%}
+          <span class="aw-offers__eyebrow">{{ ticket_eyebrow }}</span>
+        {%- endif -%}
+        {%- if ticket_heading != blank -%}
+          <h2 class="aw-offers__title">{{ ticket_heading }}</h2>
+        {%- endif -%}
+        {%- if ticket_subtitle != blank -%}
+          <p class="aw-offers__subtitle">{{ ticket_subtitle }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
 
-    .aw-offers__track {
-      display: flex;
-      gap: 1.2rem;
-      overflow-x: auto;
-      scroll-behavior: smooth;
-      scrollbar-width: none;
-      padding: 0.4rem 0.2rem 0.6rem;
-    }
-
-    .aw-offers__track::-webkit-scrollbar {
-      display: none;
-    }
-
-    .aw-offer {
-      position: relative;
-      flex: 0 0 calc((100% - 2.4rem) / 3);
-      min-width: 15rem;
-      display: block;
-      padding: 1.4rem;
-      border: 1px solid rgb(var(--color-foreground) / 0.14);
-      border-radius: 1.4rem;
-      background: rgb(var(--color-foreground) / 0.03);
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .aw-offer:hover {
-      border-color: rgb(var(--color-button));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgb(var(--color-foreground) / 0.08);
-    }
-
-    .aw-offer__inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      min-height: 14.5rem;
-      padding: 1.4rem 1rem;
-      border: 1px dotted rgb(var(--color-foreground) / 0.3);
-      border-radius: 1rem;
-      box-sizing: border-box;
-    }
-
-    .aw-offer__icon {
-      width: 2.2rem;
-      height: 2.6rem;
-      margin-bottom: 0.9rem;
-      position: relative;
-      color: rgb(var(--color-foreground));
-    }
-
-    .aw-offer__icon-body {
-      width: 1.5rem;
-      height: 1.7rem;
-      border: 0.15rem solid currentColor;
-      border-radius: 0.15rem;
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .aw-offer__icon-body::after {
-      content: '';
-      position: absolute;
-      width: 0.6rem;
-      height: 0.35rem;
-      border: 0.12rem solid currentColor;
-      top: 0.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .aw-offer__icon-neck {
-      width: 0.75rem;
-      height: 0.4rem;
-      border: 0.15rem solid currentColor;
-      position: absolute;
-      top: 0.35rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgb(var(--color-background));
-    }
-
-    .aw-offer__icon-cap {
-      width: 0.95rem;
-      height: 0.3rem;
-      border: 0.15rem solid currentColor;
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgb(var(--color-background));
-    }
-
-    .aw-offer__title {
-      margin: 0 0 0.4rem;
-      font-size: 1.5rem;
-      line-height: 1.25;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      color: rgb(var(--color-foreground));
-    }
-
-    .aw-offer__description {
-      margin: 0;
-      font-size: 1.15rem;
-      line-height: 1.4;
-      color: rgb(var(--color-foreground) / 0.65);
-    }
-
-    .aw-offer__link {
-      margin-top: 0.8rem;
-      font-size: 1.25rem;
-      line-height: 1.2;
-      font-weight: 700;
-      color: rgb(var(--color-button));
-      text-decoration: underline;
-      text-underline-offset: 0.3rem;
-      transition: opacity 0.2s ease;
-    }
-
-    .aw-offer:hover .aw-offer__link {
-      opacity: 0.75;
-    }
-
-    .aw-offers__arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3.2rem;
-      height: 3.2rem;
-      border: none;
-      border-radius: 50%;
-      background: rgb(var(--color-button));
-      color: rgb(var(--color-button-text));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10;
-      opacity: 0.9;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    .aw-offers__arrow:hover {
-      opacity: 1;
-    }
-
-    .aw-offers__arrow:active {
-      transform: translateY(-50%) scale(0.94);
-    }
-
-    .aw-offers__arrow--left {
-      left: 0.8rem;
-    }
-
-    .aw-offers__arrow--right {
-      right: 0.8rem;
-    }
-
-    .aw-offers__arrow span {
-      display: block;
-      width: 0.8rem;
-      height: 0.8rem;
-      border-top: 0.2rem solid currentColor;
-      border-left: 0.2rem solid currentColor;
-    }
-
-    .aw-offers__arrow--left span {
-      transform: rotate(-45deg);
-      margin-left: 0.35rem;
-    }
-
-    .aw-offers__arrow--right span {
-      transform: rotate(135deg);
-      margin-right: 0.35rem;
-    }
-
-    @media screen and (max-width: 749px) {
-      .aw-offers__wrapper {
-        padding: 0 3.6rem;
-      }
-
-      .aw-offer {
-        flex: 0 0 88%;
-      }
-
-      .aw-offer__inner {
-        min-height: 12.5rem;
-      }
-    }
-  </style>
-
-  <div class="aw-offers">
     <div class="aw-offers__wrapper">
       <button
         class="aw-offers__arrow aw-offers__arrow--left"
@@ -251,100 +66,103 @@
 
       <div class="aw-offers__track" data-aw-offer-track>
         {%- if design_preview -%}
-          <div class="aw-offer">
-            <div class="aw-offer__inner">
-              <div class="aw-offer__icon" aria-hidden="true">
-                <div class="aw-offer__icon-cap"></div>
-                <div class="aw-offer__icon-neck"></div>
-                <div class="aw-offer__icon-body"></div>
-              </div>
-              <h3 class="aw-offer__title">Get Any 2 For ₹1,999</h3>
-              <p class="aw-offer__description">Choose any 2 from the collection</p>
-              <span class="aw-offer__link">Offer for 2</span>
+          {%- assign preview_counts = '2,3,5' | split: ',' -%}
+          {%- assign preview_prices = '₹1,999|₹2,799|₹3,999' | split: '|' -%}
+          {%- for n in preview_counts -%}
+            <div class="aw-ticket">
+              <span class="aw-ticket__body">
+                <span class="aw-ticket__label">Bundle offer</span>
+                <span class="aw-ticket__count">
+                  <span class="aw-ticket__count-word">Get any</span>
+                  <span class="aw-ticket__count-num">{{ n }}</span>
+                </span>
+                <span class="aw-ticket__price">
+                  <span class="aw-ticket__price-word">for just</span>
+                  <span class="aw-ticket__price-value">{{ preview_prices[forloop.index0] }}</span>
+                </span>
+                <span class="aw-ticket__tagline">Mix and match any {{ n }} perfumes from the collection.</span>
+              </span>
+              <span class="aw-ticket__perf" aria-hidden="true"></span>
+              <span class="aw-ticket__cta">
+                <span>Shop this offer</span>
+                {% render 'icon-arrow' %}
+              </span>
             </div>
-          </div>
-          <div class="aw-offer">
-            <div class="aw-offer__inner">
-              <div class="aw-offer__icon" aria-hidden="true">
-                <div class="aw-offer__icon-cap"></div>
-                <div class="aw-offer__icon-neck"></div>
-                <div class="aw-offer__icon-body"></div>
-              </div>
-              <h3 class="aw-offer__title">Get Any 3 For ₹2,799</h3>
-              <p class="aw-offer__description">Choose any 3 from the collection</p>
-              <span class="aw-offer__link">Offer for 3</span>
-            </div>
-          </div>
-          <div class="aw-offer">
-            <div class="aw-offer__inner">
-              <div class="aw-offer__icon" aria-hidden="true">
-                <div class="aw-offer__icon-cap"></div>
-                <div class="aw-offer__icon-neck"></div>
-                <div class="aw-offer__icon-body"></div>
-              </div>
-              <h3 class="aw-offer__title">Get Any 5 For ₹3,999</h3>
-              <p class="aw-offer__description">Mix and match your favourite fragrances</p>
-              <span class="aw-offer__link">Offer for 5</span>
-            </div>
-          </div>
+          {%- endfor -%}
         {%- else -%}
-        {%- for offer in ticket_offers -%}
-          {%- liquid
-            assign mf = offer.metafields.offer
-            assign badge_text = mf.badge.value
-            assign tagline_text = mf.tagline.value
-            assign pick_count = mf.pick_count.value | plus: 0
-            assign price_text = offer.price | money
+          {%- for offer in ticket_offers -%}
+            {%- liquid
+              assign mf = offer.metafields.offer
+              assign badge_text = mf.badge.value
+              assign tagline_text = mf.tagline.value
+              assign pick_count = mf.pick_count.value | plus: 0
 
-            assign discount_type = mf.discount_type.value | downcase
-            assign discount_amount = mf.discount_amount.value | plus: 0
-            assign use_discount = false
-            if discount_type == 'fixed' or discount_type == 'percent'
-              if discount_amount > 0
-                assign use_discount = true
-              endif
-            endif
-            if use_discount
-              if discount_type == 'fixed'
-                assign discount_money = discount_amount | times: 100 | money
-                assign discount_text = 'Flat ' | append: discount_money | append: ' off'
-              else
-                assign discount_text = discount_amount | append: '% off'
-              endif
-            endif
+              # ₹ reads better than the store's "Rs." money format on these cards
+              assign price_text = offer.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
 
-            if badge_text != blank
-              assign headline = badge_text
-            elsif pick_count > 0
+              assign discount_type = mf.discount_type.value | downcase
+              assign discount_amount = mf.discount_amount.value | plus: 0
+              assign use_discount = false
+              if discount_type == 'fixed' or discount_type == 'percent'
+                if discount_amount > 0
+                  assign use_discount = true
+                endif
+              endif
               if use_discount
-                assign headline = 'Get any ' | append: pick_count | append: ' — ' | append: discount_text
-              else
-                assign headline = 'Get any ' | append: pick_count | append: ' for ' | append: price_text
+                if discount_type == 'fixed'
+                  assign discount_money = discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
+                  assign discount_text = 'Flat ' | append: discount_money | append: ' off'
+                else
+                  assign discount_text = discount_amount | append: '% off'
+                endif
               endif
-            else
-              assign headline = price_text
-            endif
-            if tagline_text == blank
-              assign tagline_text = offer.title
-            endif
-          -%}
 
-          <a class="aw-offer" href="{{ offer.url }}">
-            <div class="aw-offer__inner">
-              <div class="aw-offer__icon" aria-hidden="true">
-                <div class="aw-offer__icon-cap"></div>
-                <div class="aw-offer__icon-neck"></div>
-                <div class="aw-offer__icon-body"></div>
-              </div>
+              if tagline_text == blank
+                assign tagline_text = offer.title
+              endif
+            -%}
 
-              <h3 class="aw-offer__title">{{ headline }}</h3>
+            <a class="aw-ticket" href="{{ offer.url }}">
+              <span class="aw-ticket__body">
+                <span class="aw-ticket__label">Bundle offer</span>
 
-              <p class="aw-offer__description">{{ tagline_text }}</p>
+                {%- if pick_count > 0 -%}
+                  <span class="aw-ticket__count">
+                    <span class="aw-ticket__count-word">Get any</span>
+                    <span class="aw-ticket__count-num">{{ pick_count }}</span>
+                  </span>
+                {%- elsif badge_text != blank -%}
+                  <span class="aw-ticket__headline">{{ badge_text }}</span>
+                {%- else -%}
+                  <span class="aw-ticket__headline">{{ offer.title | escape }}</span>
+                {%- endif -%}
 
-              <span class="aw-offer__link">{{ offer.title | escape }}</span>
-            </div>
-          </a>
-        {%- endfor -%}
+                {%- comment -%}
+                  A zero price means the offer product has no price set in admin —
+                  show no price at all rather than "for ₹0".
+                {%- endcomment -%}
+                {%- if use_discount -%}
+                  <span class="aw-ticket__price">
+                    <span class="aw-ticket__price-value">{{ discount_text }}</span>
+                  </span>
+                {%- elsif offer.price > 0 -%}
+                  <span class="aw-ticket__price">
+                    <span class="aw-ticket__price-word">for just</span>
+                    <span class="aw-ticket__price-value">{{ price_text }}</span>
+                  </span>
+                {%- endif -%}
+
+                <span class="aw-ticket__tagline">{{ tagline_text }}</span>
+              </span>
+
+              <span class="aw-ticket__perf" aria-hidden="true"></span>
+
+              <span class="aw-ticket__cta">
+                <span>Shop this offer</span>
+                {% render 'icon-arrow' %}
+              </span>
+            </a>
+          {%- endfor -%}
         {%- endif -%}
       </div>
 
@@ -360,26 +178,48 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const track = document.querySelector('[data-aw-offer-track]');
-      const next = document.querySelector('[data-aw-offer-next]');
-      const prev = document.querySelector('[data-aw-offer-prev]');
+    (function () {
+      const init = function (root) {
+        if (root.dataset.awOffersReady === 'true') return;
+        root.dataset.awOffersReady = 'true';
 
-      if (!track || !next || !prev) return;
+        const track = root.querySelector('[data-aw-offer-track]');
+        const next = root.querySelector('[data-aw-offer-next]');
+        const prev = root.querySelector('[data-aw-offer-prev]');
 
-      const getScrollAmount = () => {
-        const card = track.querySelector('.aw-offer');
-        if (!card) return 300;
-        return card.offsetWidth + 12;
+        if (!track || !next || !prev) return;
+
+        const step = function () {
+          const card = track.querySelector('.aw-ticket');
+          if (!card) return 300;
+          return card.offsetWidth + 20;
+        };
+
+        // Arrows only earn their space when the row actually overflows, and
+        // grey out at either end so the row never looks broken.
+        const sync = function () {
+          const overflows = track.scrollWidth - track.clientWidth > 4;
+          next.hidden = !overflows;
+          prev.hidden = !overflows;
+          if (!overflows) return;
+          prev.disabled = track.scrollLeft <= 4;
+          next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
+        };
+
+        next.addEventListener('click', function () {
+          track.scrollBy({ left: step(), behavior: 'smooth' });
+        });
+
+        prev.addEventListener('click', function () {
+          track.scrollBy({ left: -step(), behavior: 'smooth' });
+        });
+
+        track.addEventListener('scroll', sync, { passive: true });
+        window.addEventListener('resize', sync);
+        sync();
       };
 
-      next.addEventListener('click', function () {
-        track.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
-      });
-
-      prev.addEventListener('click', function () {
-        track.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
-      });
-    });
+      document.querySelectorAll('[data-aw-offers]').forEach(init);
+    })();
   </script>
 {%- endif -%}

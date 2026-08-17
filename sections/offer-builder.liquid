@@ -78,15 +78,17 @@
   if badge_text == blank and total_pick_count > 0
     if use_discount
       if discount_type == 'fixed'
-        assign discount_money = discount_amount | times: 100 | money
+        assign discount_money = discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
         assign discount_display = 'Flat ' | append: discount_money | append: ' off'
       else
         assign discount_display = discount_amount | append: '% off'
       endif
       assign badge_text = 'Get any ' | append: total_pick_count | append: ' — ' | append: discount_display
-    else
-      assign formatted_price = product.price | money
+    elsif product.price > 0
+      assign formatted_price = product.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
       assign badge_text = 'Get any ' | append: total_pick_count | append: ' for ' | append: formatted_price
+    else
+      assign badge_text = 'Get any ' | append: total_pick_count
     endif
   endif
 -%}
@@ -167,30 +169,41 @@
         <p class="offer-builder__tagline">{{ tagline }}</p>
       {%- endif -%}
 
+      {%- if use_discount or product.price > 0 or product.compare_at_price > product.price -%}
       <div class="offer-builder__price">
         {%- if use_discount -%}
           <span class="offer-builder__price-discount">
             {%- if discount_type == 'fixed' -%}
-              Flat {{ discount_amount | times: 100 | money }} OFF
+              Flat {{ discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }} OFF
             {%- else -%}
               {{ discount_amount }}% OFF
             {%- endif -%}
           </span>
           <span class="offer-builder__price-note">on any {{ total_pick_count }} perfumes</span>
-        {%- else -%}
-          <span class="offer-builder__price-now">{{ product.price | money }}</span>
+        {%- elsif product.price > 0 -%}
+          {%- comment -%}
+            A zero price means the offer product has no price set in admin —
+            better to show nothing than "₹0" as the bundle price.
+          {%- endcomment -%}
+          <span class="offer-builder__price-label">Bundle price</span>
+          <span class="offer-builder__price-now">
+            {{- product.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' -}}
+          </span>
           {%- if product.compare_at_price > product.price -%}
-            <s class="offer-builder__price-was">{{ product.compare_at_price | money }}</s>
+            <s class="offer-builder__price-was">
+              {{- product.compare_at_price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' -}}
+            </s>
             <span class="offer-builder__price-save">
-              Save {{ product.compare_at_price | minus: product.price | money }}
+              Save {{ product.compare_at_price | minus: product.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}
             </span>
           {%- endif -%}
         {%- endif -%}
       </div>
+      {%- endif -%}
 
       {%- liquid
         if perks_raw != blank
-          assign perks = perks_raw | newline_to_br | strip_html | split: '<br />'
+          assign perks = perks_raw | strip | newline_to_br | replace: '<br />', '||' | strip_html | split: '||'
         endif
       -%}
       {%- if perks != blank and perks.size > 0 -%}
@@ -206,6 +219,25 @@
         </ul>
       {%- endif -%}
     </header>
+
+    {%- if section.settings.show_steps -%}
+      <ol class="offer-builder__steps" role="list">
+        <li class="offer-builder__step">
+          <span class="offer-builder__step-num">01</span>
+          <span class="offer-builder__step-text">
+            Pick any {{ total_pick_count }} fragrance{% if total_pick_count > 1 %}s{% endif %} below
+          </span>
+        </li>
+        <li class="offer-builder__step">
+          <span class="offer-builder__step-num">02</span>
+          <span class="offer-builder__step-text">Add the bundle to your cart</span>
+        </li>
+        <li class="offer-builder__step">
+          <span class="offer-builder__step-num">03</span>
+          <span class="offer-builder__step-text">The offer price is applied automatically</span>
+        </li>
+      </ol>
+    {%- endif -%}
 
     <div class="offer-builder__groups">
       {%- if use_metafield_group -%}
@@ -257,6 +289,10 @@
   </div>
 
   <div class="offer-builder__bar" data-offer-bar>
+    <div class="offer-builder__bar-track" aria-hidden="true">
+      <span class="offer-builder__bar-fill"></span>
+    </div>
+
     <div class="offer-builder__bar-inner page-width">
       <div class="offer-builder__bar-summary">
         <div class="offer-builder__bar-progress">
@@ -268,10 +304,12 @@
 
       <div class="offer-builder__bar-cta">
         <div class="offer-builder__bar-pricing">
-          <span class="offer-builder__bar-price" data-offer-bar-price>{{ product.price | money }}</span>
+          <span class="offer-builder__bar-price" data-offer-bar-price>
+            {{- product.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' -}}
+          </span>
           <span class="offer-builder__bar-worth" data-offer-worth hidden></span>
         </div>
-        <button type="button" class="offer-builder__bar-add button button--primary" data-offer-add disabled>
+        <button type="button" class="offer-builder__bar-add" data-offer-add disabled>
           <span data-offer-add-label>{{ button_label }}</span>
           {% render 'loading-spinner' %}
         </button>
@@ -325,6 +363,13 @@
       "id": "perks",
       "label": "Perks (one per line)",
       "default": "Free shipping on this offer\nMix any sizes you like"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_steps",
+      "label": "Show the \"how it works\" steps",
+      "default": true,
+      "info": "The 01 / 02 / 03 strip between the header and the picker."
     },
     {
       "type": "header",
