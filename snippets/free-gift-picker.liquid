@@ -1,0 +1,203 @@
+{% comment %}
+  Renders the "pick your free 6ml roll-on" block for the cart — one slot per
+  qualifying perfume unit in the cart (buy 3, pick 3 roll-ons independently).
+
+  How it works:
+  - The customer earns one slot per unit of a qualifying-collection product in
+    the cart (default: non-alcoholic, i.e. the full-size perfumes). 2 perfumes
+    = 2 slots, each pickable independently.
+  - Each claimed slot is an ordinary cart line carrying the properties `Gift`
+    (visible, so it shows on the order) and `_free_gift` (hidden marker this
+    snippet and free-gift.js look for). Picking the same roll-on for two slots
+    just raises that line's quantity — each unit still fills exactly one slot.
+  - Once claimed, a slot shows the chosen roll-on and its price; that price
+    only reads ₹0 when the discount function is actually doing its job.
+  - The **offer discount function** (the same automatic discount that prices the
+    bundles) is what makes claimed slots free — it zeroes up to one unit per
+    earned slot across every line marked `_free_gift`. This snippet never fakes
+    the price: the "Free" badge only appears once a slot actually costs
+    nothing, so a missing discount is visible instead of silent.
+  - "Change" on a claimed slot only removes that one unit, freeing the slot —
+    it reappears as a picker row on the next render.
+
+  Settings live in the theme customizer under Theme settings → Free gift, so the
+  cart page and the cart drawer stay in sync from one place.
+
+  Accepts:
+  - context {String} 'page' or 'drawer' — only used to keep element ids unique
+
+  Usage:
+  {% render 'free-gift-picker', context: 'page' %}
+{% endcomment %}
+
+{%- liquid
+  assign gift_collection = settings.free_gift_collection
+  if gift_collection == blank
+    assign gift_collection = collections['attar-roll-ons']
+  endif
+
+  assign qualifying_collection = settings.free_gift_qualifying_collection
+  if qualifying_collection == blank
+    assign qualifying_collection = collections['non-alcoholic']
+  endif
+
+  assign show_block = false
+  if settings.free_gift_enabled and cart != empty and gift_collection.products_count > 0
+    assign show_block = true
+  endif
+-%}
+
+{%- if show_block -%}
+  {%- liquid
+    # One slot per unit of a qualifying product; claimed_units may briefly
+    # exceed qualifying_units if the customer bumps a qualifying item's
+    # quantity down after claiming — free-gift.js trims the excess on load.
+    assign qualifying_units = 0
+    assign claimed_units = 0
+
+    for item in cart.items
+      if item.properties._free_gift != blank
+        assign claimed_units = claimed_units | plus: item.quantity
+        continue
+      endif
+
+      for c in item.product.collections
+        if c.handle == qualifying_collection.handle
+          assign qualifying_units = qualifying_units | plus: item.quantity
+          break
+        endif
+      endfor
+    endfor
+
+    assign qualifies = false
+    if qualifying_units > 0
+      assign qualifies = true
+    endif
+
+    assign remaining_slots = qualifying_units | minus: claimed_units
+    if remaining_slots < 0
+      assign remaining_slots = 0
+    endif
+
+    assign has_priced_slot = false
+  -%}
+
+  <free-gift-picker
+    class="free-gift{% if claimed_units > 0 %} free-gift--claimed{% endif %}"
+    id="FreeGift-{{ context | default: 'page' }}"
+    data-context="{{ context | default: 'page' }}"
+    data-qualifies="{{ qualifies }}"
+    data-qualifying-units="{{ qualifying_units }}"
+    data-claimed-units="{{ claimed_units }}"
+    data-gift-label="{{ settings.free_gift_heading | default: 'Your free 6ml roll-on' | escape }}"
+  >
+    <div class="free-gift__head">
+      <span class="free-gift__icon" aria-hidden="true">{% render 'icon-discount' %}</span>
+      <div class="free-gift__head-text">
+        <p class="free-gift__heading">
+          {{- settings.free_gift_heading | default: 'Your free 6ml roll-on' -}}
+          {%- if qualifying_units > 1 %} &times; {{ qualifying_units }}{% endif -%}
+        </p>
+        <p class="free-gift__subtext">
+          {%- if qualifies == false -%}
+            {{ settings.free_gift_locked_text | default: 'Add any perfume to unlock a free roll-on.' }}
+          {%- elsif remaining_slots == 0 -%}
+            {{ settings.free_gift_subtext | default: 'Pick one on us — no code needed.' }}
+          {%- else -%}
+            Pick {{ remaining_slots }} more — on us, no code needed.
+          {%- endif -%}
+        </p>
+      </div>
+    </div>
+
+    {%- if qualifies -%}
+      {%- for item in cart.items -%}
+        {%- if item.properties._free_gift != blank -%}
+          {%- if item.final_price == 0 -%}
+            {%- comment -%} at least one slot is genuinely free — no warning needed {%- endcomment -%}
+          {%- else -%}
+            {%- assign has_priced_slot = true -%}
+          {%- endif -%}
+          {%- for i in (1..item.quantity) -%}
+            <div
+              class="free-gift__claimed"
+              data-free-gift-row
+              data-gift-line-key="{{ item.key }}"
+              data-gift-variant-id="{{ item.variant_id }}"
+              data-line-quantity="{{ item.quantity }}"
+            >
+              <span class="free-gift__claimed-name">{{ item.product.title | escape }}</span>
+              {%- if item.final_price == 0 -%}
+                <span class="free-gift__claimed-tag">Free gift</span>
+              {%- endif -%}
+              <span class="free-gift__claimed-price">{{ item.final_price | money }}</span>
+              <button type="button" class="free-gift__change" data-free-gift-change>
+                {{- 'Change' -}}
+              </button>
+            </div>
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- comment -%}
+        Merchant-only warning: a claimed slot is in the cart but still costs
+        money, which means the offer discount function isn't doing its job.
+      {%- endcomment -%}
+      {%- if request.design_mode and has_priced_slot -%}
+        <p class="free-gift__warning">
+          A claimed roll-on is still being charged. Check that the offer discount is
+          active in Admin &rarr; Discounts, and that the two collections chosen in
+          Theme settings &rarr; Free gift are the ones the discount function knows
+          about.
+        </p>
+      {%- endif -%}
+
+      {%- if remaining_slots > 0 -%}
+        {%- for i in (1..remaining_slots) -%}
+          <div class="free-gift__options" data-free-gift-row data-free-gift-empty>
+            <div class="free-gift__select-wrap">
+              <select
+                class="free-gift__select"
+                data-free-gift-select
+                aria-label="{{ settings.free_gift_heading | default: 'Your free 6ml roll-on' | escape }}"
+              >
+                <option value="" selected disabled>
+                  {{- settings.free_gift_choose_label | default: 'Choose' -}} &hellip;
+                </option>
+                {%- liquid
+                  # The configurable "Customize Attar Roll-On" must never be given
+                  # away free — skip it no matter which collection it sits in. A
+                  # separate counter keeps it from eating a slot in the 12-item cap.
+                  assign gift_slot = 0
+                -%}
+                {%- for gift in gift_collection.products -%}
+                  {%- liquid
+                    assign gift_title_lower = gift.title | downcase
+                    if gift_title_lower contains 'customize'
+                      continue
+                    endif
+                    assign gift_slot = gift_slot | plus: 1
+                  -%}
+                  {%- if gift_slot > 12 -%}
+                    {%- break -%}
+                  {%- endif -%}
+                  {%- assign gift_variant = gift.selected_or_first_available_variant -%}
+                  <option
+                    value="{{ gift_variant.id }}"
+                    data-title="{{ gift.title | escape }}"
+                    {% unless gift_variant.available %}disabled{% endunless %}
+                  >
+                    {{- gift.title | escape -}}
+                    {%- unless gift_variant.available %} (sold out){% endunless -%}
+                  </option>
+                {%- endfor -%}
+              </select>
+            </div>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    <p class="free-gift__error" data-free-gift-error hidden role="alert"></p>
+  </free-gift-picker>
+{%- endif -%}

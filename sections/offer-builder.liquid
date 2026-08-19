@@ -27,6 +27,13 @@
   assign discount_type = mf.discount_type.value | default: section.settings.discount_type | downcase
   assign discount_amount = mf.discount_amount.value | default: section.settings.discount_amount | plus: 0
 
+  # whole-number discounts read as "18% off", not "18.0% off"
+  assign discount_amount_display = discount_amount
+  assign discount_amount_rounded = discount_amount | round
+  if discount_amount_rounded == discount_amount
+    assign discount_amount_display = discount_amount_rounded
+  endif
+
   assign use_discount = false
   if discount_type != 'none' and discount_type != blank and discount_amount > 0
     assign use_discount = true
@@ -81,7 +88,7 @@
         assign discount_money = discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
         assign discount_display = 'Flat ' | append: discount_money | append: ' off'
       else
-        assign discount_display = discount_amount | append: '% off'
+        assign discount_display = discount_amount_display | append: '% off'
       endif
       assign badge_text = 'Get any ' | append: total_pick_count | append: ' — ' | append: discount_display
     elsif product.price > 0
@@ -176,7 +183,7 @@
             {%- if discount_type == 'fixed' -%}
               Flat {{ discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }} OFF
             {%- else -%}
-              {{ discount_amount }}% OFF
+              {{ discount_amount_display }}% OFF
             {%- endif -%}
           </span>
           <span class="offer-builder__price-note">on any {{ total_pick_count }} perfumes</span>

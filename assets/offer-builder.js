@@ -142,9 +142,13 @@ if (!customElements.get('offer-builder')) {
       }
 
       discountLabel() {
-        return this.discountType === 'fixed'
-          ? `Flat ${formatOfferMoney(this.discountAmount * 100, this.moneyFormat)} off`
-          : `${this.discountAmount}% off`;
+        if (this.discountType === 'fixed') {
+          return `Flat ${formatOfferMoney(this.discountAmount * 100, this.moneyFormat)} off`;
+        }
+        const amount = Number.isInteger(this.discountAmount)
+          ? this.discountAmount
+          : Math.round(this.discountAmount * 100) / 100;
+        return `${amount}% off`;
       }
 
       select(card) {
@@ -394,19 +398,22 @@ if (!customElements.get('offer-builder')) {
 
         const config = fetchConfig('javascript');
         config.headers['X-Requested-With'] = 'XMLHttpRequest';
-        delete config.headers['Content-Type'];
 
-        const formData = new FormData();
-        formData.append('items', JSON.stringify(items));
+        const body = { items };
 
         if (this.cart) {
-          formData.append('sections', this.cart.getSectionsToRender().map((section) => section.id));
-          formData.append('sections_url', window.location.pathname);
+          body.sections = this.cart.getSectionsToRender().map((section) => section.id);
+          body.sections_url = window.location.pathname;
           this.cart.setActiveElement(document.activeElement);
         }
 
-        config.body = formData;
+        config.body = JSON.stringify(body);
         this.setLoading(true);
+
+        // The cart page uses this timestamp to tell a genuinely empty cart
+        // from one that merely rendered before this add finished committing —
+        // it reloads once instead of leaving the customer on a blank cart.
+        sessionStorage.setItem('cartMutationAt', String(Date.now()));
 
         fetch(window.routes.cart_add_url, config)
           .then((response) => response.json())
@@ -426,7 +433,10 @@ if (!customElements.get('offer-builder')) {
               return;
             }
 
-            publish(PUB_SUB_EVENTS.cartUpdate, { source: 'offer-builder', cartData: response });
+            // Deliberately no cartUpdate publish: cart.js would re-fetch and
+            // overwrite the sections renderContents() just wrote, racing this
+            // write and doubling the network round trip for no reason (same
+            // reasoning as free-gift.js).
             this.cart.renderContents(response);
           })
           .catch((error) => {

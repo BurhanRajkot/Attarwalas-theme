@@ -1,0 +1,247 @@
+{%- style -%}
+  .aw-perfumer-{{ section.id }} {
+    --aw-perfumer-bg: {{ section.settings.background_color }};
+    --aw-perfumer-fg: {{ section.settings.text_color }};
+    --aw-perfumer-muted: {{ section.settings.muted_text_color }};
+    background: var(--aw-perfumer-bg);
+    color: var(--aw-perfumer-fg);
+    overflow: hidden;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 60vh;
+  }
+
+  @media screen and (min-width: 750px) {
+    .aw-perfumer-{{ section.id }} .aw-perfumer__grid {
+      grid-template-columns: 1fr 1fr;
+      min-height: 90vh;
+      {%- if section.settings.image_position == 'left' -%}
+        direction: rtl;
+      {%- endif -%}
+    }
+
+    .aw-perfumer-{{ section.id }} .aw-perfumer__grid > * {
+      direction: ltr;
+    }
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 2rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .aw-perfumer-{{ section.id }} .aw-perfumer__text {
+      padding: 4rem 5rem;
+    }
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__eyebrow {
+    display: block;
+    font-size: 1.2rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--aw-perfumer-muted);
+    margin-bottom: 2rem;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__bio {
+    font-family: var(--font-body-family);
+    font-size: 1.8rem;
+    line-height: 1.75;
+    max-width: 50rem;
+    color: var(--aw-perfumer-fg);
+    margin: 0;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__media {
+    position: relative;
+    min-height: 45vh;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__media img,
+  .aw-perfumer-{{ section.id }} .aw-perfumer__media svg,
+  .aw-perfumer-{{ section.id }} .aw-perfumer__media .aw-perfumer__placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__credit {
+    position: absolute;
+    left: 2rem;
+    bottom: 3rem;
+    right: 2rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .aw-perfumer-{{ section.id }} .aw-perfumer__credit {
+      left: 5rem;
+      bottom: 5rem;
+      right: 5rem;
+    }
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__name {
+    font-family: var(--font-heading-family);
+    font-size: 2.2rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 0.8rem;
+    color: var(--aw-perfumer-fg);
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__role {
+    font-size: 1.4rem;
+    color: var(--aw-perfumer-muted);
+    margin: 0;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__placeholder-note {
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--aw-perfumer-muted);
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign pf_name = product.metafields.custom.perfumer_name.value | default: section.settings.name
+  assign pf_role = product.metafields.custom.perfumer_role.value | default: section.settings.role
+  assign pf_bio = product.metafields.custom.perfumer_bio.value | default: section.settings.bio
+
+  assign pf_photo = product.metafields.custom.perfumer_photo.value
+  if pf_photo == blank
+    assign pf_photo = section.settings.image
+  endif
+
+  if pf_role == blank
+    assign pf_role = 'Perfumer'
+  endif
+-%}
+
+{%- if pf_bio != blank or pf_name != blank -%}
+  <div class="aw-perfumer-{{ section.id }}">
+    <div class="aw-perfumer__grid">
+      <div class="aw-perfumer__text">
+        {%- if section.settings.eyebrow != blank -%}
+          <span class="aw-perfumer__eyebrow">{{ section.settings.eyebrow }}</span>
+        {%- endif -%}
+        {%- if pf_bio != blank -%}
+          <p class="aw-perfumer__bio">{{ pf_bio }}</p>
+        {%- endif -%}
+      </div>
+      <div class="aw-perfumer__media">
+        {%- if pf_photo != blank -%}
+          {{
+            pf_photo
+            | image_url: width: 1200
+            | image_tag: loading: 'lazy', widths: '600, 900, 1200, 1600', alt: pf_name
+          }}
+        {%- else -%}
+          <div class="aw-perfumer__placeholder">
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {%- endif -%}
+        {%- if pf_name != blank -%}
+          <div class="aw-perfumer__credit">
+            <p class="aw-perfumer__name">{{ pf_name }}</p>
+            <p class="aw-perfumer__role">{{ pf_role }}</p>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+{%- elsif request.design_mode -%}
+  <div class="aw-perfumer-{{ section.id }}">
+    <p class="aw-perfumer__placeholder-note">
+      This section is empty. Add a photo and bio text in the section settings on the left, or —
+      to show a different perfumer on this specific product — fill in this product's Perfumer
+      metafields in Shopify admin instead.
+    </p>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Perfumer bio",
+  "tag": "section",
+  "class": "section section-perfumer",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Photo and bio"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Photo"
+    },
+    {
+      "type": "textarea",
+      "id": "bio",
+      "label": "Bio text"
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "label": "Name"
+    },
+    {
+      "type": "text",
+      "id": "role",
+      "label": "Role",
+      "default": "Perfumer"
+    },
+    {
+      "type": "paragraph",
+      "content": "Want a different perfumer per product instead of one for every product using this template? Fill in this product's Perfumer metafields (Shopify admin → this product → Metafields) — those take priority over the fields above whenever they're set."
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "info": "Optional small label above the bio text, e.g. \"The nose behind it\""
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Image position (desktop)",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#0a0a0a"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "muted_text_color",
+      "label": "Muted text color (eyebrow, role)",
+      "default": "#a8a8a8"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Perfumer bio"
+    }
+  ]
+}
+{% endschema %}

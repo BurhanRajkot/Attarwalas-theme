@@ -52,68 +52,82 @@
 
 .offer-builder__intro {
   text-align: center;
-  max-width: 72rem;
-  margin: 0 auto 4.8rem;
+  max-width: 64rem;
+  margin: 0 auto 3.6rem;
+}
+
+/* Small gold line above the headline. The headline itself now carries the
+   offer ("Get any 2 for ₹1,999"), so this stays deliberately generic. */
+.offer-builder__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgb(var(--offer-gold));
+}
+
+.offer-builder__eyebrow svg {
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
 .offer-builder__badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.7rem 1.6rem;
-  background: transparent;
-  border: 1px solid rgb(var(--offer-gold));
-  font-size: 1.1rem;
+  gap: 0.7rem;
+  padding: 0.6rem 1.4rem;
+  border: 1px solid rgba(var(--offer-gold), 0.35);
+  font-size: 1.05rem;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgb(var(--offer-gold));
 }
 
 .offer-builder__badge svg {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  flex-shrink: 0;
 }
 
 .offer-builder__title {
-  margin: 2rem 0 0;
+  margin: 1.2rem 0 0;
   font-family: var(--font-heading-family);
   font-weight: 400;
-  font-size: clamp(3.2rem, 5.5vw, 5.6rem);
+  font-size: clamp(3.2rem, 5.5vw, 5.2rem);
   line-height: 1.05;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .offer-builder__tagline {
-  margin: 1.4rem auto 0;
-  max-width: 52rem;
-  font-size: 1.5rem;
-  line-height: 1.6;
-  color: rgba(var(--offer-ink), 0.68);
+  margin: 1.2rem auto 0;
+  max-width: 44rem;
+  font-size: 1.45rem;
+  line-height: 1.55;
+  color: rgba(var(--offer-ink), 0.62);
 }
 
 /* --------------------------------- Pricing -------------------------------- */
 
 .offer-builder__price {
-  margin-top: 2.4rem;
+  margin-top: 1.6rem;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4rem 1.2rem;
 }
 
-.offer-builder__price-label {
-  font-size: 1.05rem;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgba(var(--offer-ink), 0.5);
-}
-
+/* Secondary to the headline now — it only appears when it adds a saving the
+   headline doesn't already state, so it no longer needs to shout. */
 .offer-builder__price-now {
   font-family: var(--font-heading-family);
   font-weight: 400;
-  font-size: clamp(4rem, 7vw, 6rem);
+  font-size: clamp(2.4rem, 4vw, 3.2rem);
   line-height: 1;
   letter-spacing: -0.02em;
   color: rgb(var(--offer-gold));
@@ -159,25 +173,24 @@
 
 .offer-builder__perks {
   list-style: none;
-  margin: 2.8rem 0 0;
-  padding: 1.6rem 0;
+  margin: 2rem 0 0;
+  padding: 1.2rem 0 0;
   border-top: 1px solid var(--offer-line);
-  border-bottom: 1px solid var(--offer-line);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.8rem 3.2rem;
+  gap: 0.6rem 2.4rem;
 }
 
 .offer-builder__perks li {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  font-size: 1.2rem;
+  gap: 0.6rem;
+  font-size: 1.1rem;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(var(--offer-ink), 0.7);
+  color: rgba(var(--offer-ink), 0.55);
 }
 
 .offer-builder__perks svg {
@@ -271,12 +284,6 @@
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: -0.01em;
-}
-
-.offer-group__summary-hint {
-  font-size: 1.2rem;
-  letter-spacing: 0.02em;
-  color: rgba(var(--offer-ink), 0.55);
 }
 
 .offer-group__summary-meta {
@@ -566,10 +573,15 @@
   white-space: nowrap;
 }
 
-.offer-card__variant {
+.offer-card__variant-select {
   flex: 1;
   min-width: 0;
-  padding: 0.7rem 0.9rem;
+  color: rgba(var(--offer-ink), 0.6);
+}
+
+.offer-card__variant {
+  width: 100%;
+  padding: 0.7rem 2.6rem 0.7rem 0.9rem;
   border: 1px solid rgba(var(--offer-ink), 0.2);
   border-radius: 0;
   background-color: rgb(var(--color-background));
@@ -877,27 +889,26 @@
 @media screen and (max-width: 749px) {
   /* ---- intro: less scrolling before the customer reaches the picker ---- */
   .offer-builder__intro {
-    margin-bottom: 2.8rem;
+    margin-bottom: 2.4rem;
   }
 
-  .offer-builder__badge {
+  .offer-builder__eyebrow {
     font-size: 1rem;
-    padding: 0.6rem 1.2rem;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
   }
 
   .offer-builder__tagline {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
   }
 
   .offer-builder__perks {
-    margin-top: 2rem;
-    padding: 1.2rem 0;
-    gap: 0.8rem 2rem;
+    margin-top: 1.6rem;
+    padding-top: 1.2rem;
+    gap: 0.5rem 1.6rem;
   }
 
   .offer-builder__perks li {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .offer-builder__steps {
@@ -919,10 +930,6 @@
 
   .offer-group__summary-text {
     font-size: 1.8rem;
-  }
-
-  .offer-group__summary-hint {
-    font-size: 1.1rem;
   }
 
   .offer-group__summary-meta {

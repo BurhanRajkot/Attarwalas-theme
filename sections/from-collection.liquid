@@ -1,0 +1,233 @@
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'component-price.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .aw-from-collection__title-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .aw-from-collection__line {
+    flex: 1 1 auto;
+    height: 0.1rem;
+    background: rgba(var(--color-foreground), 0.15);
+  }
+
+  .aw-from-collection__heading {
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .aw-from-collection__list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(220px, 1fr);
+    gap: 2.5rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.5rem;
+    margin: 0;
+    list-style: none;
+  }
+
+  @media screen and (min-width: 750px) {
+    .aw-from-collection__list {
+      grid-auto-columns: minmax(0, 1fr);
+      grid-template-columns: repeat(var(--aw-fc-cols, 4), 1fr);
+      overflow-x: visible;
+    }
+  }
+
+  .aw-from-collection__item {
+    scroll-snap-align: start;
+  }
+
+  .aw-from-collection__empty {
+    text-align: center;
+    color: rgba(var(--color-foreground), 0.6);
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign fc_collection = section.settings.collection
+  if fc_collection == blank
+    for c in product.collections
+      unless c.handle == 'offer' or c.handle == 'frontpage' or c.handle == 'all'
+        assign fc_collection = c
+        break
+      endunless
+    endfor
+  endif
+-%}
+
+<div class="color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- if fc_collection != blank -%}
+      {%- liquid
+        assign fc_heading = section.settings.heading
+        if fc_heading == blank
+          assign fc_heading = fc_collection.title
+        endif
+
+        assign fc_products = fc_collection.products | where: 'id', product.id
+        assign fc_shown = 0
+      -%}
+
+      <div class="aw-from-collection__title-row">
+        <span class="aw-from-collection__line" aria-hidden="true"></span>
+        <h2 class="aw-from-collection__heading">{{ fc_heading }}</h2>
+        <span class="aw-from-collection__line" aria-hidden="true"></span>
+      </div>
+
+      <ul
+        class="aw-from-collection__list grid"
+        role="list"
+        style="--aw-fc-cols: {{ section.settings.columns_desktop }};"
+      >
+        {%- for fc_product in fc_collection.products -%}
+          {%- if fc_product.id != product.id -%}
+            {%- assign fc_shown = fc_shown | plus: 1 -%}
+            {%- if fc_shown <= section.settings.products_to_show -%}
+              <li class="aw-from-collection__item grid__item">
+                {%- render 'card-product',
+                  card_product: fc_product,
+                  media_aspect_ratio: section.settings.image_ratio,
+                  show_secondary_image: section.settings.show_secondary_image,
+                  show_vendor: section.settings.show_vendor,
+                  quick_add: 'standard',
+                  section_id: section.id
+                -%}
+              </li>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </ul>
+
+      {%- if fc_shown == 0 -%}
+        <p class="aw-from-collection__empty">No other products in this collection yet.</p>
+      {%- endif -%}
+    {%- elsif request.design_mode -%}
+      <p class="aw-from-collection__empty">
+        This product isn't in a collection yet, so there's nothing to show here. Add it to a
+        collection, or pick one manually in the section settings.
+      </p>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "From the collection",
+  "tag": "section",
+  "class": "section section-from-collection",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows other products from the same collection as the product being viewed, with a quick-add button so shoppers can buy a similar item without leaving the page."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Leave blank to use the collection's own title"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection override",
+      "info": "Leave blank to automatically use the current product's own collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 4,
+      "label": "Products to show"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 4,
+      "label": "Columns on desktop"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        { "value": "adapt", "label": "Adapt to image" },
+        { "value": "portrait", "label": "Portrait" },
+        { "value": "square", "label": "Square" }
+      ],
+      "default": "square",
+      "label": "Image ratio"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "default": true,
+      "label": "Show second image on hover"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "default": false,
+      "label": "Show vendor"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Section padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 52
+    }
+  ],
+  "presets": [
+    {
+      "name": "From the collection"
+    }
+  ]
+}
+{% endschema %}

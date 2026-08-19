@@ -6,7 +6,7 @@
         "group-1": {
           "type": "group",
           "settings": {
-            "heading": "Choose 2 items",
+            "heading": "",
             "pick_count": 2,
             "open_by_default": true
           }
@@ -14,13 +14,21 @@
       },
       "block_order": ["group-1"],
       "settings": {
+        "config_mode": "auto",
         "banner_full_width": false,
+        "eyebrow": "Limited time offer",
+        "badge": "",
         "tagline": "Mix and match your favourites and pay one bundle price.",
+        "show_tagline": true,
         "perks": "Free shipping on this offer\nMix any sizes you like",
+        "show_steps": false,
+        "discount_type": "none",
+        "discount_amount": 0,
         "button_label": "Add bundle to cart",
         "add_label": "Add to bundle",
         "soldout_label": "Sold out",
         "selected_label": "selected",
+        "more_offers_heading": "More offers",
         "color_scheme": "scheme-1",
         "padding_top": 40,
         "padding_bottom": 40

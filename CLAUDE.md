@@ -139,28 +139,41 @@ The deal cards everywhere fall back automatically to the store's **`offer` colle
 
 ### Configuring an offer
 
-Two interchangeable paths. Precedence for **who the customer can pick from** is:
+The section's **"Offer settings come from"** setting (`config_mode`) decides
+whether metafields are in play at all:
 
-```
-configured Pick group block  >  offer.collection metafield  >  empty state
-```
+| `config_mode` | behaviour |
+| --- | --- |
+| `auto` (default) | metafield wins where set, section settings fill the gaps. Precedence for the picker: configured Pick group block > `offer.collection` metafield > empty state. For the **shared** `product.offer` template that many offer products use. |
+| `editor` | metafields are ignored **completely**. The template's own settings and Pick group blocks are the only source, so the theme editor is exactly what the customer sees. For a **per-offer** template. |
 
-A Pick group block counts as *configured* once it has hand-picked products or a
-collection on it. An empty block changes nothing, so a template can ship with a
-block in place and still run off the metafield until someone curates it.
-Everything else (badge/tagline/banner/perks/pricing) is still **metafield wins**.
+`auto` mode is what makes an empty Pick group block silently fall back to the
+metafield — handy for a shared template, confusing on a per-offer one. That's
+why `product.offer-2/-3/-5.json` all ship with `config_mode: "editor"`.
+
+A Pick group block counts as *configured* once it has hand-picked products, a
+collection, or a list of collection handles on it.
 
 1. **Theme editor** (no metafields needed). Duplicate the `offer` product template
-   per offer, then set banner/badge/tagline/perks in the section and add one
-   **Pick group** block per set (each with its own heading, pick count, and
-   either hand-picked `products` or a `collection`). Multiple groups is how
-   "choose 2 from A *and* 3 from B" works.
+   per offer, set `config_mode` to "Only this template", then set
+   banner/headline/tagline/perks in the section and add one **Pick group** block
+   per set. Each block takes, in priority order: hand-picked `products` >
+   `collections` (comma-separated handles, e.g. `men, women, unisex` — merged and
+   deduped, mirroring what the metafield can do) > a single `collection`.
+   Multiple groups is how "choose 2 from A *and* 3 from B" works.
 
    **Per-offer templates**: `templates/product.offer-2.json`, `-3`, `-5` exist so
    each offer can be curated separately — hand-picking products in the shared
    `product.offer` template would apply to every offer at once. Point each offer
    product at its own template suffix (`offer-2` / `offer-3` / `offer-5`) in
    admin → product → Theme template.
+
+   **As of 2026-08-17 none of the three offer products have been pointed at their
+   own template** — all three still render the shared `product.offer` template
+   (verified: `offer-for-2` shows the metafield group heading, not the
+   `offer-2` template's "Choose any 2 perfumes"). Until that switch is made in
+   admin, the per-offer templates are inert and every offer is driven by its
+   `offer.*` metafields.
 2. **Metafields** (namespace `offer`, listed in
    `~/Desktop/SHOPIFY/offer-metafields/product.json` — kept outside the theme
    dir because the theme CLI rejects files in `config/` subfolders) —
@@ -222,6 +235,10 @@ those two metafields set needs zero extra config to appear correctly on product 
   per-offer, because price and size travel on the cart lines.
 - The function bails out when a bundle's units no longer match `_bundle_size`, so
   editing quantities in the cart reverts the bundle to full price.
+- The function's result uses `discountApplicationStrategy: 'ALL'` — **not**
+  `FIRST`, which would apply only the first discount in the array and leave a
+  free roll-on charged whenever a bundle sits in the same cart. Every discount
+  targets its own cart lines, so `ALL` applies them all.
 - **Without the discount set up, offers add at full price** — the customer is
   over-charged, not under-charged. Set it up before linking customers to an offer.
 - `cart-transform-legacy/` in the app folder is the superseded cart-transform
@@ -232,6 +249,82 @@ those two metafields set needs zero extra config to appear correctly on product 
 
 `{% return %}` is not a Shopify Liquid tag — early-exit guards in these sections
 use `{% if %}…{% else %}` around the whole body instead.
+
+## Free gift — "pick your free 6ml roll-on" in the cart
+
+Backs the announcement-bar promise ("Buy 1 Perfume • FREE 6ml Roll-On"), which
+was previously just text with nothing behind it.
+
+| File | Role |
+| --- | --- |
+| `snippets/free-gift-picker.liquid` | the block itself: eligibility check, a dropdown of roll-ons, and the claimed state (chosen roll-on + ₹0 price + Change button) |
+| `assets/free-gift.js` | `<free-gift-picker>` — add / swap / auto-remove the gift line, then re-render the cart sections |
+| `assets/component-free-gift.css` | styles, incl. the `.cart-item__free-gift-tag` "Free gift" badge |
+
+Rendered from **both** carts, inside `.js-contents` so Dawn's own quantity
+refresh re-evaluates eligibility for free:
+`sections/main-cart-items.liquid` (cart page) and `snippets/cart-drawer.liquid`.
+
+Settings live in **Theme settings → Free gift** (`config/settings_schema.json`),
+so one place drives both carts: on/off, the gift collection (defaults to
+`attar-roll-ons`), the qualifying collection (defaults to `non-alcoholic`), and
+the copy.
+
+### How it works
+
+- Eligible once the cart holds ≥1 item from the qualifying collection. The check
+  walks `item.product.collections` per cart line — this works in the sections API
+  too, verified.
+- Choosing a roll-on adds an **ordinary cart line** with properties `Gift`
+  (visible, so it lands on the order) and `_free_gift` (hidden marker everything
+  else keys off).
+- Swapping adds the new roll-on first, then removes the old line, so a failed add
+  can't leave the customer with no gift.
+- If the cart stops qualifying, `connectedCallback` removes the stale gift line
+  (once per page load — `staleGiftRemovalTried` guards against a loop).
+- `free-gift.js` re-renders the sections itself and deliberately does **not**
+  publish `cartUpdate`: `cart.js` would re-fetch and overwrite the DOM it just
+  wrote, racing it.
+
+### What makes it ₹0 — the offer discount function
+
+**The theme never fakes the price.** The "Free gift" badge only renders when
+`item.final_line_price == 0`, so a missing discount is visible rather than
+silent.
+
+The zeroing is done by the **same discount function that prices the bundles**
+(`~/Desktop/SHOPIFY/offer-transform-app`, extension `offer-discount`) — not by a
+"Buy X get Y" automatic discount. Two reasons:
+
+- Shopify runs **one** automatic product discount, so a separate Buy X get Y
+  would compete with the bundle discount instead of stacking with it.
+- Buy X get Y can't see `_free_gift`, so it would also zero a roll-on the
+  customer deliberately added to buy. Keying off the marker means only the
+  picked gift is free.
+
+What the function does (`extensions/offer-discount/src/index.js`): it finds the
+first line marked `_free_gift`, and takes **one unit's price** off it — so a
+customer who raises that line's quantity to 2 pays for the second one — provided
+the cart also holds a line from the qualifying collection.
+
+Line item properties come from the browser and can be forged, so eligibility is
+re-checked in the function against **collection membership**, via
+`inAnyCollection` in `src/run.graphql`. The collection ids are hardcoded there:
+
+| collection | id | role |
+| --- | --- | --- |
+| `attar-roll-ons` | `482701836576` | line must be in it to count as a gift |
+| `non-alcoholic` | `435023937824` | a line in it unlocks the gift |
+
+**These must match Theme settings → Free gift.** Changing either collection in
+the customizer means editing `run.graphql` and redeploying, otherwise the picker
+offers a roll-on the function refuses to discount. (Collection ids without admin
+access: `curl -s https://attarwalas-4203.myshopify.com/collections/<handle> |
+grep -o '"resourceId":[0-9]*'`.)
+
+Deploy after any change to the function: `shopify app deploy` from
+`~/Desktop/SHOPIFY/offer-transform-app`. Nothing to create in admin — the
+existing automatic discount picks up the new function version.
 
 ## Useful Shopify CLI commands
 

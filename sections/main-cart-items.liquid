@@ -4,6 +4,62 @@
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
 {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
 {{ 'quantity-popover.css' | asset_url | stylesheet_tag }}
+{{ 'component-free-gift.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'free-gift.js' | asset_url }}" defer="defer"></script>
+
+{%- comment -%}
+  Stale-render guard. Adding a bundle (or picking a roll-on) finishes server-side
+  a moment AFTER the cart page may have rendered — so a customer who lands on
+  /cart while the add is still committing sees the empty state even though the
+  cart actually has items, and only a refresh fixes it. This watches for that:
+  if the page rendered empty but the cart holds items within a few seconds of a
+  recent cart mutation, it reloads once to show them. The mutation timestamp is
+  set by offer-builder.js / free-gift.js; both the timestamp and a one-shot
+  guard here keep it from firing on a normal (genuinely empty) cart visit.
+{%- endcomment -%}
+<script>
+  (function () {
+    if (window.__cartRaceReconciled) return;
+    window.__cartRaceReconciled = true;
+
+    // The inline script sits above the <cart-items> element in this section,
+    // so it must wait for the DOM (and for window.routes from theme.liquid)
+    // before it can query anything.
+    function maybeWatch() {
+      var cartEl = document.querySelector('cart-items');
+      if (!cartEl || !cartEl.classList.contains('is-empty')) return;
+
+      var mutatedAt = Number(sessionStorage.getItem('cartMutationAt')) || 0;
+      if (Date.now() - mutatedAt > 25000) return;
+
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries += 1;
+        var routes = window.routes || {};
+        fetch((routes.cart_url || '/cart') + '.js')
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (cart) {
+            if (cart.item_count > 0) {
+              clearInterval(timer);
+              window.location.reload();
+            }
+          })
+          .catch(function () {
+            // transient — keep polling
+          });
+        if (tries >= 16) clearInterval(timer);
+      }, 700);
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      maybeWatch();
+    } else {
+      document.addEventListener('DOMContentLoaded', maybeWatch);
+    }
+  })();
+</script>
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -103,6 +159,14 @@
                       {%- endif -%}
 
                       <a href="{{ item.url }}" class="cart-item__name h4 break">{{ item.product.title | escape }}</a>
+
+                      {%- comment -%}
+                        Only badge it as free once it genuinely costs nothing, so
+                        a missing automatic discount shows up instead of hiding.
+                      {%- endcomment -%}
+                      {%- if item.properties._free_gift != blank and item.final_line_price == 0 -%}
+                        <span class="cart-item__free-gift-tag">Free gift</span>
+                      {%- endif -%}
 
                       {%- if item.original_price != item.final_price -%}
                         <div class="cart-item__discounted-prices">
@@ -434,6 +498,13 @@
               </tbody>
             </table>
           {%- endif -%}
+
+          {%- comment -%}
+            Inside .js-contents on purpose: Dawn re-renders this wrapper on every
+            quantity change, so the gift block re-evaluates whether the cart
+            still qualifies without any extra wiring.
+          {%- endcomment -%}
+          {%- render 'free-gift-picker', context: 'page' -%}
         </div>
       </div>
 

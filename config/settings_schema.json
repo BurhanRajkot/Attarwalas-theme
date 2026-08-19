@@ -1476,5 +1476,56 @@
         "default": "scheme-1"
       }
     ]
+  },
+  {
+    "name": "Free gift",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Lets the customer choose a free 6ml roll-on from inside the cart. The roll-on goes in as a normal cart line — the offer discount (the same automatic discount that prices the bundles) is what takes it to ₹0. Changing the two collections below also means updating the discount function's collection ids."
+      },
+      {
+        "type": "checkbox",
+        "id": "free_gift_enabled",
+        "label": "Show the free gift picker in the cart",
+        "default": true
+      },
+      {
+        "type": "collection",
+        "id": "free_gift_collection",
+        "label": "Roll-ons the customer can pick from",
+        "info": "Defaults to the \"attar-roll-ons\" collection. Only the first 12 products are shown."
+      },
+      {
+        "type": "collection",
+        "id": "free_gift_qualifying_collection",
+        "label": "Buying from this collection unlocks the gift",
+        "info": "Defaults to the \"non-alcoholic\" collection — i.e. one full-size perfume in the cart earns one free roll-on. Must match the qualifying collection id in the offer discount function."
+      },
+      {
+        "type": "text",
+        "id": "free_gift_heading",
+        "label": "Heading",
+        "default": "Your free 6ml roll-on"
+      },
+      {
+        "type": "text",
+        "id": "free_gift_subtext",
+        "label": "Text when the gift is unlocked",
+        "default": "Pick one on us — no code needed."
+      },
+      {
+        "type": "text",
+        "id": "free_gift_locked_text",
+        "label": "Text before the gift is unlocked",
+        "default": "Add any perfume to unlock a free roll-on."
+      },
+      {
+        "type": "text",
+        "id": "free_gift_choose_label",
+        "label": "Choose button label",
+        "default": "Choose"
+      }
+    ]
   }
 ]

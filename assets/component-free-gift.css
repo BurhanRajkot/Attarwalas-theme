@@ -1,0 +1,236 @@
+/* ==========================================================================
+   Free gift picker — "choose your free 6ml roll-on" block in the cart.
+   Same gold-hairline language as the offer tickets so the cart doesn't look
+   like a different store. Rendered by snippets/free-gift-picker.liquid.
+   ========================================================================== */
+
+.free-gift {
+  --gift-gold: var(--color-button);
+  --gift-ink: var(--color-foreground);
+  display: block;
+  margin: 2.4rem 0;
+  padding: 1.8rem 2rem;
+  border: 1px solid rgba(var(--gift-gold), 0.35);
+  background: linear-gradient(180deg, rgba(var(--gift-gold), 0.06) 0%, rgba(var(--gift-gold), 0) 60%);
+}
+
+.free-gift--busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ---------------------------------- Head ---------------------------------- */
+
+.free-gift__head {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.free-gift__icon {
+  display: flex;
+  flex-shrink: 0;
+  color: rgb(var(--gift-gold));
+}
+
+.free-gift__icon svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.free-gift__head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.free-gift__heading {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(var(--gift-gold));
+}
+
+.free-gift__subtext {
+  margin: 0.4rem 0 0;
+  font-size: 1.35rem;
+  line-height: 1.45;
+  color: rgba(var(--gift-ink), 0.68);
+}
+
+/* Merchant-only, theme-editor-only nudge when the discount isn't wired up. */
+.free-gift__warning {
+  margin: 1.2rem 0 0;
+  padding: 1rem 1.2rem;
+  border: 1px dashed rgba(var(--gift-ink), 0.35);
+  font-size: 1.2rem;
+  line-height: 1.45;
+}
+
+/* -------------------------------- Dropdown -------------------------------- */
+
+.free-gift__options {
+  margin-top: 1.6rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid rgba(var(--gift-gold), 0.25);
+}
+
+.free-gift__options[hidden] {
+  display: none;
+}
+
+.free-gift__select-wrap {
+  position: relative;
+}
+
+.free-gift__select {
+  width: 100%;
+  padding: 1.1rem 4.4rem 1.1rem 1.4rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgb(var(--color-background));
+  border: 1px solid rgba(var(--gift-ink), 0.3);
+  border-radius: 0;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  color: rgb(var(--gift-ink));
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.free-gift__select:focus-visible {
+  outline: none;
+  border-color: rgb(var(--gift-gold));
+  box-shadow: 0 0 0 0.1rem rgb(var(--gift-gold));
+}
+
+.free-gift__select:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.free-gift__select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 1.6rem;
+  top: 50%;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-right: 2px solid rgb(var(--gift-gold));
+  border-bottom: 2px solid rgb(var(--gift-gold));
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* ------------------------------ Claimed state ----------------------------- */
+
+.free-gift__claimed {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  margin-top: 1.6rem;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid rgba(var(--gift-gold), 0.35);
+  background: rgba(var(--gift-gold), 0.07);
+}
+
+.free-gift__claimed-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgb(var(--gift-ink));
+}
+
+.free-gift__claimed-tag {
+  flex-shrink: 0;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid rgb(var(--gift-gold));
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--gift-gold));
+}
+
+.free-gift__claimed-price {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(var(--gift-gold));
+}
+
+.free-gift__change {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0.7rem 1.4rem;
+  background: transparent;
+  border: 1px solid rgba(var(--gift-gold), 0.5);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--gift-gold));
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.free-gift__change:hover {
+  background: rgb(var(--gift-gold));
+  color: rgb(var(--color-button-text));
+}
+
+/* --------------------------------- Errors --------------------------------- */
+
+.free-gift__error {
+  margin: 1.2rem 0 0;
+  font-size: 1.3rem;
+  color: rgba(var(--color-error, 200 0 0), 1);
+}
+
+.free-gift__error[hidden] {
+  display: none;
+}
+
+/* --------------------------- Cart line "Free" tag ------------------------- */
+
+.cart-item__free-gift-tag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid rgb(var(--color-button));
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--color-button));
+}
+
+/* --------------------------------- Mobile --------------------------------- */
+
+@media screen and (max-width: 749px) {
+  .free-gift {
+    padding: 1.4rem 1.4rem;
+  }
+
+  .free-gift__head {
+    gap: 1rem;
+  }
+
+  .free-gift__heading {
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+  }
+
+  .free-gift__subtext {
+    font-size: 1.25rem;
+  }
+
+  .free-gift__change {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+  }
+}

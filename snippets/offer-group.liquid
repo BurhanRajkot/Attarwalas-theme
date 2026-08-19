@@ -77,9 +77,6 @@
     <summary class="offer-group__summary">
       <span class="offer-group__summary-main">
         <span class="offer-group__summary-text">{{ heading }}</span>
-        <span class="offer-group__summary-hint">
-          Pick {{ group_pick_count }} — tap “{{ add_label | default: 'Add to bundle' }}” on the ones you want
-        </span>
       </span>
       <span class="offer-group__summary-meta">
         <span class="offer-group__pill" data-group-counter>0 / {{ group_pick_count }}</span>
@@ -163,25 +160,28 @@
                     <label class="offer-card__variant-label" for="{{ card_id }}-variant">
                       {{- item.options.first -}}:
                     </label>
-                    <select class="offer-card__variant select__select" id="{{ card_id }}-variant" data-offer-variant>
-                      {%- for v in item.variants -%}
-                        <option
-                          value="{{ v.id }}"
-                          data-price="{{ v.price }}"
-                          data-price-formatted="{{ v.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
-                          data-variant-title="{{ v.title | escape }}"
-                          data-available="{{ v.available }}"
-                          {% if v.id == variant.id %}
-                            selected
-                          {% endif %}
-                          {% unless v.available %}
-                            disabled
-                          {% endunless %}
-                        >
-                          {{- v.title -}}
-                        </option>
-                      {%- endfor -%}
-                    </select>
+                    <div class="select offer-card__variant-select">
+                      <select class="offer-card__variant select__select" id="{{ card_id }}-variant" data-offer-variant>
+                        {%- for v in item.variants -%}
+                          <option
+                            value="{{ v.id }}"
+                            data-price="{{ v.price }}"
+                            data-price-formatted="{{ v.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
+                            data-variant-title="{{ v.title | escape }}"
+                            data-available="{{ v.available }}"
+                            {% if v.id == variant.id %}
+                              selected
+                            {% endif %}
+                            {% unless v.available %}
+                              disabled
+                            {% endunless %}
+                          >
+                            {{- v.title -}}
+                          </option>
+                        {%- endfor -%}
+                      </select>
+                      {% render 'icon-caret' %}
+                    </div>
                   </div>
                 {%- endunless -%}
 

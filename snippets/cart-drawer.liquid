@@ -7,6 +7,8 @@
 
 {{ 'quantity-popover.css' | asset_url | stylesheet_tag }}
 {{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'component-free-gift.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'free-gift.js' | asset_url }}" defer="defer"></script>
 
 <script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
@@ -138,6 +140,10 @@
                           <a href="{{ item.url }}" class="cart-item__name h4 break">
                             {{- item.product.title | escape -}}
                           </a>
+
+                          {%- if item.properties._free_gift != blank and item.final_line_price == 0 -%}
+                            <span class="cart-item__free-gift-tag">Free gift</span>
+                          {%- endif -%}
 
                           {%- if item.original_price != item.final_price -%}
                             <div class="cart-item__discounted-prices">
@@ -440,6 +446,13 @@
                 </table>
               </div>
             {%- endif -%}
+
+            {%- comment -%}
+              Inside .js-contents so Dawn's own quantity refresh re-evaluates the
+              gift block's eligibility for free.
+            {%- endcomment -%}
+            {%- render 'free-gift-picker', context: 'drawer' -%}
+
             <p id="CartDrawer-LiveRegionText" class="visually-hidden" role="status"></p>
             <p id="CartDrawer-LineItemStatus" class="visually-hidden" aria-hidden="true" role="status">
               {{ 'accessibility.loading' | t }}

@@ -35,9 +35,12 @@ class CartDrawer extends HTMLElement {
     this.addEventListener(
       'transitionend',
       () => {
-        const containerToTrapFocusOn = this.classList.contains('is-empty')
+        let containerToTrapFocusOn = this.classList.contains('is-empty')
           ? this.querySelector('.drawer__inner-empty')
           : document.getElementById('CartDrawer');
+        if (!containerToTrapFocusOn) {
+          containerToTrapFocusOn = document.getElementById('CartDrawer') || this;
+        }
         const focusElement = this.querySelector('.drawer__inner') || this.querySelector('.drawer__close');
         trapFocus(containerToTrapFocusOn, focusElement);
       },
@@ -69,6 +72,20 @@ class CartDrawer extends HTMLElement {
   }
 
   renderContents(parsedState) {
+    // Keep the cart-drawer element's own is-empty class honest, or open()'s
+    // focus trap would look for .drawer__inner-empty that is no longer there
+    // (added the first item to an empty cart) and crash on a null container.
+    // /cart/add.js reports lines via `items`; /cart/change.js reports
+    // `item_count` — accept whichever is present.
+    const itemCount =
+      typeof parsedState.item_count === 'number'
+        ? parsedState.item_count
+        : Array.isArray(parsedState.items)
+          ? parsedState.items.length
+          : undefined;
+    if (typeof itemCount === 'number') {
+      this.classList.toggle('is-empty', itemCount === 0);
+    }
     this.querySelector('.drawer__inner').classList.contains('is-empty') &&
       this.querySelector('.drawer__inner').classList.remove('is-empty');
     this.productId = parsedState.id;
