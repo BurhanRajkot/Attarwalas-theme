@@ -96,6 +96,9 @@
       "type": "perfumer",
       "settings": {
         "eyebrow": "",
+        "bio": "Every ATTARWALAS fragrance is composed in-house, blending rare oils and traditional attars with modern techniques to create scents that are both timeless and distinctive.",
+        "name": "ATTARWALAS Perfumers",
+        "role": "Perfumer",
         "image_position": "left",
         "background_color": "#0a0a0a",
         "text_color": "#f5f5f5",
