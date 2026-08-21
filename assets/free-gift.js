@@ -1,8 +1,10 @@
 /**
- * <free-gift-picker> — lets the customer choose (and swap) their free 6ml
- * roll-ons from inside the cart, one per qualifying perfume unit. Rendered by
- * snippets/free-gift-picker.liquid, which draws one row per earned slot:
- * a claimed row (product + price + Change) or an empty row (a dropdown).
+ * <free-gift-picker> — lets the customer choose (and swap) their free
+ * roll-ons from inside the cart, one per qualifying perfume unit. A slot's
+ * roll-on size (10ml or 35ml) is locked to the bottle size that earned it.
+ * Rendered by snippets/free-gift-picker.liquid, which draws one row per
+ * earned slot: a claimed row (product + price + Change) or an empty row (a
+ * dropdown).
  *
  * Each gift is an ordinary cart line tagged with a hidden `_free_gift`
  * property. The store's offer discount function is what zeroes its price;
@@ -36,13 +38,23 @@ if (!customElements.get('free-gift-picker')) {
     }
   
     connectedCallback() {
-      const qualifying = parseInt(this.dataset.qualifyingUnits, 10) || 0;
-      const claimed = parseInt(this.dataset.claimedUnits, 10) || 0;
-      const excess = claimed - qualifying;
-  
-      if (excess > 0 && !staleTrimTried) {
+      // Each bucket ('50' → filled with a 10ml roll-on, '100' → 35ml) is
+      // trimmed independently: a bucket's excess must only take units from
+      // that same bucket's rows, otherwise dropping a 50ml perfume from the
+      // cart could remove a still-valid 35ml gift instead of the orphaned
+      // 10ml one.
+      const buckets = ['50', '100'];
+      const excessByBucket = buckets
+        .map((bucket) => {
+          const qualifying = parseInt(this.dataset[`qualifying${bucket}`], 10) || 0;
+          const claimed = parseInt(this.dataset[`claimed${bucket}`], 10) || 0;
+          return { bucket, excess: claimed - qualifying };
+        })
+        .filter(({ excess }) => excess > 0);
+
+      if (excessByBucket.length > 0 && !staleTrimTried) {
         staleTrimTried = true;
-        this.trimExcess(excess);
+        this.trimExcess(excessByBucket);
       }
     }
   
@@ -103,7 +115,12 @@ if (!customElements.get('free-gift-picker')) {
       this.clearError();
   
       this.changeLine(lineKey, quantity - 1)
-        .then((state) => this.renderSections(state))
+        .then((state) => {
+          if (state.status || state.message || state.description) {
+            throw new Error(state.description || state.message);
+          }
+          this.renderSections(state);
+        })
         .catch((error) => {
           this.showError(error.message);
           this.setBusy(false, trigger);
@@ -111,22 +128,27 @@ if (!customElements.get('free-gift-picker')) {
     }
   
     /**
-     * Drops `excess` already-claimed units, taking them from the last rows in
-     * DOM order (grouped by line, since several rows can share one line when
-     * the same roll-on fills more than one slot).
+     * Drops each bucket's excess already-claimed units, taking them from that
+     * bucket's last rows in DOM order (grouped by line, since several rows
+     * can share one line when the same roll-on fills more than one slot).
+     * Buckets are trimmed independently so a 50ml perfume dropping out of the
+     * cart can never take a still-valid 35ml gift with it.
      */
-    trimExcess(excess) {
-      const rows = Array.from(this.querySelectorAll('[data-free-gift-row][data-gift-line-key]'));
-      const toTrim = rows.slice(-excess);
-      if (toTrim.length === 0) return;
-  
+    trimExcess(excessByBucket) {
+      const allRows = Array.from(this.querySelectorAll('[data-free-gift-row][data-gift-line-key]'));
+
       /** @type {Map<string, number>} */
       const unitsToRemoveByLine = new Map();
-      toTrim.forEach((row) => {
-        const key = row.dataset.giftLineKey;
-        unitsToRemoveByLine.set(key, (unitsToRemoveByLine.get(key) || 0) + 1);
+      excessByBucket.forEach(({ bucket, excess }) => {
+        const bucketRows = allRows.filter((row) => row.dataset.giftBucket === bucket);
+        bucketRows.slice(-excess).forEach((row) => {
+          const key = row.dataset.giftLineKey;
+          unitsToRemoveByLine.set(key, (unitsToRemoveByLine.get(key) || 0) + 1);
+        });
       });
-  
+      if (unitsToRemoveByLine.size === 0) return;
+
+      const rows = allRows;
       this.setBusy(true);
   
       const tasks = Array.from(unitsToRemoveByLine.entries()).map(([key, units]) => () => {
@@ -148,7 +170,7 @@ if (!customElements.get('free-gift-picker')) {
           id: Number(variantId),
           quantity: 1,
           properties: {
-            Gift: this.dataset.giftLabel || 'Free 6ml roll-on',
+            Gift: this.dataset.giftLabel || 'Free roll-on',
             _free_gift: '1',
           },
         },
@@ -217,9 +239,13 @@ if (!customElements.get('free-gift-picker')) {
   
     renderSections(state) {
       if (!state || !state.sections) {
-        // No section HTML came back (e.g. an older cart response) — fall back to a
-        // reload so the customer never sees a cart that disagrees with itself.
-        window.location.reload();
+        // No section HTML came back — most commonly an error response
+        // (Shopify's cart API error shape has no `sections` key) that a
+        // caller didn't already catch. Surface it instead of reloading: a
+        // full-page reload silently discards whatever the customer was
+        // doing and looks like the click did nothing at all.
+        this.showError();
+        this.setBusy(false);
         return;
       }
   

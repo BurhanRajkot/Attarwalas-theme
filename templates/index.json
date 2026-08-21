@@ -225,9 +225,10 @@
       "type": "product-carousel",
       "settings": {
         "full_width": true,
-        "title": "Duo & Trio",
+        "title": "Duo",
         "collection": "men",
         "products_to_show": 8,
+        "discount_percent": 20,
         "show_badge": true,
         "badge_text": "Online Exclusive",
         "show_description": true,

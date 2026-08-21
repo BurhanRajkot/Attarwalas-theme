@@ -64,12 +64,21 @@
 {%- endstyle -%}
 
 {%- liquid
+  # Pick whichever eligible collection the product belongs to has the most
+  # OTHER products, not just the first one found — a product can sit in
+  # several collections (e.g. a small marketing collection alongside its real
+  # product-family collection), and picking an arbitrary one can leave this
+  # section showing only 1-2 items in a grid sized for more, with an
+  # awkward empty gap where the rest of the row should be.
   assign fc_collection = section.settings.collection
   if fc_collection == blank
+    assign fc_best_count = -1
     for c in product.collections
       unless c.handle == 'offer' or c.handle == 'frontpage' or c.handle == 'all'
-        assign fc_collection = c
-        break
+        if c.products_count > fc_best_count
+          assign fc_best_count = c.products_count
+          assign fc_collection = c
+        endif
       endunless
     endfor
   endif
@@ -84,8 +93,26 @@
           assign fc_heading = fc_collection.title
         endif
 
-        assign fc_products = fc_collection.products | where: 'id', product.id
         assign fc_shown = 0
+
+        # How many items will actually render, so the grid can be sized to
+        # match instead of always reserving columns_desktop columns — a
+        # short row (fewer siblings than the column count) would otherwise
+        # leave dangling empty space on the right.
+        assign fc_other_count = fc_collection.products_count | minus: 1
+        if fc_other_count < 0
+          assign fc_other_count = 0
+        endif
+
+        assign fc_display_count = section.settings.products_to_show
+        if fc_other_count < fc_display_count
+          assign fc_display_count = fc_other_count
+        endif
+
+        assign fc_grid_cols = section.settings.columns_desktop
+        if fc_display_count > 0 and fc_display_count < fc_grid_cols
+          assign fc_grid_cols = fc_display_count
+        endif
       -%}
 
       <div class="aw-from-collection__title-row">
@@ -95,15 +122,15 @@
       </div>
 
       <ul
-        class="aw-from-collection__list grid"
+        class="aw-from-collection__list"
         role="list"
-        style="--aw-fc-cols: {{ section.settings.columns_desktop }};"
+        style="--aw-fc-cols: {{ fc_grid_cols }};"
       >
         {%- for fc_product in fc_collection.products -%}
           {%- if fc_product.id != product.id -%}
             {%- assign fc_shown = fc_shown | plus: 1 -%}
             {%- if fc_shown <= section.settings.products_to_show -%}
-              <li class="aw-from-collection__item grid__item">
+              <li class="aw-from-collection__item">
                 {%- render 'card-product',
                   card_product: fc_product,
                   media_aspect_ratio: section.settings.image_ratio,

@@ -119,6 +119,23 @@
             {%- if item.id == offer_product.id -%}
               {%- continue -%}
             {%- endif -%}
+            {%- comment -%}
+              Offer pickers are perfume bottles only, never roll-ons — the
+              store has duplicate "Men"/"Women"/"Unisex" collections (one
+              roll-on-only, one bottle-only) with identical titles, so this
+              checks collection membership directly instead of trusting
+              whichever one admin picked.
+            {%- endcomment -%}
+            {%- assign is_rollon = false -%}
+            {%- for item_collection in item.collections -%}
+              {%- if item_collection.handle == 'attar-roll-ons' -%}
+                {%- assign is_rollon = true -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if is_rollon -%}
+              {%- continue -%}
+            {%- endif -%}
             {%- liquid
               assign variant = item.selected_or_first_available_variant
               assign card_id = 'OfferCard-' | append: group_index | append: '-' | append: forloop.index

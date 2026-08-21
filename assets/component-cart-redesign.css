@@ -1,0 +1,235 @@
+/* ==========================================================================
+   Cart redesign — cosmetic-only cleanup layered on top of Dawn's stock
+   component-cart-items.css / component-cart.css / component-discounts.css.
+
+   Deliberately does NOT touch markup structure, display roles (table-row /
+   grid), or class names those stylesheets and cart.js / quantity-popover.js
+   depend on — only spacing, type, borders and color, so nothing about the
+   AJAX cart update / quantity / remove wiring is at risk. Loaded after those
+   stylesheets in both sections/main-cart-items.liquid and
+   snippets/cart-drawer.liquid so these rules win the cascade.
+   ========================================================================== */
+
+/* ------------------------------ Header row -------------------------------- */
+/* Kept in the DOM for screen readers (real <th scope="col">), just visually
+   quiet instead of bold/uppercase/bordered — minimal carts don't shout
+   "PRODUCT / QUANTITY / TOTAL" at you. */
+
+.cart-items th {
+  padding-bottom: 1.2rem !important;
+  border-bottom: none !important;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.45;
+}
+
+@media screen and (max-width: 749px) {
+  .cart-items thead tr {
+    border-bottom: none !important;
+    margin-bottom: 2.4rem !important;
+  }
+}
+
+/* -------------------------------- Item row -------------------------------- */
+
+.cart-item {
+  padding-bottom: 2.8rem;
+  margin-bottom: 2.8rem !important;
+  border-bottom: 1px solid rgba(var(--color-foreground), 0.08);
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0 !important;
+}
+
+@media screen and (min-width: 750px) {
+  .cart-items td {
+    padding-top: 0 !important;
+  }
+
+  .cart-item > td {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* -------------------------------- Image ----------------------------------- */
+
+.cart-item__image-container,
+.cart-item__media > .cart-item__image {
+  background: rgba(var(--color-foreground), 0.03);
+}
+
+.cart-item__image {
+  max-width: calc(9rem / var(--font-body-scale)) !important;
+}
+
+@media screen and (min-width: 750px) {
+  .cart-item__image {
+    max-width: 11rem !important;
+  }
+
+  .cart-item__media {
+    width: 11rem !important;
+  }
+}
+
+/* -------------------------------- Details ---------------------------------- */
+
+.cart-item__name {
+  font-size: 1.7rem;
+  letter-spacing: 0.01em;
+}
+
+.cart-item__name:hover {
+  text-decoration-thickness: 0.1rem;
+}
+
+/* Regular price (no discount) line — quiet, it's not the headline. */
+.cart-item__details > .product-option:first-of-type {
+  color: rgba(var(--color-foreground), 0.6);
+}
+
+.cart-item__discounted-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+}
+
+.cart-item__discounted-prices .cart-item__old-price {
+  font-size: 1.3rem;
+  opacity: 0.5;
+}
+
+.cart-item__final-price {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgb(var(--color-foreground));
+}
+
+/* Variant options ("Size: 6ML", "Box Colour: Red") — one quiet inline line
+   instead of two stacked <dl> rows. */
+.cart-item__details dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.8rem;
+  margin: 0.4rem 0 0 !important;
+}
+
+.cart-item__details dl .product-option {
+  font-size: 1.3rem;
+  color: rgba(var(--color-foreground), 0.55);
+}
+
+.cart-item__details dl .product-option:not(:last-child)::after {
+  content: '·';
+  margin-left: 0.8rem;
+  opacity: 0.6;
+}
+
+.cart-item__details dl dt {
+  display: none;
+}
+
+.cart-item__details dl dd {
+  display: inline;
+  margin: 0;
+}
+
+/* Duo offer / bundle discount tag and the free-gift tag — same quiet pill so
+   neither shouts over the product name. */
+.cart-item__free-gift-tag,
+.discounts__discount {
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+.discounts {
+  margin-top: 0.6rem !important;
+}
+
+.discounts__discount {
+  display: inline-flex;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid rgba(var(--color-button), 0.4);
+  color: rgba(var(--color-foreground), 0.75);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.discounts__discount .icon {
+  width: 1rem !important;
+  height: 1rem !important;
+  margin-right: 0.5rem !important;
+}
+
+/* --------------------------------- Price ----------------------------------- */
+
+.cart-item__totals .price {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.cart-item__totals .cart-item__old-price {
+  font-size: 1.3rem;
+  opacity: 0.5;
+}
+
+.cart-item__totals .unit-price {
+  opacity: 0.55;
+}
+
+/* ------------------------------- Quantity ----------------------------------- */
+
+.cart-item .quantity {
+  border-color: rgba(var(--color-foreground), 0.16);
+}
+
+.cart-item cart-remove-button .button {
+  opacity: 0.6;
+}
+
+.cart-item cart-remove-button .button:hover {
+  opacity: 1;
+}
+
+/* --------------------------------- Totals ----------------------------------- */
+
+.totals__total {
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+.totals__total-value {
+  font-size: 2rem;
+}
+
+/* -------------------------------- Mobile ------------------------------------ */
+
+@media screen and (max-width: 749px) {
+  .cart-item {
+    gap: 1.2rem 1.6rem;
+  }
+
+  .cart-item__image {
+    max-width: 100% !important;
+  }
+}
+
+/* ---------------------------------- Drawer ----------------------------------- */
+
+.cart-drawer .cart-item {
+  padding-bottom: 2rem;
+  margin-bottom: 2rem !important;
+}
+
+.cart-drawer .cart-item__name {
+  font-size: 1.5rem;
+}
+
+.cart-drawer .cart-item__image {
+  max-width: 8rem !important;
+}

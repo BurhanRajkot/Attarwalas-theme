@@ -8,10 +8,53 @@
 {{ 'quantity-popover.css' | asset_url | stylesheet_tag }}
 {{ 'component-card.css' | asset_url | stylesheet_tag }}
 {{ 'component-free-gift.css' | asset_url | stylesheet_tag }}
+{{ 'component-cart-redesign.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'free-gift.js' | asset_url }}" defer="defer"></script>
 
 <script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  # Mirrors the eligibility math in snippets/free-gift-picker.liquid and
+  # sections/main-cart-footer.liquid — checkout is blocked until every earned
+  # free-gift slot is claimed. Kept in sync manually since Liquid has no way
+  # to share a computed value across snippet scopes.
+  assign gift_collection = settings.free_gift_collection
+  if gift_collection == blank
+    assign gift_collection = collections['attar-roll-ons']
+  endif
+
+  assign qualifying_collection = settings.free_gift_qualifying_collection
+  if qualifying_collection == blank
+    assign qualifying_collection = collections['non-alcoholic']
+  endif
+
+  assign gift_active = false
+  if settings.free_gift_enabled and gift_collection.products_count > 0
+    assign gift_active = true
+  endif
+
+  assign qualifying_units = 0
+  assign claimed_units = 0
+  for item in cart.items
+    if item.properties._free_gift != blank
+      assign claimed_units = claimed_units | plus: item.quantity
+      continue
+    endif
+
+    for c in item.product.collections
+      if c.handle == qualifying_collection.handle
+        assign qualifying_units = qualifying_units | plus: item.quantity
+        break
+      endif
+    endfor
+  endfor
+
+  assign gift_pending = false
+  if gift_active and qualifying_units > claimed_units
+    assign gift_pending = true
+  endif
+-%}
 
 <style>
   .drawer {
@@ -175,10 +218,7 @@
                                 {%- for option in item.options_with_values -%}
                                   <div class="product-option">
                                     <dt>{{ option.name }}:</dt>
-                                    <dd>
-                                      {{ option.value -}}
-                                      {%- unless forloop.last %}, {% endunless %}
-                                    </dd>
+                                    <dd>{{ option.value }}</dd>
                                   </div>
                                 {%- endfor -%}
                               {%- endif -%}
@@ -527,12 +567,15 @@
             class="cart__checkout-button button"
             name="checkout"
             form="CartDrawer-Form"
-            {% if cart == empty %}
+            {% if cart == empty or gift_pending %}
               disabled
             {% endif %}
           >
             {{ 'sections.cart.checkout' | t }}
           </button>
+          {%- if gift_pending -%}
+            <p class="cart__gift-pending-note">Pick your free roll-on above to continue.</p>
+          {%- endif -%}
         </div>
       </div>
     </div>

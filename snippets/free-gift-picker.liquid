@@ -1,11 +1,18 @@
 {% comment %}
-  Renders the "pick your free 6ml roll-on" block for the cart — one slot per
+  Renders the "pick your free roll-on" block for the cart — one slot per
   qualifying perfume unit in the cart (buy 3, pick 3 roll-ons independently).
 
   How it works:
   - The customer earns one slot per unit of a qualifying-collection product in
     the cart (default: non-alcoholic, i.e. the full-size perfumes). 2 perfumes
     = 2 slots, each pickable independently.
+  - The roll-on size a slot can be filled with depends on the bottle size that
+    earned it: a 50ml bottle earns a slot fillable only with a 10ml roll-on; a
+    100ml bottle (or any size that isn't recognised as 50ml — covers every
+    perfume sold before the 50ml option existed) earns a slot fillable only
+    with a 35ml roll-on. The two pools are tracked and rendered separately so
+    a mixed-size cart can't spend one size's earned slot on the other size's
+    roll-on.
   - Each claimed slot is an ordinary cart line carrying the properties `Gift`
     (visible, so it shows on the order) and `_free_gift` (hidden marker this
     snippet and free-gift.js look for). Picking the same roll-on for two slots
@@ -49,35 +56,63 @@
 
 {%- if show_block -%}
   {%- liquid
-    # One slot per unit of a qualifying product; claimed_units may briefly
-    # exceed qualifying_units if the customer bumps a qualifying item's
-    # quantity down after claiming — free-gift.js trims the excess on load.
-    assign qualifying_units = 0
-    assign claimed_units = 0
+    # Two separate pools, keyed by the bottle size that earns them: '50' for a
+    # 50ml bottle (fillable with a 10ml roll-on), '100' for everything else
+    # (fillable with a 35ml roll-on — also the safe default for any perfume
+    # variant title this doesn't recognise). claimed_* may briefly exceed
+    # qualifying_* if the customer bumps a qualifying item's quantity down
+    # after claiming — free-gift.js trims the excess, per pool, on load.
+    assign qualifying_50 = 0
+    assign qualifying_100 = 0
+    assign claimed_50 = 0
+    assign claimed_100 = 0
 
     for item in cart.items
       if item.properties._free_gift != blank
-        assign claimed_units = claimed_units | plus: item.quantity
+        if item.variant.option1 contains '10'
+          assign claimed_50 = claimed_50 | plus: item.quantity
+        else
+          assign claimed_100 = claimed_100 | plus: item.quantity
+        endif
         continue
       endif
 
+      assign in_qualifying_collection = false
       for c in item.product.collections
         if c.handle == qualifying_collection.handle
-          assign qualifying_units = qualifying_units | plus: item.quantity
+          assign in_qualifying_collection = true
           break
         endif
       endfor
+
+      if in_qualifying_collection
+        if item.variant.option1 contains '50'
+          assign qualifying_50 = qualifying_50 | plus: item.quantity
+        else
+          assign qualifying_100 = qualifying_100 | plus: item.quantity
+        endif
+      endif
     endfor
+
+    assign qualifying_units = qualifying_50 | plus: qualifying_100
+    assign claimed_units = claimed_50 | plus: claimed_100
 
     assign qualifies = false
     if qualifying_units > 0
       assign qualifies = true
     endif
 
-    assign remaining_slots = qualifying_units | minus: claimed_units
-    if remaining_slots < 0
-      assign remaining_slots = 0
+    assign remaining_50 = qualifying_50 | minus: claimed_50
+    if remaining_50 < 0
+      assign remaining_50 = 0
     endif
+
+    assign remaining_100 = qualifying_100 | minus: claimed_100
+    if remaining_100 < 0
+      assign remaining_100 = 0
+    endif
+
+    assign remaining_slots = remaining_50 | plus: remaining_100
 
     assign has_priced_slot = false
   -%}
@@ -87,15 +122,17 @@
     id="FreeGift-{{ context | default: 'page' }}"
     data-context="{{ context | default: 'page' }}"
     data-qualifies="{{ qualifies }}"
-    data-qualifying-units="{{ qualifying_units }}"
-    data-claimed-units="{{ claimed_units }}"
-    data-gift-label="{{ settings.free_gift_heading | default: 'Your free 6ml roll-on' | escape }}"
+    data-qualifying-50="{{ qualifying_50 }}"
+    data-claimed-50="{{ claimed_50 }}"
+    data-qualifying-100="{{ qualifying_100 }}"
+    data-claimed-100="{{ claimed_100 }}"
+    data-gift-label="{{ settings.free_gift_heading | default: 'Your free roll-on' | escape }}"
   >
     <div class="free-gift__head">
       <span class="free-gift__icon" aria-hidden="true">{% render 'icon-discount' %}</span>
       <div class="free-gift__head-text">
         <p class="free-gift__heading">
-          {{- settings.free_gift_heading | default: 'Your free 6ml roll-on' -}}
+          {{- settings.free_gift_heading | default: 'Your free roll-on' -}}
           {%- if qualifying_units > 1 %} &times; {{ qualifying_units }}{% endif -%}
         </p>
         <p class="free-gift__subtext">
@@ -118,6 +155,11 @@
           {%- else -%}
             {%- assign has_priced_slot = true -%}
           {%- endif -%}
+          {%- if item.variant.option1 contains '10' -%}
+            {%- assign row_bucket = '50' -%}
+          {%- else -%}
+            {%- assign row_bucket = '100' -%}
+          {%- endif -%}
           {%- for i in (1..item.quantity) -%}
             <div
               class="free-gift__claimed"
@@ -125,6 +167,7 @@
               data-gift-line-key="{{ item.key }}"
               data-gift-variant-id="{{ item.variant_id }}"
               data-line-quantity="{{ item.quantity }}"
+              data-gift-bucket="{{ row_bucket }}"
             >
               <span class="free-gift__claimed-name">{{ item.product.title | escape }}</span>
               {%- if item.final_price == 0 -%}
@@ -152,14 +195,15 @@
         </p>
       {%- endif -%}
 
-      {%- if remaining_slots > 0 -%}
-        {%- for i in (1..remaining_slots) -%}
-          <div class="free-gift__options" data-free-gift-row data-free-gift-empty>
+      {%- if remaining_50 > 0 -%}
+        {%- for i in (1..remaining_50) -%}
+          <div class="free-gift__options" data-free-gift-row data-free-gift-empty data-gift-bucket="50">
+            <p class="free-gift__slot-label">10ml roll-on</p>
             <div class="free-gift__select-wrap">
               <select
                 class="free-gift__select"
                 data-free-gift-select
-                aria-label="{{ settings.free_gift_heading | default: 'Your free 6ml roll-on' | escape }}"
+                aria-label="10ml {{ settings.free_gift_heading | default: 'Your free roll-on' | escape }}"
               >
                 <option value="" selected disabled>
                   {{- settings.free_gift_choose_label | default: 'Choose' -}} &hellip;
@@ -176,19 +220,77 @@
                     if gift_title_lower contains 'customize'
                       continue
                     endif
-                    assign gift_slot = gift_slot | plus: 1
                   -%}
+                  {%- assign gift_variant = blank -%}
+                  {%- for v in gift.variants -%}
+                    {%- if v.option1 contains '10' -%}
+                      {%- assign gift_variant = v -%}
+                      {%- break -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- if gift_variant == blank -%}
+                    {%- continue -%}
+                  {%- endif -%}
+                  {%- assign gift_slot = gift_slot | plus: 1 -%}
                   {%- if gift_slot > 12 -%}
                     {%- break -%}
                   {%- endif -%}
-                  {%- assign gift_variant = gift.selected_or_first_available_variant -%}
-                  <option
-                    value="{{ gift_variant.id }}"
-                    data-title="{{ gift.title | escape }}"
-                    {% unless gift_variant.available %}disabled{% endunless %}
-                  >
+                  {%- comment -%}
+                    Not gated on gift_variant.available: these are giveaway
+                    units, not stock the merchant intends to sell separately,
+                    and inventory counts on a newly added size variant aren't
+                    reliably kept in sync. A slot the customer has genuinely
+                    earned should never be unselectable.
+                  {%- endcomment -%}
+                  <option value="{{ gift_variant.id }}" data-title="{{ gift.title | escape }}">
                     {{- gift.title | escape -}}
-                    {%- unless gift_variant.available %} (sold out){% endunless -%}
+                  </option>
+                {%- endfor -%}
+              </select>
+            </div>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+
+      {%- if remaining_100 > 0 -%}
+        {%- for i in (1..remaining_100) -%}
+          <div class="free-gift__options" data-free-gift-row data-free-gift-empty data-gift-bucket="100">
+            <p class="free-gift__slot-label">35ml roll-on</p>
+            <div class="free-gift__select-wrap">
+              <select
+                class="free-gift__select"
+                data-free-gift-select
+                aria-label="35ml {{ settings.free_gift_heading | default: 'Your free roll-on' | escape }}"
+              >
+                <option value="" selected disabled>
+                  {{- settings.free_gift_choose_label | default: 'Choose' -}} &hellip;
+                </option>
+                {%- liquid
+                  assign gift_slot = 0
+                -%}
+                {%- for gift in gift_collection.products -%}
+                  {%- liquid
+                    assign gift_title_lower = gift.title | downcase
+                    if gift_title_lower contains 'customize'
+                      continue
+                    endif
+                  -%}
+                  {%- assign gift_variant = blank -%}
+                  {%- for v in gift.variants -%}
+                    {%- if v.option1 contains '35' -%}
+                      {%- assign gift_variant = v -%}
+                      {%- break -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- if gift_variant == blank -%}
+                    {%- continue -%}
+                  {%- endif -%}
+                  {%- assign gift_slot = gift_slot | plus: 1 -%}
+                  {%- if gift_slot > 12 -%}
+                    {%- break -%}
+                  {%- endif -%}
+                  <option value="{{ gift_variant.id }}" data-title="{{ gift.title | escape }}">
+                    {{- gift.title | escape -}}
                   </option>
                 {%- endfor -%}
               </select>

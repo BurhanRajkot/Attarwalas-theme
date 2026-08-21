@@ -7,9 +7,25 @@
     first, then the section setting as a fallback. Metafields let one shared
     `product.offer` template drive many offer products; section settings let a
     duplicated template be configured entirely in the theme editor.
+
+    config_mode gates whether metafields are consulted at all: "editor" (used by
+    the per-offer templates) ignores metafields completely so the theme editor is
+    exactly what the customer sees, regardless of what's left over on the
+    product's metafields. "auto" (the shared product.offer template) reads them
+    normally. Assigning `mf` to blank here is enough — every value below already
+    falls back to the section setting when `mf.xxx.value` is blank.
   endcomment
 
-  assign mf = product.metafields.offer
+  assign is_editor_mode = false
+  if section.settings.config_mode == 'editor'
+    assign is_editor_mode = true
+  endif
+
+  if is_editor_mode
+    assign mf = blank
+  else
+    assign mf = product.metafields.offer
+  endif
 
   assign tagline = mf.tagline.value | default: section.settings.tagline
   assign perks_raw = mf.perks.value | default: section.settings.perks
@@ -60,6 +76,8 @@
   assign blocks_configured = false
   for block in group_blocks
     if block.settings.products != blank and block.settings.products.size > 0
+      assign blocks_configured = true
+    elsif block.settings.collections != blank and block.settings.collections.size > 0
       assign blocks_configured = true
     elsif block.settings.collection != blank
       assign blocks_configured = true
@@ -260,10 +278,18 @@
         -%}
       {%- else -%}
         {%- for block in group_blocks -%}
+          {%- liquid
+            assign block_collections_str = blank
+            if block.settings.collections != blank and block.settings.collections.size > 0
+              assign block_collection_handles = block.settings.collections | map: 'handle'
+              assign block_collections_str = block_collection_handles | join: ','
+            endif
+          -%}
           {%- render 'offer-group',
             group_index: forloop.index0,
             group_heading: block.settings.heading,
             group_products: block.settings.products,
+            group_collections: block_collections_str,
             group_collection: block.settings.collection,
             group_pick_count: block.settings.pick_count,
             group_open: block.settings.open_by_default,
@@ -339,7 +365,18 @@
   "settings": [
     {
       "type": "paragraph",
-      "content": "The offer product's own price is the bundle price (or set a Discount below to price it off the retail total instead). Add one \"Pick group\" block per set the customer picks from — each block takes either hand-picked products or a collection."
+      "content": "The offer product's own price is the bundle price (or set a Discount below to price it off the retail total instead). Add one \"Pick group\" block per set the customer picks from — each block takes hand-picked products, one or more collections, or a single collection."
+    },
+    {
+      "type": "select",
+      "id": "config_mode",
+      "options": [
+        { "value": "auto", "label": "Auto — metafield fills in blanks (shared template)" },
+        { "value": "editor", "label": "Only this template — ignore metafields entirely" }
+      ],
+      "default": "auto",
+      "label": "Offer settings come from",
+      "info": "\"Auto\" lets the offer.* product metafields drive this page wherever a Pick group block is left blank — use this on the shared product.offer template. \"Only this template\" ignores metafields completely, so everything below and the Pick group blocks are the only source — use this on a per-offer template (product.offer-2, -3, -5, etc.)."
     },
     {
       "type": "image_picker",
@@ -489,13 +526,20 @@
           "id": "products",
           "label": "Products",
           "limit": 50,
-          "info": "Hand-pick exactly what the customer can choose from, in this order. Takes priority over the collection below AND over the offer.collection metafield, so this is how you curate one offer differently from the others."
+          "info": "Hand-pick exactly what the customer can choose from, in this order. Takes priority over the collections below AND over the offer.collection metafield, so this is how you curate one offer differently from the others."
+        },
+        {
+          "type": "collection_list",
+          "id": "collections",
+          "label": "…or eligible collections",
+          "limit": 10,
+          "info": "Select one or more collections to merge into one picker (products deduped across them). Used only when no products are hand-picked above; takes priority over the single collection below."
         },
         {
           "type": "collection",
           "id": "collection",
-          "label": "…or an eligible collection",
-          "info": "Used only when no products are hand-picked above."
+          "label": "…or a single collection",
+          "info": "Used only when nothing is set above."
         },
         {
           "type": "range",

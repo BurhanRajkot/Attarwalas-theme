@@ -7,7 +7,6 @@
           "type": "group",
           "settings": {
             "heading": "Choose any 3 perfumes",
-            "collections": "men, women, unisex",
             "pick_count": 3,
             "open_by_default": true
           }
@@ -25,8 +24,8 @@
         "show_tagline": true,
         "perks": "Free shipping on this offer\nMix any sizes you like",
         "show_steps": false,
-        "discount_type": "none",
-        "discount_amount": 0,
+        "discount_type": "percent",
+        "discount_amount": 18,
         "button_label": "Add bundle to cart",
         "add_label": "Add to bundle",
         "soldout_label": "Sold out",

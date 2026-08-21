@@ -1482,7 +1482,7 @@
     "settings": [
       {
         "type": "paragraph",
-        "content": "Lets the customer choose a free 6ml roll-on from inside the cart. The roll-on goes in as a normal cart line — the offer discount (the same automatic discount that prices the bundles) is what takes it to ₹0. Changing the two collections below also means updating the discount function's collection ids."
+        "content": "Lets the customer choose a free roll-on from inside the cart. The roll-on's size matches the perfume bottle size bought — 50ml earns a 10ml roll-on, 100ml (or any other size) earns a 35ml roll-on. The roll-on goes in as a normal cart line — the offer discount (the same automatic discount that prices the bundles) is what takes it to ₹0. Changing the two collections below also means updating the discount function's collection ids."
       },
       {
         "type": "checkbox",
@@ -1506,7 +1506,7 @@
         "type": "text",
         "id": "free_gift_heading",
         "label": "Heading",
-        "default": "Your free 6ml roll-on"
+        "default": "Your free roll-on"
       },
       {
         "type": "text",

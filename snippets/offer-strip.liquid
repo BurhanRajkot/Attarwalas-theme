@@ -50,6 +50,12 @@
 
           assign discount_type = mf.discount_type.value | downcase
           assign discount_amount = mf.discount_amount.value | plus: 0
+          # whole-number discounts read as "18% OFF", not "18.0% OFF"
+          assign discount_amount_display = discount_amount
+          assign discount_amount_rounded = discount_amount | round
+          if discount_amount_rounded == discount_amount
+            assign discount_amount_display = discount_amount_rounded
+          endif
           assign use_discount = false
           if discount_type == 'fixed' or discount_type == 'percent'
             if discount_amount > 0
@@ -61,7 +67,7 @@
               assign discount_money = discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
               assign discount_text = 'Flat ' | append: discount_money | append: ' OFF'
             else
-              assign discount_text = discount_amount | append: '% OFF'
+              assign discount_text = discount_amount_display | append: '% OFF'
             endif
           endif
 

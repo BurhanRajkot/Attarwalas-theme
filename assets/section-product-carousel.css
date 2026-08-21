@@ -294,6 +294,39 @@
   margin: 0;
 }
 
+/* Keep the standard price snippet's compare-at/sale styling at the same
+   size as the carousel's own price text instead of its larger default. */
+.product-carousel__price .price {
+  font-size: 1.4rem;
+}
+
+.product-carousel__price .price-item--regular {
+  color: rgba(var(--color-foreground), 0.55);
+}
+
+/* Discounted price display: original struck through, sale price in the
+   button/gold colour, and a small "X% OFF" pill. */
+.product-carousel__price-was {
+  font-size: 1.2rem;
+  color: rgba(var(--color-foreground), 0.55);
+}
+
+.product-carousel__price-now {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgb(var(--color-button));
+}
+
+.product-carousel__price-off {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-background));
+}
+
 /* ---------- Progress bar ---------- */
 .product-carousel__progress-track {
   position: relative;

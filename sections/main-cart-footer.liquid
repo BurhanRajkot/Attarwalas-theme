@@ -3,6 +3,49 @@
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
 {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
 
+{%- liquid
+  # A qualifying perfume in the cart earns a free roll-on slot; checkout is
+  # blocked until every earned slot is claimed, so a customer can't skip
+  # picking their free gift. Mirrors the eligibility math in
+  # snippets/free-gift-picker.liquid — kept in sync manually since Liquid has
+  # no way to share a computed value across snippet scopes.
+  assign gift_collection = settings.free_gift_collection
+  if gift_collection == blank
+    assign gift_collection = collections['attar-roll-ons']
+  endif
+
+  assign qualifying_collection = settings.free_gift_qualifying_collection
+  if qualifying_collection == blank
+    assign qualifying_collection = collections['non-alcoholic']
+  endif
+
+  assign gift_active = false
+  if settings.free_gift_enabled and gift_collection.products_count > 0
+    assign gift_active = true
+  endif
+
+  assign qualifying_units = 0
+  assign claimed_units = 0
+  for item in cart.items
+    if item.properties._free_gift != blank
+      assign claimed_units = claimed_units | plus: item.quantity
+      continue
+    endif
+
+    for c in item.product.collections
+      if c.handle == qualifying_collection.handle
+        assign qualifying_units = qualifying_units | plus: item.quantity
+        break
+      endif
+    endfor
+  endfor
+
+  assign gift_pending = false
+  if gift_active and qualifying_units > claimed_units
+    assign gift_pending = true
+  endif
+-%}
+
 {%- style -%}
   .section-{{ section.id }}-padding {
     padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -82,16 +125,19 @@
                   id="checkout"
                   class="cart__checkout-button button"
                   name="checkout"
-                  {% if cart == empty %}
+                  {% if cart == empty or gift_pending %}
                     disabled
                   {% endif %}
                   form="cart"
                 >
                   {{ 'sections.cart.checkout' | t }}
                 </button>
+                {%- if gift_pending -%}
+                  <p class="cart__gift-pending-note">Pick your free roll-on above to continue.</p>
+                {%- endif -%}
               </div>
 
-              {%- if additional_checkout_buttons -%}
+              {%- if additional_checkout_buttons and gift_pending == false -%}
                 <div class="cart__dynamic-checkout-buttons additional-checkout-buttons">
                   {{ content_for_additional_checkout_buttons }}
                 </div>

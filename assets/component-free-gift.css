@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Free gift picker — "choose your free 6ml roll-on" block in the cart.
+   Free gift picker — "choose your free roll-on" block in the cart.
    Same gold-hairline language as the offer tickets so the cart doesn't look
    like a different store. Rendered by snippets/free-gift-picker.liquid.
    ========================================================================== */
@@ -78,6 +78,15 @@
 
 .free-gift__options[hidden] {
   display: none;
+}
+
+.free-gift__slot-label {
+  margin: 0 0 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--gift-ink), 0.6);
 }
 
 .free-gift__select-wrap {
@@ -193,6 +202,16 @@
 
 .free-gift__error[hidden] {
   display: none;
+}
+
+/* ------------------------- Checkout blocked notice ------------------------ */
+
+.cart__gift-pending-note {
+  margin: 0.8rem 0 0;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  color: rgba(var(--color-foreground), 0.75);
+  text-align: center;
 }
 
 /* --------------------------- Cart line "Free" tag ------------------------- */

@@ -25,17 +25,23 @@
       </div>
     {%- endif -%}
 
-    {%- if section.settings.collection == blank or section.settings.collection.products.size == 0 -%}
+    {%- liquid
+      assign carousel_products = section.settings.products
+      if carousel_products == blank or carousel_products.size == 0
+        assign carousel_products = section.settings.collection.products
+      endif
+    -%}
+    {%- if carousel_products == blank or carousel_products.size == 0 -%}
       <p class="product-carousel__empty">
         {%- if section.settings.collection == blank -%}
-          Select a collection to display products in this section.
+          Select products (or a collection) to display in this section.
         {%- else -%}
           This collection has no products yet.
         {%- endif -%}
       </p>
     {%- else -%}
       {%- liquid
-        assign products_count = section.settings.collection.all_products_count
+        assign products_count = carousel_products.size
         if products_count > section.settings.products_to_show
           assign products_count = section.settings.products_to_show
         endif
@@ -70,12 +76,18 @@
 
         <div class="product-carousel__viewport">
           <ul id="ProductCarousel-{{ section.id }}" class="product-carousel__list" data-carousel-track role="list">
-            {%- for product in section.settings.collection.products limit: section.settings.products_to_show -%}
+            {%- for product in carousel_products limit: section.settings.products_to_show -%}
               <li class="product-carousel__slide" data-carousel-slide data-index="{{ forloop.index0 }}">
                 <div class="product-carousel__card">
                   <div class="product-carousel__media">
                     {%- if section.settings.show_badge -%}
-                      <span class="product-carousel__badge">{{ section.settings.badge_text }}</span>
+                      <span class="product-carousel__badge">
+                        {%- if section.settings.discount_percent > 0 -%}
+                          {{ section.settings.discount_percent }}% OFF
+                        {%- else -%}
+                          {{ section.settings.badge_text }}
+                        {%- endif -%}
+                      </span>
                     {%- endif -%}
                     <a href="{{ product.url }}" class="product-carousel__image-link" tabindex="-1" aria-hidden="true">
                       {%- if product.featured_media -%}
@@ -98,14 +110,21 @@
                     {%- if section.settings.show_description and product.description != blank -%}
                       <p class="product-carousel__desc">{{ product.description | strip_html | truncatewords: 5 }}</p>
                     {%- endif -%}
-                    <p class="product-carousel__price">
-                      {%- if product.price_varies -%}
+                    <div class="product-carousel__price">
+                      {%- if section.settings.discount_percent > 0 -%}
+                        {%- assign discount_multiplier = 100 | minus: section.settings.discount_percent -%}
+                        {%- assign carousel_base_price = product.price_min -%}
+                        {%- assign carousel_discount_price = carousel_base_price | times: discount_multiplier | divided_by: 100 -%}
+                        <s class="product-carousel__price-was">{{ carousel_base_price | money }}</s>
+                        <span class="product-carousel__price-now">{{ carousel_discount_price | money }}</span>
+                        <span class="product-carousel__price-off">{{ section.settings.discount_percent }}% OFF</span>
+                      {%- elsif product.price_varies -%}
                         {%- assign carousel_min_price = product.price_min | money -%}
                         {{ 'products.product.price.from_price_html' | t: price: carousel_min_price }}
                       {%- else -%}
-                        {{ product.price | money }}
+                        {%- render 'price', product: product, price_class: 'product-carousel__price-inline', show_compare_at_price: true -%}
                       {%- endif -%}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </li>
@@ -242,9 +261,17 @@
       "label": "Heading"
     },
     {
+      "type": "product_list",
+      "id": "products",
+      "label": "Products",
+      "limit": 20,
+      "info": "Hand-pick exactly which products appear here, in this order. Takes priority over the collection below."
+    },
+    {
       "type": "collection",
       "id": "collection",
-      "label": "Collection"
+      "label": "…or a collection",
+      "info": "Used only when no products are hand-picked above."
     },
     {
       "type": "range",
@@ -254,6 +281,17 @@
       "step": 1,
       "default": 8,
       "label": "Products to show"
+    },
+    {
+      "type": "range",
+      "id": "discount_percent",
+      "min": 0,
+      "max": 70,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "label": "Discount to show on cards",
+      "info": "Shows \"X% OFF\" and the discounted price on every card. Set to 0 to show the regular prices instead."
     },
     {
       "type": "checkbox",

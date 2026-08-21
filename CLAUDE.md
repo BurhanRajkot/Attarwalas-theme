@@ -2,6 +2,21 @@
 
 Guidance for working in this repo. Read this before making changes.
 
+## Before submitting / launching this site
+
+Outstanding items to resolve before this theme goes live — check this list before submitting.
+
+- [ ] **Replace the dummy free-gift variants with a proper product collection.** The
+      50ml perfume variants and 10ml/35ml roll-on variants (added 2026-08-22) use
+      computed placeholder pricing (50ml = half the 100ml price; 10ml/35ml =
+      linear scale off each product's existing 6ml/12ml pricing) entered directly
+      as extra variants on the existing products, just to unblock the free-gift
+      picker feature. Burhan is going to redo this properly via a product
+      collection — swap the ad-hoc variants out for that once it exists, and
+      update `snippets/free-gift-picker.liquid` / the qualifying-collection logic
+      to match the new structure. See memory (`dummy-gift-variants-pending-collection-redo`)
+      for details.
+
 ## What this is
 
 A Shopify **Online Store 2.0 Liquid theme** (Dawn-family architecture: JSON templates,
@@ -250,9 +265,9 @@ those two metafields set needs zero extra config to appear correctly on product 
 `{% return %}` is not a Shopify Liquid tag — early-exit guards in these sections
 use `{% if %}…{% else %}` around the whole body instead.
 
-## Free gift — "pick your free 6ml roll-on" in the cart
+## Free gift — "pick your free roll-on" in the cart
 
-Backs the announcement-bar promise ("Buy 1 Perfume • FREE 6ml Roll-On"), which
+Backs the announcement-bar promise ("Buy 1 Perfume • FREE Roll-On"), which
 was previously just text with nothing behind it.
 
 | File | Role |
@@ -269,6 +284,33 @@ Settings live in **Theme settings → Free gift** (`config/settings_schema.json`
 so one place drives both carts: on/off, the gift collection (defaults to
 `attar-roll-ons`), the qualifying collection (defaults to `non-alcoholic`), and
 the copy.
+
+### The gift size is matched to the bottle size (added 2026-08-21)
+
+Perfumes now come in **50ml and 100ml** variants (added to all 6
+`non-alcoholic` perfumes and the roll-on products alongside this feature: 50ml
+perfumes priced at half the 100ml price, roll-on 10ml/35ml priced by linearly
+scaling each product's existing 6ml/12ml pricing — see git history for the
+exact numbers). A 50ml bottle earns a slot fillable **only** with a 10ml
+roll-on; a 100ml bottle — or any size the snippet doesn't recognise, which
+covers every perfume sold before 50ml existed — earns a slot fillable only
+with a 35ml roll-on.
+
+`free-gift-picker.liquid` tracks this as two separate pools (`_50` / `_100` in
+the Liquid variable names and the `data-qualifying-50` / `data-claimed-50` /
+`data-qualifying-100` / `data-claimed-100` attributes on `<free-gift-picker>`),
+each rendering its own dropdown filtered to roll-on variants whose `option1`
+(the Size option) contains `'10'` or `'35'` respectively. The bucket a
+bottle/gift line belongs to is inferred by checking whether
+`item.variant.option1 contains '50'` (bottles) or `contains '10'` (already-
+claimed roll-ons) — not a stored property — so it's derived fresh from the
+cart every render.
+
+`free-gift.js`'s stale-slot trim (`trimExcess`) is bucket-aware too: each
+claimed row carries `data-gift-bucket="50"` or `"100"`, and excess is computed
+and trimmed per bucket. This matters because a flat/global trim could delete a
+still-earned 35ml gift instead of the orphaned 10ml one when a 50ml perfume
+line is removed from a mixed-size cart.
 
 ### How it works
 
@@ -302,10 +344,15 @@ The zeroing is done by the **same discount function that prices the bundles**
   customer deliberately added to buy. Keying off the marker means only the
   picked gift is free.
 
-What the function does (`extensions/offer-discount/src/index.js`): it finds the
-first line marked `_free_gift`, and takes **one unit's price** off it — so a
-customer who raises that line's quantity to 2 pays for the second one — provided
-the cart also holds a line from the qualifying collection.
+What the function does (`extensions/offer-discount/src/index.js`): it counts
+total qualifying units in the cart (`qualifyingUnits`, size-agnostic — it
+doesn't distinguish 50ml from 100ml, only the theme's picker does that), then
+spends that budget **across every `_free_gift` line in cart order**, zeroing up
+to `qualifyingUnits` worth of units total. A cart can hold several different
+`_free_gift` lines at once (e.g. one 10ml roll-on line and one 35ml roll-on
+line, from a mixed 50ml+100ml cart) and all of them get their fair share
+zeroed, not just the first — so a customer who raises a slot's quantity past
+what's earned only pays for the extra units on that line.
 
 Line item properties come from the browser and can be forged, so eligibility is
 re-checked in the function against **collection membership**, via
