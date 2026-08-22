@@ -10,6 +10,15 @@
   {{ 'component-swatch.css' | asset_url | stylesheet_tag }}
   {{ 'component-swatch-input.css' | asset_url | stylesheet_tag }}
 {% endunless %}
+{%- assign has_fragrance_option = false -%}
+{%- for option in section.settings.product.options_with_values -%}
+  {%- if option.name contains 'Fragrance' -%}
+    {%- assign has_fragrance_option = true -%}
+  {%- endif -%}
+{%- endfor -%}
+{% if has_fragrance_option %}
+  {{ 'component-fragrance-picker.css' | asset_url | stylesheet_tag }}
+{% endif %}
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -28,6 +37,9 @@
 <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'price-per-item.js' | asset_url }}" defer="defer"></script>
+{% if has_fragrance_option %}
+  <script src="{{ 'fragrance-picker.js' | asset_url }}" defer="defer"></script>
+{% endif %}
 
 {%- liquid
   assign product = section.settings.product

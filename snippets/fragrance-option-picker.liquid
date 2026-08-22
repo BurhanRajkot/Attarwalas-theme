@@ -1,0 +1,133 @@
+{% comment %}
+  Renders a searchable, scrollable picker for a single product option, cross-referenced
+  against the `fragrance` metaobject type so search matches Display Name and Aliases.
+  New fragrances only need to be added as option values on the product (Shopify admin) -
+  this picker reads product.options_with_values directly, so it always reflects whatever
+  fragrances currently exist, no theme changes required.
+
+  Accepts:
+  - product: {Object} product object.
+  - option: {Object} the option to render.
+  - block: {Object} block object.
+
+  Usage:
+  {% render 'fragrance-option-picker', product: product, option: option, block: block %}
+{% endcomment %}
+{%- liquid
+  assign product_form_id = 'product-form-' | append: section.id
+  assign fragrances = shop.metaobjects.fragrance.values
+  assign variants_available_arr = product.variants | map: 'available'
+  assign variants_option1_arr = product.variants | map: 'option1'
+  assign variants_option2_arr = product.variants | map: 'option2'
+  assign variants_option3_arr = product.variants | map: 'option3'
+-%}
+
+<fieldset
+  class="js product-form__input product-form__input--fragrance"
+  data-fragrance-option
+  {{ block.shopify_attributes }}
+>
+  <legend class="form__label">
+    {{ option.name | remove: ':' }}
+    <span data-selected-swatch-value="{{ option.name }}">{{ option.selected_value }}</span>
+  </legend>
+
+  <fragrance-picker class="fragrance-picker">
+    <div class="fragrance-picker__search">
+      <svg class="icon icon-search fragrance-picker__search-icon" aria-hidden="true" focusable="false">
+        <use href="#icon-search">
+      </svg>
+      <input
+        type="search"
+        class="fragrance-picker__search-input"
+        placeholder="Search by name or brand…"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        aria-label="Search fragrances"
+        data-fragrance-search
+      >
+      <button type="button" class="fragrance-picker__search-clear" data-fragrance-clear hidden>
+        <svg class="icon icon-close" aria-hidden="true" focusable="false">
+          <use xlink:href="#icon-reset">
+        </svg>
+        <span class="visually-hidden">Clear search</span>
+      </button>
+    </div>
+
+    <div class="fragrance-picker__list" data-fragrance-list role="listbox" tabindex="0" hidden>
+      {%- for value in option.values -%}
+        {%- liquid
+          assign option_disabled = true
+          for option1_name in variants_option1_arr
+            case option.position
+              when 1
+                if variants_option1_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                  assign option_disabled = false
+                endif
+              when 2
+                if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                  assign option_disabled = false
+                endif
+              when 3
+                if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == product.selected_or_first_available_variant.option2 and variants_option3_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                  assign option_disabled = false
+                endif
+            endcase
+          endfor
+
+          assign fragrance_entry = null
+          for f in fragrances
+            if f.display_name.value == value
+              assign fragrance_entry = f
+              break
+            endif
+          endfor
+
+          assign clean_name = value | remove_first: 'ATTARWALAS '
+          assign family = fragrance_entry.fragrance_family.value
+          assign gender_list = fragrance_entry.gender.value | join: ' / '
+          assign alias_list = fragrance_entry.aliases.value | join: ' '
+          assign reference_name = fragrance_entry.reference_name.value
+          assign search_text = value | append: ' ' | append: alias_list | append: ' ' | append: reference_name | downcase | strip | escape
+        -%}
+        {%- capture input_id -%}{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}{%- endcapture -%}
+        <div
+          class="fragrance-picker__item{% if option_disabled %} is-disabled{% endif %}"
+          data-fragrance-item
+          data-search="{{ search_text }}"
+        >
+          <input
+            type="radio"
+            id="{{ input_id }}"
+            name="{{ option.name }}"
+            value="{{ value | escape }}"
+            form="{{ product_form_id }}"
+            class="fragrance-picker__radio visually-hidden{% if option_disabled %} disabled{% endif %}"
+            {% if option.selected_value == value %}
+              checked
+            {% endif %}
+          >
+          <label for="{{ input_id }}" class="fragrance-picker__label">
+            <span class="fragrance-picker__name">{{ clean_name }}</span>
+            {%- if family != blank or gender_list != blank -%}
+              <span class="fragrance-picker__meta">
+                {{- family -}}
+                {%- if family != blank and gender_list != blank %} · {% endif -%}
+                {{- gender_list -}}
+              </span>
+            {%- endif -%}
+            {% if option_disabled %}
+              <span class="visually-hidden label-unavailable">
+                {{- 'products.product.variant_sold_out_or_unavailable' | t -}}
+              </span>
+            {% endif %}
+            <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
+          </label>
+        </div>
+      {%- endfor -%}
+      <p class="fragrance-picker__empty" data-fragrance-empty hidden>No fragrances match your search.</p>
+    </div>
+  </fragrance-picker>
+</fieldset>

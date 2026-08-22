@@ -27,9 +27,12 @@
 
   <style>
     .whatsapp-float {
+      /* Stacked above the Shopify Inbox chat bubble (~20px + 46px tall,
+         z-index 2147483000 — Inbox always wins the stacking order, so this
+         button is positioned above it instead of trying to out-stack it). */
       position: fixed;
       right: 24px;
-      bottom: 24px;
+      bottom: 92px;
       z-index: 990;
       display: inline-flex;
       align-items: center;
@@ -114,7 +117,7 @@
     @media (max-width: 749px) {
       .whatsapp-float {
         right: 16px;
-        bottom: 16px;
+        bottom: 76px;
         height: 56px;
         max-width: 56px;
       }

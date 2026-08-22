@@ -206,7 +206,16 @@
 
                           {%- for property in item.properties -%}
                             {%- assign property_first_char = property.first | slice: 0 -%}
-                            {%- if property.last != blank and property_first_char != '_' -%}
+                            {%- comment -%}
+                              Offer/Gift are kept visible (not `_`-prefixed) so they land on
+                              the order, but they'd just repeat the discount pill below
+                              verbatim in the cart UI — skip them here only.
+                            {%- endcomment -%}
+                            {%- if property.last != blank
+                              and property_first_char != '_'
+                              and property.first != 'Offer'
+                              and property.first != 'Gift'
+                            -%}
                               <div class="product-option">
                                 <dt>{{ property.first }}:</dt>
                                 <dd>

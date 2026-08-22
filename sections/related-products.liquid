@@ -21,30 +21,103 @@
 {%- endstyle -%}
 
 <div class="color-{{ section.settings.color_scheme }} gradient">
+  {%- liquid
+    # Shopify's recommendation engine decides its own result count based on how
+    # many genuinely similar products it finds — it can (and often does) return
+    # fewer than products_to_show. When it comes up short, pad the grid out with
+    # more products from the current product's own collection (same "best
+    # collection" pick as sections/from-collection.liquid) so the section
+    # reliably shows the configured count instead of whatever the algorithm felt
+    # like returning.
+    assign rp_shown_ids = ','
+    if recommendations.performed
+      for rec in recommendations.products
+        assign rp_shown_ids = rp_shown_ids | append: rec.id | append: ','
+      endfor
+    endif
+
+    assign rp_needed = section.settings.products_to_show | minus: recommendations.products_count
+    if recommendations.performed == false
+      assign rp_needed = section.settings.products_to_show
+    endif
+
+    assign rp_fallback_products = ''
+    if rp_needed > 0
+      assign rp_best_count = -1
+      for c in product.collections
+        unless c.handle == 'offer' or c.handle == 'frontpage' or c.handle == 'all'
+          if c.products_count > rp_best_count
+            assign rp_best_count = c.products_count
+            assign rp_collection = c
+          endif
+        endunless
+      endfor
+
+      assign rp_fallback_products = rp_collection.products
+    endif
+  -%}
+  {%- capture rp_recommendation_items -%}
+    {% for recommendation in recommendations.products %}
+      <li class="grid__item">
+        {% render 'card-product',
+          card_product: recommendation,
+          media_aspect_ratio: section.settings.image_ratio,
+          image_shape: section.settings.image_shape,
+          show_secondary_image: section.settings.show_secondary_image,
+          show_vendor: section.settings.show_vendor,
+          show_rating: section.settings.show_rating
+        %}
+      </li>
+    {% endfor %}
+  {%- endcapture -%}
+  {%- capture rp_fallback_items -%}
+    {%- assign rp_fill_count = 0 -%}
+    {% for fallback_product in rp_fallback_products %}
+      {%- if rp_fill_count >= rp_needed -%}
+        {%- break -%}
+      {%- endif -%}
+      {%- assign rp_fallback_id_str = ',' | append: fallback_product.id | append: ',' -%}
+      {%- if fallback_product.id == product.id or rp_shown_ids contains rp_fallback_id_str -%}
+        {%- continue -%}
+      {%- endif -%}
+      {%- assign rp_fill_count = rp_fill_count | plus: 1 -%}
+      <li class="grid__item">
+        {% render 'card-product',
+          card_product: fallback_product,
+          media_aspect_ratio: section.settings.image_ratio,
+          image_shape: section.settings.image_shape,
+          show_secondary_image: section.settings.show_secondary_image,
+          show_vendor: section.settings.show_vendor,
+          show_rating: section.settings.show_rating
+        %}
+      </li>
+    {% endfor %}
+  {%- endcapture -%}
+  {%- liquid
+    assign rp_total_shown = recommendations.products_count | plus: rp_fill_count
+    # A row with fewer items than columns_desktop leaves the trailing columns
+    # empty (this grid is width-per-item flexbox, not a track-based CSS grid),
+    # so the row visibly doesn't reach the right edge on desktop. Shrinking the
+    # column count to match what's actually shown keeps the row full-width.
+    assign rp_grid_cols = section.settings.columns_desktop
+    if rp_total_shown > 0 and rp_total_shown < rp_grid_cols
+      assign rp_grid_cols = rp_total_shown
+    endif
+  -%}
   <product-recommendations
     class="related-products page-width section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
     data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.products_to_show }}"
   >
-    {% if recommendations.performed and recommendations.products_count > 0 %}
+    {% if rp_total_shown > 0 %}
       <h2 class="related-products__heading inline-richtext {{ section.settings.heading_size }}">
         {{ section.settings.heading }}
       </h2>
       <ul
-        class="grid product-grid grid--{{ section.settings.columns_desktop }}-col-desktop grid--{{ section.settings.columns_mobile }}-col-tablet-down"
+        class="grid product-grid grid--{{ rp_grid_cols }}-col-desktop grid--{{ section.settings.columns_mobile }}-col-tablet-down"
         role="list"
       >
-        {% for recommendation in recommendations.products %}
-          <li class="grid__item">
-            {% render 'card-product',
-              card_product: recommendation,
-              media_aspect_ratio: section.settings.image_ratio,
-              image_shape: section.settings.image_shape,
-              show_secondary_image: section.settings.show_secondary_image,
-              show_vendor: section.settings.show_vendor,
-              show_rating: section.settings.show_rating
-            %}
-          </li>
-        {% endfor %}
+        {{ rp_recommendation_items }}
+        {{ rp_fallback_items }}
       </ul>
     {% endif %}
   </product-recommendations>

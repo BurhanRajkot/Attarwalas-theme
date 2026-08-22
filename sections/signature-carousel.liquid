@@ -85,6 +85,9 @@
                   </div>
                 </a>
                 <div class="signature-carousel__info">
+                  <a href="{{ card_url }}" class="signature-carousel__title-link">
+                    <h3>{{ card_title | default: 'Select a product' }}</h3>
+                  </a>
                   {%- if block.settings.note_1 != blank or block.settings.note_2 != blank or block.settings.note_3 != blank -%}
                     <div class="signature-carousel__notes" aria-label="Fragrance notes">
                       {%- if block.settings.note_1 != blank -%}
@@ -98,9 +101,6 @@
                       {%- endif -%}
                     </div>
                   {%- endif -%}
-                  <a href="{{ card_url }}" class="signature-carousel__title-link">
-                    <h3>{{ card_title | default: 'Select a product' }}</h3>
-                  </a>
                   {%- if product != blank -%}
                     <product-form data-section-id="{{ section.id }}">
                       {%- form 'product', product, id: signature_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}

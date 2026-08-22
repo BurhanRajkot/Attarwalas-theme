@@ -342,6 +342,7 @@
     width: 40vw;
     min-width: 40vw;
     max-width: 40vw;
+    padding: 0 8px;
   }
 
   .signature-carousel__image {
@@ -356,14 +357,36 @@
   }
 
   .signature-carousel__info {
-    width: 160%;
-    margin-left: -30%;
     margin-top: 0;
+    padding: 0 4px;
   }
 
   .signature-carousel__info h3 {
-    font-size: 13px;
-    letter-spacing: 1.2px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .signature-carousel__notes {
+    display: block;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 6px;
+    margin-bottom: 8px;
+  }
+
+  .signature-carousel__note {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+  }
+
+  .signature-carousel__note + .signature-carousel__note::before {
+    margin: 0 3px;
+    font-size: 9px;
   }
 
   .signature-carousel__arrow {
@@ -385,10 +408,5 @@
 @media screen and (max-width: 390px) {
   .signature-carousel__image {
     height: 268px;
-  }
-
-  .signature-carousel__info h3 {
-    font-size: 13px;
-    letter-spacing: 1.2px;
   }
 }

@@ -16,6 +16,29 @@ Outstanding items to resolve before this theme goes live — check this list bef
       update `snippets/free-gift-picker.liquid` / the qualifying-collection logic
       to match the new structure. See memory (`dummy-gift-variants-pending-collection-redo`)
       for details.
+- [ ] **Add matching product variants for the new Fragrance metaobject entries.** As of
+      2026-08-22, Burhan is bulk-importing fragrance entries into the `fragrance`
+      metaobject via Matrixify (50+ entries added in one session, more expected — see
+      "Customize Perfume — fragrance search picker" below). The metaobjects are just
+      reference data; the "Customize Perfume" product (`customize-perfume-1`) still only
+      has 5 fragrances wired up as real option values/variants (30 variants total: 5
+      fragrances × 3 sizes × 2 types), each with its own price. A fragrance only appears
+      in the storefront picker once it has a matching variant + price for every Size ×
+      Type combo on that product — adding the metaobject alone does nothing on its own.
+      Closing this gap means either Burhan keeps adding variants/pricing by hand in
+      admin, a Matrixify variant import, or an Admin API bulk-create — in all cases the
+      price per fragrance (or which pricing tier it falls into) has to come from Burhan.
+- [ ] **Set a per-product perfumer photo/bio on each perfume product.** The "Perfumer
+      bio" section (`sections/perfumer.liquid`) already supports a different photo, bio,
+      name, and role per product — via that product's own metafields
+      (`custom.perfumer_photo`, `custom.perfumer_bio`, `custom.perfumer_name`,
+      `custom.perfumer_role`), set in admin under Products → [product] → Metafields.
+      Nothing to build here, this already works and was verified live (2026-08-23). What's
+      missing is the data: no product currently has these filled in, so every product page
+      falls back to the one shared photo/bio set in the section's own settings in the
+      Theme Customizer (Perfumer bio section → Photo/Bio text/Name fields) — which is
+      why every product looked identical. Burhan needs to go through each perfume
+      product and fill in its own Perfumer photo + bio to make them distinct.
 
 ## What this is
 
@@ -282,8 +305,11 @@ refresh re-evaluates eligibility for free:
 
 Settings live in **Theme settings → Free gift** (`config/settings_schema.json`),
 so one place drives both carts: on/off, the gift collection (defaults to
-`attar-roll-ons`), the qualifying collection (defaults to `non-alcoholic`), and
-the copy.
+`attar-roll-ons`), the qualifying collection (defaults to `signature-series`,
+id `435023937824` — this collection was titled/handled `non-alcoholic` when
+this feature was built and got renamed since; the hardcoded Liquid fallback
+handle was updated to match on 2026-08-22, see the "stale collection handle"
+gotcha near the bottom of this section), and the copy.
 
 ### The gift size is matched to the bottle size (added 2026-08-21)
 
@@ -361,17 +387,87 @@ re-checked in the function against **collection membership**, via
 | collection | id | role |
 | --- | --- | --- |
 | `attar-roll-ons` | `482701836576` | line must be in it to count as a gift |
-| `non-alcoholic` | `435023937824` | a line in it unlocks the gift |
+| `signature-series` (was `non-alcoholic`) | `435023937824` | a line in it unlocks the gift |
 
 **These must match Theme settings → Free gift.** Changing either collection in
 the customizer means editing `run.graphql` and redeploying, otherwise the picker
 offers a roll-on the function refuses to discount. (Collection ids without admin
 access: `curl -s https://attarwalas-4203.myshopify.com/collections/<handle> |
-grep -o '"resourceId":[0-9]*'`.)
+grep -o '"resourceId":[0-9]*'`.) The function keys on **id**, so the 2026-08-22
+rename of this collection's handle/title didn't require redeploying it — only
+the theme's hardcoded fallback handle (`snippets/free-gift-picker.liquid`) and
+`cart_drawer_collection` in `config/settings_data.json` needed fixing, since
+those referenced it by handle string.
 
 Deploy after any change to the function: `shopify app deploy` from
 `~/Desktop/SHOPIFY/offer-transform-app`. Nothing to create in admin — the
 existing automatic discount picks up the new function version.
+
+## Customize Perfume — fragrance search picker
+
+The "Customize Perfume" product (`customize-perfume-1`, live product id
+`10559302992160`) lets a customer pick which fragrance goes in the bottle. Its
+"Search Your Fragrance:" option used to render as Dawn's default plain
+button/dropdown list — unusable once there are more than a handful of values,
+with no search and no scroll. Replaced 2026-08-22 with a searchable, scrollable
+picker, explicitly **not** using the Globo Product Options app.
+
+### Files
+
+| File | Role |
+| --- | --- |
+| `snippets/fragrance-option-picker.liquid` | the picker itself: search box + scrollable list of radio/label rows |
+| `assets/fragrance-picker.js` | `<fragrance-picker>` custom element — filters the list on input, Enter selects first visible match |
+| `assets/component-fragrance-picker.css` | search box + scrollable list styling (custom scrollbar, selected/disabled states) |
+
+Wired in via `snippets/product-variant-picker.liquid`: any product option whose
+name contains `'Fragrance'` renders `fragrance-option-picker` instead of the
+normal swatch/button/dropdown branch — every other option (Size, Type, and any
+other product's options) is untouched. CSS/JS are loaded from
+`sections/main-product.liquid` and `sections/featured-product.liquid`, gated
+behind the same `option.name contains 'Fragrance'` check so they don't load on
+pages that don't need them.
+
+### How it works
+
+- The picker still emits the exact same `<input type="radio">` + `<label>`
+  markup Dawn's `button` picker type uses (just visually hidden radios), so
+  `VariantSelects` in `assets/global.js` needs zero changes — price, URL, and
+  cart submission all keep working exactly as before.
+- **The picker only ever shows fragrances that already exist as real option
+  values/variants on the product** — it reads `product.options_with_values`
+  directly, nothing is hardcoded. It does not, and cannot, invent new variants:
+  Shopify still needs a real variant (and a real price) for every Size × Type
+  combo before a fragrance can appear.
+- Search matches against each option value's Display Name **and** its Aliases,
+  cross-referenced from the `fragrance` metaobject type (see below) by matching
+  `f.display_name.value == value`. A fragrance option value with no matching
+  metaobject entry still renders (search just falls back to matching the raw
+  name).
+
+### The `fragrance` metaobject
+
+Namespace/type `fragrance`, fields (Liquid keys are the snake_case of the admin
+label — confirmed for `display_name` and `fragrance_family`, the rest follow
+the same pattern): `display_name`, `reference_name`, `aliases` (list),
+`gender` (list), `fragrance_family`, `notes`, `occasion` (list), `season`
+(list), `customization_available` (boolean), `globo_option_name`,
+`shopify_product_url`, `similar_fragrances` (list), `top_notes` (list),
+`heart_notes` (list), `base_notes` (list).
+
+**This metaobject has no price field and never will drive price.** It's
+reference/content data only (used for the picker's search index, and available
+for future use like notes/family display). Pricing lives entirely on the
+product's real variants (Size × Type × Fragrance), same as any other Shopify
+product.
+
+### Outstanding: metaobjects ≠ variants
+
+Burhan is bulk-populating the `fragrance` metaobject via Matrixify (50+ entries
+as of 2026-08-22, more ongoing). Adding a metaobject entry does **not** make it
+sellable — see the checklist item at the top of this file. Until a matching
+variant + price exists for a fragrance on `customize-perfume-1`, it simply
+won't appear in the picker, which is correct/expected behavior, not a bug.
 
 ## Useful Shopify CLI commands
 

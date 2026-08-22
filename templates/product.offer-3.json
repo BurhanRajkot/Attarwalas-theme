@@ -7,6 +7,7 @@
           "type": "group",
           "settings": {
             "heading": "Choose any 3 perfumes",
+            "collections": ["men-3", "women-1", "unisex-3"],
             "pick_count": 3,
             "open_by_default": true
           }
