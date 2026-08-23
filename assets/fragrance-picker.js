@@ -22,7 +22,18 @@ class FragrancePicker extends HTMLElement {
   }
 
   open() {
-    if (this.list) this.list.hidden = false;
+    if (!this.list || !this.list.hidden) return;
+    this.list.hidden = false;
+    this.keepListInView();
+  }
+
+  // The list drops downward, so opening the picker near the bottom of a phone
+  // screen would push the options off-screen (worse once the on-screen keyboard
+  // takes half the viewport). Nudge the page up by however much is hanging off.
+  keepListInView() {
+    var overflow = this.list.getBoundingClientRect().bottom - window.innerHeight;
+    if (overflow <= 0) return;
+    window.scrollBy({ top: overflow + 16, behavior: 'smooth' });
   }
 
   close() {

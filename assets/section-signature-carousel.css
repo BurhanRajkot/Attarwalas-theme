@@ -338,11 +338,16 @@
   }
 
   .signature-carousel__product {
-    flex: 0 0 40vw;
-    width: 40vw;
-    min-width: 40vw;
-    max-width: 40vw;
-    padding: 0 8px;
+    /* 46vw rather than 40vw: the widest note list ("Bergamot · Sea Salt ·
+       Cedarwood") needs ~143px, which a 40vw card can't give until the
+       viewport is ~399px — so it ellipsed mid-word on 360–390px phones, the
+       most common sizes. At 46vw it fits from ~337px up, and the featured
+       bottle reads larger on mobile as a bonus. */
+    flex: 0 0 46vw;
+    width: 46vw;
+    min-width: 46vw;
+    max-width: 46vw;
+    padding: 0 6px;
   }
 
   .signature-carousel__image {
@@ -358,7 +363,9 @@
 
   .signature-carousel__info {
     margin-top: 0;
-    padding: 0 4px;
+    /* No side padding on mobile — the card is only ~40vw, and every pixel here
+       is what keeps a 3-note list on one line instead of ellipsing mid-word. */
+    padding: 0;
   }
 
   .signature-carousel__info h3 {
@@ -381,11 +388,15 @@
 
   .signature-carousel__note {
     font-size: 8px;
-    letter-spacing: 0.1em;
+    /* Tracking and separator gutters are trimmed here purely to buy horizontal
+       room; a typical 3-note list needs ~123px at the desktop values but only
+       ~108px is available inside a 40vw card. Longer note sets still ellipse
+       gracefully rather than wrapping to a second line. */
+    letter-spacing: 0.03em;
   }
 
   .signature-carousel__note + .signature-carousel__note::before {
-    margin: 0 3px;
+    margin: 0 2px;
     font-size: 9px;
   }
 

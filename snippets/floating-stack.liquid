@@ -1,0 +1,113 @@
+{% comment %}
+  Keeps the floating launchers (the WhatsApp button and the Shopify Inbox chat
+  bubble) clear of whatever is pinned to the bottom of the viewport, so they can
+  never sit on top of a primary CTA.
+
+  Why this is needed:
+  - Shopify Inbox renders `<shopify-chat>` as a full-viewport fixed host at
+    z-index 2147483000. It always paints above theme content and can't be
+    re-stacked from here — but raising the *host's* bottom edge lifts the bubble
+    inside it, which is what this does.
+  - Two bottom-pinned bars were being covered on mobile, hiding the buy button:
+    `<product-sticky-bar>` on the product page (fixed, ~74px) and
+    `.offer-builder__bar` on the offer pages (sticky, ~109px).
+
+  How it works: on scroll/resize, measure any bottom-pinned bar that currently
+  crosses the bottom edge of the viewport and publish its height as
+  `--aw-float-lift`. Both launchers offset themselves by that value, so they
+  ride above the bar while it's showing and drop back down when it isn't.
+
+  Add `data-floating-clear` to any future bottom-pinned bar to opt it in.
+
+  Usage:
+  {% render 'floating-stack' %}
+{% endcomment %}
+
+<style>
+  /* Shopify Inbox's launcher sits at the bottom of its full-viewport host, so
+     lifting the host's bottom edge lifts the bubble. At a lift of 0 this is
+     identical to Inbox's own default positioning. */
+  shopify-chat {
+    bottom: var(--aw-float-lift, 0px) !important;
+    height: auto !important;
+    transition: bottom var(--duration-default, 0.2s) ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    shopify-chat {
+      transition: none !important;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    if (window.__awFloatingStack) return;
+    window.__awFloatingStack = true;
+
+    var root = document.documentElement;
+    // Bottom-pinned bars that the launchers must stay clear of.
+    var SELECTOR = 'product-sticky-bar.is-visible, .offer-builder__bar, [data-floating-clear]';
+    var GAP = 8; // breathing room between the bar and the lowest launcher
+    var frame = null;
+    var timer = null;
+    var lastLift = -1;
+
+    function measure() {
+      frame = null;
+
+      var viewportHeight = window.innerHeight;
+      var lift = 0;
+
+      document.querySelectorAll(SELECTOR).forEach(function (bar) {
+        var rect = bar.getBoundingClientRect();
+        if (rect.height === 0 || rect.width === 0) return;
+
+        // Only count a bar while it's actually spanning the bottom edge —
+        // a sticky bar scrolled up mid-page shouldn't push the launchers.
+        var pinnedToBottom = rect.bottom >= viewportHeight - 4 && rect.top < viewportHeight;
+        if (!pinnedToBottom) return;
+
+        lift = Math.max(lift, viewportHeight - rect.top + GAP);
+      });
+
+      if (lift === lastLift) return;
+      lastLift = lift;
+      root.style.setProperty('--aw-float-lift', lift + 'px');
+    }
+
+    function schedule() {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(measure);
+
+      // requestAnimationFrame is starved while a tab is backgrounded or the
+      // window is occluded, and it can stay starved after the tab is restored
+      // until the next paint. Without this fallback the launchers would keep
+      // their stale offset and could sit on top of a CTA.
+      if (timer !== null) clearTimeout(timer);
+      timer = setTimeout(function () {
+        timer = null;
+        if (frame === null) return;
+        cancelAnimationFrame(frame);
+        measure();
+      }, 250);
+    }
+
+    ['scroll', 'resize', 'orientationchange'].forEach(function (event) {
+      window.addEventListener(event, schedule, { passive: true });
+    });
+
+    // Sections re-render (cart updates, variant changes) can add or remove a bar.
+    if (document.body) {
+      new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Measure directly (not via schedule) on the paths that must be correct
+    // before the customer can interact, so a starved frame can't leave a
+    // launcher covering the buy button on first paint.
+    document.addEventListener('DOMContentLoaded', measure);
+    window.addEventListener('load', measure);
+    document.addEventListener('visibilitychange', measure);
+    measure();
+  })();
+</script>

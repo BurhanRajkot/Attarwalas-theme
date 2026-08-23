@@ -224,3 +224,11 @@ fragrance-picker {
 .fragrance-picker__empty[hidden] {
   display: none;
 }
+
+@media screen and (max-width: 749px) {
+  /* Keep the dropdown to a share of the screen so it can't swallow the whole
+     viewport on a phone — especially with the keyboard open. */
+  .fragrance-picker__list {
+    max-height: 45vh;
+  }
+}

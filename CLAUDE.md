@@ -469,6 +469,53 @@ sellable — see the checklist item at the top of this file. Until a matching
 variant + price exists for a fragrance on `customize-perfume-1`, it simply
 won't appear in the picker, which is correct/expected behavior, not a bug.
 
+## Floating launchers (WhatsApp + Shopify Inbox) — keep them off the CTAs
+
+`snippets/floating-stack.liquid` (rendered from `layout/theme.liquid` on every
+page) stops the two floating launchers from covering bottom-pinned UI.
+
+The problem it solves: Shopify Inbox renders `<shopify-chat>` as a
+**full-viewport fixed host at z-index 2147483000**, so it always paints above
+theme content and can't be out-stacked. On mobile it was sitting directly on
+top of the product page's `<product-sticky-bar>` (fixed, ~74px) and the offer
+pages' `.offer-builder__bar` (sticky, ~109px) — hiding "Add to cart" and
+"Select N items".
+
+How it works: on scroll/resize it measures any bottom-pinned bar currently
+crossing the bottom edge of the viewport and publishes its height (+8px) as
+`--aw-float-lift` on `<html>`. Both launchers offset themselves by it:
+- `shopify-chat` → `bottom: var(--aw-float-lift)` (raising the host's bottom
+  edge lifts the bubble inside it — you can't reposition the bubble directly)
+- `.whatsapp-float` → `bottom: calc(<base> + var(--aw-float-lift))`
+
+**Add `data-floating-clear` to any new bottom-pinned bar** to opt it in.
+
+Gotchas:
+- The measurement runs **directly** (not through `requestAnimationFrame`) on
+  init/`load`/`visibilitychange`, and the rAF throttle used during scroll has a
+  250ms `setTimeout` fallback. rAF is starved in backgrounded/occluded tabs, and
+  relying on it alone left the launchers on top of the buy button.
+- Separately, `.footer__content-bottom` carries `padding-bottom: 9rem` on mobile
+  so the policy links at the very bottom of the page aren't permanently covered
+  (there's no bar there to lift against).
+- **The chat bubble is invisible on this draft theme, and that is not a bug.**
+  Shopify injects `<shopify-chat>` (plus `<shopify-store>` and the `agent_chat`
+  config blob) server-side into the **published** theme only. On theme
+  `190519771424` — and in `shopify theme dev` — the element is absent from the
+  HTML entirely and `customElements.get('shopify-chat')` is `undefined`; the
+  script is never served. No theme file, setting, or app embed controls this, so
+  nothing here can bring it back on a draft. It reappears on its own once the
+  theme is published. Verified 2026-08-23: previewing the *live* theme
+  (`?preview_theme_id=169078784288`) still shows the chat, so it's the theme's
+  published/unpublished role that decides, not preview mode. Confirm before
+  "fixing" a missing bubble:
+  ```
+  curl -sL -c /tmp/cj -b /tmp/cj "https://www.attarwalas.com/?preview_theme_id=<id>" | grep -c '<shopify-chat'
+  ```
+  The lift itself was checked against the real widget on the live theme: at a
+  lift of 0 the activator lands pixel-identical to Inbox's default, and at 120px
+  it rises 120px and stays fully visible.
+
 ## Useful Shopify CLI commands
 
 ```

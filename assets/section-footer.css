@@ -60,6 +60,11 @@
     padding-top: 0;
     padding-left: 0;
     padding-right: 0;
+    /* Reserve room under the last footer row for the floating launchers
+       (WhatsApp button + Shopify Inbox bubble), which are fixed to the
+       bottom-right and would otherwise sit on top of the policy links and
+       make them unclickable. */
+    padding-bottom: 9rem;
     row-gap: 1.5rem;
   }
 

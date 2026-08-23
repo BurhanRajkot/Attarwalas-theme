@@ -375,5 +375,10 @@
     {%- unless request.page_type == 'cart' -%}
       {% render 'whatsapp-floating' %}
     {%- endunless -%}
+    {%- comment -%}
+      Rendered on every page (not just where the WhatsApp button shows) because it
+      also repositions the Shopify Inbox chat bubble, which renders everywhere.
+    {%- endcomment -%}
+    {% render 'floating-stack' %}
   </body>
 </html>

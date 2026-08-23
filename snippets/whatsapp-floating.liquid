@@ -29,10 +29,13 @@
     .whatsapp-float {
       /* Stacked above the Shopify Inbox chat bubble (~20px + 46px tall,
          z-index 2147483000 — Inbox always wins the stacking order, so this
-         button is positioned above it instead of trying to out-stack it). */
+         button is positioned above it instead of trying to out-stack it).
+         --aw-float-lift is published by snippets/floating-stack.liquid and
+         raises both launchers clear of any bottom-pinned bar (sticky
+         add-to-cart, offer bar) that would otherwise be covered. */
       position: fixed;
       right: 24px;
-      bottom: 92px;
+      bottom: calc(92px + var(--aw-float-lift, 0px));
       z-index: 990;
       display: inline-flex;
       align-items: center;
@@ -52,6 +55,7 @@
       transition:
         max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
         transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        bottom 0.2s ease,
         box-shadow 0.35s ease,
         opacity 0.25s ease;
     }
@@ -117,7 +121,7 @@
     @media (max-width: 749px) {
       .whatsapp-float {
         right: 16px;
-        bottom: 76px;
+        bottom: calc(76px + var(--aw-float-lift, 0px));
         height: 56px;
         max-width: 56px;
       }
