@@ -957,6 +957,24 @@ class SlideshowComponent extends SliderComponent {
 
 customElements.define('slideshow-component', SlideshowComponent);
 
+/*
+  The element inside the add-to-cart button that holds its wording.
+
+  Stock Dawn reads `[name="add"] > span` — the button's first child span. This
+  theme's button (snippets/buy-buttons.liquid) opens with an icon span before
+  the label, so that selector returns the cart icon: every variant change wrote
+  "Add to cart" over the icon and left the real label alone, rendering
+  "Add to cartAdd to cart" with the icon gone. Same for "Sold out" and
+  "Unavailable" via setUnavailable().
+
+  Prefers the explicitly-marked label and falls back to Dawn's original
+  behaviour, so a button without the icon markup still works.
+*/
+function addButtonLabel(addButton) {
+  if (!addButton) return null;
+  return addButton.querySelector('.product-form__submit-text') || addButton.querySelector(':scope > span');
+}
+
 class VariantSelects extends HTMLElement {
   constructor() {
     super();
@@ -1255,7 +1273,7 @@ class VariantSelects extends HTMLElement {
     const productForm = document.getElementById(`product-form-${this.dataset.section}`);
     if (!productForm) return;
     const addButton = productForm.querySelector('[name="add"]');
-    const addButtonText = productForm.querySelector('[name="add"] > span');
+    const addButtonText = addButtonLabel(addButton);
     if (!addButton) return;
 
     if (disable) {
@@ -1272,7 +1290,7 @@ class VariantSelects extends HTMLElement {
   setUnavailable() {
     const button = document.getElementById(`product-form-${this.dataset.section}`);
     const addButton = button.querySelector('[name="add"]');
-    const addButtonText = button.querySelector('[name="add"] > span');
+    const addButtonText = addButtonLabel(addButton);
     const price = document.getElementById(`price-${this.dataset.section}`);
     const inventory = document.getElementById(`Inventory-${this.dataset.section}`);
     const sku = document.getElementById(`Sku-${this.dataset.section}`);

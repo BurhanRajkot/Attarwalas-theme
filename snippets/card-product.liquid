@@ -331,10 +331,26 @@
                 >
               {%- endif -%}
             </div>
-            {%- if quick_add_overlay -%}
-              <div class="quick-add-overlay">{{ card_quick_add }}</div>
-            {%- endif -%}
           </div>
+          {%- comment -%}
+            Deliberately a sibling of .card__media, not a child of it.
+
+            .card__media is `position: absolute; z-index: 0`, which makes it a
+            stacking context — anything inside it is capped at that level. The
+            card's whole-surface link (.card__heading a::after) sits at
+            z-index 1 in a higher context, so an overlay nested in .card__media
+            can never be clicked no matter how high its z-index goes: the click
+            falls through to the link and navigates to the product page instead
+            of opening the quick-add modal.
+
+            Out here it shares .card's stacking context with that link, so
+            z-index 3 in component-card.css actually wins. Both boxes cover the
+            same area (.card__media fills .card__inner), so the overlay's
+            left/right/bottom offsets are unchanged by the move.
+          {%- endcomment -%}
+          {%- if quick_add_overlay -%}
+            <div class="quick-add-overlay">{{ card_quick_add }}</div>
+          {%- endif -%}
         {%- endif -%}
         <div class="card__content">
           <div class="card__information">

@@ -28,6 +28,16 @@ Outstanding items to resolve before this theme goes live — check this list bef
       Closing this gap means either Burhan keeps adding variants/pricing by hand in
       admin, a Matrixify variant import, or an Admin API bulk-create — in all cases the
       price per fragrance (or which pricing tier it falls into) has to come from Burhan.
+- [ ] **Create the duo product(s) and the `duo` collection.** The duo page
+      (`templates/product.duo.json`) is built and verified, but nothing points at
+      it yet. To go live: create a product per duo, set its Theme template to
+      `duo`, tag it and add it to a new manual collection with handle `duo`
+      (that handle is what the "More duos" strip and any Offer Teaser section
+      pointed at duos read from). The duo product's own price is never charged —
+      like the offer products, it only supplies the page — but give it one
+      anyway so it can be published. Then confirm the perfume/attar groups in the
+      theme editor: they currently default to `men-3, women-1, unisex-3` for
+      bottles and `attar-roll-ons` for attars. See "Duo — perfume + attar" below.
 - [ ] **Set a per-product perfumer photo/bio on each perfume product.** The "Perfumer
       bio" section (`sections/perfumer.liquid`) already supports a different photo, bio,
       name, and role per product — via that product's own metafields
@@ -206,12 +216,16 @@ collection, or a list of collection handles on it.
    product at its own template suffix (`offer-2` / `offer-3` / `offer-5`) in
    admin → product → Theme template.
 
-   **As of 2026-08-17 none of the three offer products have been pointed at their
-   own template** — all three still render the shared `product.offer` template
-   (verified: `offer-for-2` shows the metafield group heading, not the
-   `offer-2` template's "Choose any 2 perfumes"). Until that switch is made in
-   admin, the per-offer templates are inert and every offer is driven by its
-   `offer.*` metafields.
+   **As of 2026-08-23 all three offer products are pointed at their own
+   template** — `offer-for-2` renders `offer-2`'s own "Choose any 2 perfumes"
+   heading (this was still the shared `product.offer` template as of
+   2026-08-17; the switch was made in admin sometime after). Each per-offer
+   template's own `include: "bottles"` setting on its Pick group block is what
+   the "only perfumes" fix below actually depends on — if a future offer
+   product ever gets pointed back at the shared `product.offer` template
+   instead, it falls back to that template's block (currently unconfigured,
+   metafield-driven), which still defaults to bottles-only with no explicit
+   setting needed — see the note in `snippets/offer-group.liquid`.
 2. **Metafields** (namespace `offer`, listed in
    `~/Desktop/SHOPIFY/offer-metafields/product.json` — kept outside the theme
    dir because the theme CLI rejects files in `config/` subfolders) —
@@ -287,6 +301,280 @@ those two metafields set needs zero extra config to appear correctly on product 
 
 `{% return %}` is not a Shopify Liquid tag — early-exit guards in these sections
 use `{% if %}…{% else %}` around the whole body instead.
+
+### Every bottle in a pick group shares one Size (added 2026-08-23)
+
+Each bottle card has its own Size `<select>`, and until now they were fully
+independent — picking 50ML on one bottle left every other bottle at whatever
+size it happened to default to, with no indication anything was inconsistent
+until checkout. Reported by Burhan; fixed by locking the whole group to one
+Size.
+
+How it works (`assets/offer-builder.js`): every size pick — via the dropdown
+(`onVariantChange`) or by freshly adding a card (`select()`) — calls
+`syncGroupSize(sourceCard)`, which reads the option's `data-option1` (the Size
+value specifically, added to each `<option>` in `snippets/offer-group.liquid`)
+and applies the matching option to every other card **in the same group**,
+whether that card is already in the bundle or not. There's no separate "locked"
+state to fall out of sync — whichever size was picked most recently, anywhere
+in the group, is what every card shows. Both the direct-pick and the
+cascaded-from-a-sibling path go through one `applyVariantOption()` helper, so a
+cascaded card updates identically to a manually-picked one (dataset, price
+text, and the `<select>`'s own value all move together).
+
+Matching is deliberately on `data-option1`, not the full variant title —
+`item.variants` titles are the concatenation of every option (e.g. attar
+roll-ons render `"6ML / Red"` for their Size + Box Colour), and matching the
+whole string would try to force Box Colour to agree across products too. Size
+alone is what should be forced.
+
+Scoped per **group**, not globally: on the duo page, locking the perfume
+group's size never touches the attar group (verified — cascading 50ML through
+every perfume card left every attar card at its own default). A classic offer
+(`offer-for-2/3/5`) has one group, so this reads as "the whole bundle."
+
+### `offer-2/3/5` are perfumes only — never attar roll-ons
+
+Confirmed with Burhan 2026-08-23. Each per-offer template's Pick group block
+now sets `"include": "bottles"` explicitly (`templates/product.offer-2/-3/-5.json`)
+rather than relying on `offer-group.liquid`'s default — belt-and-suspenders,
+since a block left unconfigured already defaults to bottles-only (see the
+`include_mode` gotcha below), but an explicit setting can't be silently changed
+by picking "Both" in the theme editor's "Show" dropdown without it being
+obvious in the template diff. Verified: all three pages render exactly
+Oudh Eternal / Mystique Island / Fresh Woodscape / Yameni Yakud / Ambre
+Intense — no roll-on ever appears. If a duo-style attar option is ever wanted
+on these offers, that's a distinct Pick group block with `include: "rollons"`,
+same as the duo page — not a change to this one's setting.
+
+If a sibling card has no option at the target size (only possible if a group
+mixes products whose Size sets don't fully overlap — not the case for any
+current offer or duo group), it's left alone rather than guessed at.
+
+## Product card quick-add ("Choose options" on hover)
+
+Rendered by `snippets/card-product.liquid` when called with
+`quick_add_overlay: true` — that's `main-collection-product-grid` and
+`featured-collection`. Styled in `assets/component-card.css` as
+`.quick-add-overlay`: a brand-gold bar, full card width, that wipes up from the
+image's bottom edge on hover with a shine sweep on button-hover. Hidden below
+750px, since hover-to-reveal is unreachable on touch.
+
+Reworked 2026-08-23 (it was Dawn's default grey `button--secondary` box
+floating mid-image). Two non-obvious things came out of it — both easy to
+reintroduce:
+
+### The bar's colour has to be captured on `.card-wrapper`
+
+`--color-button` is redefined **twice** between the card and the button:
+`.card` carries its own color-scheme class (scheme-2, near-black) and the
+button carries `.button--secondary` (pale grey). So reading `--color-button`
+from the overlay or the button gives the wrong colour — the section's gold is
+only still visible at `.card-wrapper`, which is above both. It's aliased there
+into `--quick-add-bg` / `--quick-add-fg`, which nothing downstream redefines.
+
+This is why the older copy of this treatment scoped to `featured-collection`
+rendered **grey, not gold**, despite its comment claiming otherwise. That copy
+has been deleted; the shared rules are the only source now. Don't re-add a
+section-scoped copy.
+
+### The overlay must be a sibling of `.card__media`, not a child
+
+`.card__media` is `position: absolute; z-index: 0` — a stacking context. The
+card's whole-surface link (`.card__heading a::after`) is `z-index: 1` in a
+*higher* context, so anything nested inside `.card__media` is painted under it
+no matter how large its z-index. The button was therefore **unclickable**:
+clicks fell through to the link and went to the product page instead of opening
+the quick-add modal. It had been that way since the overlay was added, which is
+why it went unnoticed — the wrong behaviour looks like a working link.
+
+Fixed by moving the `<div class="quick-add-overlay">` out of `.card__media` (it
+is now a sibling, anchored by `.card__inner`, which covers the same box) and
+raising it to `z-index: 3`. Verify after touching either file:
+
+```js
+// with the cursor over a card — the overlay is deliberately pointer-events:none otherwise
+const b = document.querySelector('.quick-add-overlay .quick-add__submit');
+const r = b.getBoundingClientRect();
+document.elementFromPoint(r.x + r.width/2, r.y + r.height/2) === b;  // must be true
+```
+
+## Gotcha: the add-to-cart button's label is the *second* span
+
+`snippets/buy-buttons.liquid` renders the buy button as an **icon span followed
+by a label span**:
+
+```html
+<button name="add">
+  <span class="product-form__submit-icon">{cart svg}</span>
+  <span class="product-form__submit-text">Add to cart</span>
+  {loading spinner}
+</button>
+```
+
+Stock Dawn reads that label as `[name="add"] > span` — the button's *first*
+child span — which in this theme is the **icon**. So every variant change wrote
+"Add to cart" over the cart icon and left the real label untouched, rendering
+**"Add to cartAdd to cart"** with the icon gone. Reported and fixed 2026-08-23;
+reproduce by switching size/type on any multi-variant perfume.
+
+`assets/global.js` now resolves it through `addButtonLabel()`, which prefers
+`.product-form__submit-text` and falls back to Dawn's `:scope > span`. Both
+callers use it — `toggleAddButton()` (add to cart / sold out) and
+`setUnavailable()` (unavailable). **Any new code that sets this button's
+wording must use `addButtonLabel()`, not `querySelector('span')`.**
+
+Not affected: the sticky bar button (`sections/main-product.liquid`) has a bare
+`<span>` label with no icon, so `product-sticky-bar.js`'s `querySelector('span')`
+still finds the right node — but it would break the same way if an icon were
+ever added to it.
+
+Unrelated but worth knowing: on products with Globo options the app clones the
+buy button and hides the original, and **both copies keep the same
+`id="ProductSubmitButton-…"`**. Duplicate ids are invalid HTML, and
+`getElementById` returns the clone (it comes first) — which happens to be the
+visible one, so the fix above lands where the customer can see it.
+
+## Duo — perfume + attar (skeleton, added 2026-08-23)
+
+A duo is **an offer with two groups and no fixed pick count**: the customer
+chooses how many perfumes and how many attars, and the price follows the
+quantities. It reuses the offer machinery end to end — same section, same
+snippet, same JS, same `_bundle` cart properties, same discount function. There
+is no separate duo section or duo JS.
+
+**Status: plumbing only.** `templates/product.duo.json` exists and is verified
+working, but there is no duo product and no `duo` collection yet, so nothing is
+reachable on the storefront. See the checklist at the top of this file.
+
+### What made this possible
+
+Two limits in the offer picker had to go, both additive and defaulted to the
+old behaviour, so every existing offer page is byte-for-byte unaffected
+(verified 2026-08-23 — `offer-for-2` still reads "Select 2 items" → "Select 1
+more" → "Add bundle to cart" with a `0 / 2` pill and blocks a 3rd pick):
+
+- **Quantity mode.** A Pick group block's "How many items" can now be *"Any
+  quantity in a range"* (`pick_mode: range` + `min_pick`/`max_pick`) instead of
+  an exact count. `offer-group.liquid` publishes `data-group-min` /
+  `data-group-max` / `data-group-range`; `offer-builder.js` treats a group as
+  satisfied when its count is within the range rather than equal to a number.
+  Exact mode passes min = max, which is the original code path.
+- **Roll-ons can be picked.** The picker used to drop every `attar-roll-ons`
+  product unconditionally. A group's "Show" setting (`include`) is now
+  `bottles` (default, unchanged) / `rollons` / `all`.
+
+Supporting bits: `data-group-noun` ("perfume", "attar") so the sticky bar says
+"Add 1 attar" rather than a useless "Select 1 more"; `steps_first_line`,
+`price_note`, `more_offers_collection`, `card_pill_label` and `card_cta_label`
+settings so the offer copy can read as a duo; `pill_label`/`cta_label` params
+on `offer-strip.liquid`.
+
+### Pricing — nothing new was built
+
+Duos use the **existing discount pricing mode** (`discount_type: percent`,
+`discount_amount: 20` in `product.duo.json` — the same 20% the offer templates
+already use). Bundle price = retail total of what's picked − discount,
+recomputed on every quantity change, and it travels to the cart as
+`_bundle_price` on ordinary cart lines exactly like an offer. Verified: the
+add-to-cart payload for 5 perfumes + 1 attar is two lines carrying the same
+`_bundle`, `_bundle_price: "12555.20"`, `_bundle_size: "6"`. **The
+`offer-discount` function needs no change and no redeploy** — it groups by
+`_bundle` and never inspects product type.
+
+A fixed bundle price is the wrong tool here: it would charge the same for one
+perfume + one attar as for five of each.
+
+### Gotcha: which collection is which
+
+`men` / `women` / `unisex` are the **roll-on** collections. The bottle ones are
+`men-3` / `women-1` / `unisex-3` (what `product.offer-2.json` uses, and what
+`product.duo.json` now uses for its perfume group). Getting this backwards is
+silent — the duo's perfume group first rendered an empty grid because it was
+pointed at `men`/`women`/`unisex` and the bottles filter removed everything.
+That's exactly why `include` checks `attar-roll-ons` membership per product
+instead of trusting the chosen collection, and why a group whose products all
+get filtered out now prints an explicit reason in the theme editor instead of
+rendering a blank row.
+
+### Open question for Burhan
+
+A duo whose perfume is in `signature-series` also earns a free roll-on from the
+cart's free-gift picker, on top of the duo discount. Nothing prevents that
+today — decide whether duos should be excluded before this goes live.
+
+## Cart — pill buttons and a compact quantity stepper (added 2026-08-23)
+
+Reported by Burhan: cart buttons read square and oversized. Confirmed the
+cause — `assets/component-cart-redesign.css` (the existing cosmetic-cleanup
+file, loaded after Dawn's stock cart CSS in both `sections/main-cart-items.liquid`
+and `snippets/cart-drawer.liquid`) handled spacing/type/color but never touched
+shape. Every cart button was inheriting the theme's global corner-radius
+setting (`buttons_radius` in the customizer, currently `0`) with no scoped
+override — unlike the product page, which already has one (see
+`[id^="MainProduct-"] .product-form__buttons .button` in
+`section-main-product.css`).
+
+**Deliberately not fixed by raising the global `buttons_radius` setting.**
+That setting is shared site-wide, and the offer-builder page's buttons are
+**square on purpose** — see the design-language comment at the top of
+`section-offer-builder.css`. Raising it would round those too. Instead the
+cart gets the same kind of scoped override the product page already has:
+
+- `.cart-drawer .button`, `cart-items .button`, `#main-cart-footer .button`
+  (and their `:before`/`:after`, which draw Dawn's ring/shadow pseudo-elements
+  at their own radius) → `border-radius: 999px`. Covers checkout, "Continue
+  shopping", remove, close, and the quantity-rules info toggle in one rule,
+  since none of them share a more specific class worth targeting individually.
+- `.cart-item .quantity` → shrunk from Dawn's stock 14rem × 4.5rem box to
+  11rem × 3.8rem and rounded to match, mirroring the pill treatment already
+  on the product page's own quantity control (different scope, so the two
+  can't collide). `.quantity__button` width comes down with it so the total
+  box actually shrinks rather than just its wrapper.
+- `.free-gift__change` (`assets/component-free-gift.css`) → same pill radius,
+  since it's a real interactive control sitting in the same cart row as
+  everything else — the static "FREE GIFT" / "OFFER FOR 2" tags next to it
+  were left alone, they're labels, not buttons.
+
+Verified: AJAX quantity +/- still works in the drawer (1 → 2 → 1, no reload,
+no console error) — this file's own stated rule is spacing/type/color/shape
+only, never markup or class names cart.js depends on, and this addition
+follows that.
+
+### Gotcha: `.discounts__discount` needs `!important`
+
+Reported by Burhan as "looks cluttered" — the "YOUR FREE ROLL-ON" /
+"OFFER FOR N" tag under each cart line was rendering as a full-width bordered
+box (Dawn's stock `display: flex`), not the small pill this file's own rule
+sets (`display: inline-flex`). Cause: `snippets/cart-drawer.liquid` (and its
+`stylesheet_tag` includes, among them `component-discounts.css`) renders on
+**every page**, including `/cart` itself — so on the cart page,
+`component-discounts.css`'s plain `display: flex` can land in the DOM a
+second time *after* this file's `inline-flex`, silently winning the cascade
+back. Fixed by adding `!important` to the `display` declaration, the same
+tool this file already uses for `.discounts { margin-top: 0.6rem !important }`
+one rule up, for the identical reason.
+
+If a future edit to this rule drops the `!important` "because it looks
+unnecessary," it'll pass every visual check taken in isolation and then
+silently break again the moment `cart-drawer.liquid`'s own stylesheet ordering
+shifts — verify by checking `document.styleSheets` order in the browser, not
+just the source file, before removing it.
+
+### The discount-name tag is hidden on free-gift lines specifically
+
+Follow-up to the above, also reported by Burhan: after the tag became a
+small pill instead of a broken box, a free-gift line still showed it —
+"Your free roll-on" (the discount function's own line title) sitting right
+next to the "Free gift" badge (`.cart-item__free-gift-tag`), saying the same
+thing twice. Fixed in both `sections/main-cart-items.liquid` and
+`snippets/cart-drawer.liquid`: the `.discounts` list is now wrapped in
+`{% unless item.properties._free_gift != blank and item.final_line_price == 0 %}`
+— the exact condition the free-gift badge itself already uses, so the two
+stay in sync by construction rather than by two copies of the same check
+drifting apart. Every other discounted line (offer bundles, duo) is
+unaffected — its discount tag is the *only* thing telling the customer why
+that line is discounted, so it still needs to show.
 
 ## Free gift — "pick your free roll-on" in the cart
 
@@ -468,6 +756,114 @@ as of 2026-08-22, more ongoing). Adding a metaobject entry does **not** make it
 sellable — see the checklist item at the top of this file. Until a matching
 variant + price exists for a fragrance on `customize-perfume-1`, it simply
 won't appear in the picker, which is correct/expected behavior, not a bug.
+
+## Announcement bar — continuous marquee, not a slideshow (added 2026-08-23)
+
+Reported by Burhan as "rolling in a single line, like news headlines." Dawn's
+stock announcement bar (`sections/announcement-bar.liquid`) was a one-at-a-time
+slideshow: each message cross-fades in, sits for `change_slides_speed`
+seconds, then slides out for the next, with prev/next arrows
+(`slideshow-component` + `component-slider.css`/`component-slideshow.css`).
+Replaced with an actual CSS marquee — every message scrolls continuously in
+one line, right to left, forever.
+
+### How the loop is seamless
+
+The track (`.announcement-bar__track`) renders **two identical copies** of
+every announcement block back to back (`{%- for pass in (1..2) -%}` in the
+Liquid). Animating from `translateX(0)` to `translateX(-50%)` scrolls exactly
+one copy's width off-screen — by the time it does, the second copy is sitting
+exactly where the first one started, so the loop point is invisible. The
+second copy carries `aria-hidden="true"` so screen readers hear each message
+once, not twice; `block.shopify_attributes` is only emitted on the first copy
+for the same reason (a theme-editor block should map to one DOM node, not two).
+
+A bullet separator sits after **every** item, including the last item of each
+copy — that's what makes the seam between copy 1 and copy 2 read as one
+continuous sequence ("MSG1 • MSG2 • MSG1 • MSG2 • …") instead of a visible gap.
+
+### Speed scales with block count
+
+`change_slides_speed` (still the same 3–10s customizer range) is now "seconds
+per message" rather than "seconds this message is shown." Actual loop
+duration = `change_slides_speed × number of blocks`
+(`assign marquee_duration = section.settings.change_slides_speed | times: section.blocks.size`),
+so the ticker's visual speed stays roughly constant whether Burhan has 2
+announcements or 8 — without this, adding more blocks would either speed up
+the scroll (fixed duration, more content) or slow it down (fixed per-block
+time only), neither of which reads as "the ticker got faster/slower on
+purpose."
+
+`auto_rotate` was removed from the schema — there's no on/off for continuous
+scroll, only speed. Its stored value in `sections/header-group.json` is
+harmless and ignored (Shopify drops settings the schema no longer defines).
+
+### Gotcha: don't trust "it's not moving" from an unfocused automated browser
+
+Verified working by reading `element.getAnimations()[0].startTime` — it comes
+back `null` (animation created but not yet ticking) whenever
+`document.hasFocus()` is `false`, which happens routinely when a page is
+driven by browser automation without OS-level window focus. The moment focus
+is given (`window.focus()`), `startTime` populates and the track moves
+immediately. This is a testing-environment artifact, not a bug — a normal
+visitor's browser always has focus on the tab they're looking at. Don't
+diagnose "the marquee isn't animating" from an automated screenshot alone;
+check `document.hasFocus()` first, or drive it interactively.
+
+Pauses on `:hover`/`:focus-within` (`animation-play-state: paused`) — both so
+a customer can actually read or click a message, and because WCAG 2.2.2
+requires a way to stop auto-moving content that runs longer than 5 seconds.
+`prefers-reduced-motion: reduce` disables the animation entirely and hides
+the duplicate copy (so reduced-motion visitors get one static line, not two
+copies of the same text sitting side by side).
+
+### Gotcha: `.announcement-bar__item` needs the `h5` class, not its own type styles
+
+The first version of this rewrite dropped Dawn's `<p class="announcement-bar__message h5">`
+in favor of a plain `<span class="announcement-bar__item">`, losing the `h5`
+class entirely — Burhan caught it immediately ("font and boldness will remain
+the same"). `.h5` isn't decorative filler here: it's the only thing setting
+font-weight 600, uppercase, 0.08em letter-spacing, and (counter-intuitively)
+the **body** font specifically — `typography-attarwalas.css` overrides `h5,
+.h5` to `var(--attarwalas-font-body)` (DM Sans) while every other heading
+level stays on the serif. Losing the class silently fell back to whatever
+default text styling applied in that context, which looked nothing like the
+original.
+
+Fixed by adding `h5` back onto `.announcement-bar__item`, and — this part
+matters — **removing `letter-spacing: 0.1rem` from this file's own
+`.announcement-bar__item` rule**, which had been silently overriding `.h5`'s
+`0.08em` at equal specificity (last-in-source wins, and this file's `{% style
+%}` loads after base.css). Any layout property is fine to add to
+`.announcement-bar__item` going forward; anything `.h5` already sets
+(font-family, weight, size, letter-spacing, case, color) should not be
+touched here — set it on `.h5` itself if it needs to change, so every other
+`.h5` element on the site changes consistently with it.
+
+**Narrow, deliberate exception: font-weight.** Burhan then asked for the bar
+to be bolder and visually less flat ("only 1 font or boldness... add some
+stuff"). Turned out `.h5`'s 600 was itself already a regression — base.css
+still has an older, now-orphaned `PREMIUM ANNOUNCEMENT BAR` block
+(`.announcement-bar__message, .announcement-bar__message span { font-weight:
+700 !important }`) that no longer matches anything, since this markup
+doesn't use `.announcement-bar__message` anymore. That block also has a
+`barLightSweep` shimmer-sweep animation on `.utility-bar::after`, which
+**is** still live — it targets `.utility-bar`, a class this rewrite never
+touched, and is worth knowing about if the bar ever looks like it's missing
+its light-sweep effect (check `.utility-bar`'s `overflow: hidden` isn't
+clipping it before assuming it's broken).
+
+Restoring 700 belongs on `.announcement-bar__item` specifically, not on
+`.h5` globally — bumping `.h5` itself would also embolden every unrelated
+`.h5` element site-wide (product-card labels, badges, anything else using
+that class), which is broader than what was asked. `.announcement-bar__item,
+.announcement-bar__item *` covers both the plain-text and linked-message
+cases in one rule.
+
+The separator between messages was also upgraded from a plain grey dot to a
+small gold diamond (`background: rgb(var(--color-button))`, `transform:
+rotate(45deg)`) — same brand-gold variable every CTA site-wide already uses,
+not a hardcoded color, so it can't drift from the color scheme.
 
 ## Floating launchers (WhatsApp + Shopify Inbox) — keep them off the CTAs
 

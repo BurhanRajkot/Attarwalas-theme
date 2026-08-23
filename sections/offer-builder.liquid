@@ -89,13 +89,23 @@
     assign use_metafield_group = true
   endif
 
-  # total items the customer has to pick across every group
+  comment
+    Total items the customer has to pick across every group. A quantity-mode
+    group (the duo page) has no fixed count, so it contributes its minimum —
+    the smallest bundle the customer can check out with.
+  endcomment
   assign total_pick_count = 0
+  assign has_range_group = false
   if use_metafield_group
     assign total_pick_count = mf_pick_count
   else
     for block in group_blocks
-      assign block_count = block.settings.pick_count | plus: 0
+      if block.settings.pick_mode == 'range'
+        assign has_range_group = true
+        assign block_count = block.settings.min_pick | plus: 0
+      else
+        assign block_count = block.settings.pick_count | plus: 0
+      endif
       assign total_pick_count = total_pick_count | plus: block_count
     endfor
   endif
@@ -108,7 +118,15 @@
       else
         assign discount_display = discount_amount_display | append: '% off'
       endif
-      assign badge_text = 'Get any ' | append: total_pick_count | append: ' — ' | append: discount_display
+      comment
+        A quantity-mode offer has no "any N" to advertise — the customer sets
+        the quantities — so the badge is just the discount.
+      endcomment
+      if has_range_group
+        assign badge_text = discount_display
+      else
+        assign badge_text = 'Get any ' | append: total_pick_count | append: ' — ' | append: discount_display
+      endif
     elsif product.price > 0
       assign formatted_price = product.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
       assign badge_text = 'Get any ' | append: total_pick_count | append: ' for ' | append: formatted_price
@@ -204,7 +222,15 @@
               {{ discount_amount_display }}% OFF
             {%- endif -%}
           </span>
-          <span class="offer-builder__price-note">on any {{ total_pick_count }} perfumes</span>
+          <span class="offer-builder__price-note">
+            {%- if section.settings.price_note != blank -%}
+              {{ section.settings.price_note }}
+            {%- elsif has_range_group -%}
+              on whatever you pick below
+            {%- else -%}
+              on any {{ total_pick_count }} perfumes
+            {%- endif -%}
+          </span>
         {%- elsif product.price > 0 -%}
           {%- comment -%}
             A zero price means the offer product has no price set in admin —
@@ -250,7 +276,11 @@
         <li class="offer-builder__step">
           <span class="offer-builder__step-num">01</span>
           <span class="offer-builder__step-text">
-            Pick any {{ total_pick_count }} fragrance{% if total_pick_count > 1 %}s{% endif %} below
+            {%- if section.settings.steps_first_line != blank -%}
+              {{ section.settings.steps_first_line }}
+            {%- else -%}
+              Pick any {{ total_pick_count }} fragrance{% if total_pick_count > 1 %}s{% endif %} below
+            {%- endif -%}
           </span>
         </li>
         <li class="offer-builder__step">
@@ -284,6 +314,16 @@
               assign block_collection_handles = block.settings.collections | map: 'handle'
               assign block_collections_str = block_collection_handles | join: ','
             endif
+
+            # Exact mode passes min = max = pick_count, so offer-group behaves
+            # exactly as it did before quantity mode existed.
+            if block.settings.pick_mode == 'range'
+              assign block_min = block.settings.min_pick | plus: 0
+              assign block_max = block.settings.max_pick | plus: 0
+            else
+              assign block_min = block.settings.pick_count | plus: 0
+              assign block_max = block_min
+            endif
           -%}
           {%- render 'offer-group',
             group_index: forloop.index0,
@@ -292,6 +332,10 @@
             group_collections: block_collections_str,
             group_collection: block.settings.collection,
             group_pick_count: block.settings.pick_count,
+            group_min: block_min,
+            group_max: block_max,
+            group_include: block.settings.include,
+            group_noun: block.settings.noun,
             group_open: block.settings.open_by_default,
             offer_product: product,
             add_label: section.settings.add_label,
@@ -305,7 +349,10 @@
     {%- liquid
       # Sibling offers from the "offer" collection — lets the customer hop
       # between "Offer for 2 / 3 / 5" without going back to the product page.
-      assign more_offers = collections['offer'].products
+      # A duo page points this at the "duo" collection instead, so duos link
+      # to other duos rather than to the bundle offers.
+      assign more_offers_handle = section.settings.more_offers_collection | default: 'offer'
+      assign more_offers = collections[more_offers_handle].products
       # filters aren't allowed on `render` arguments, so build the id up here
       assign more_offers_strip_id = section.id | append: '-more'
     -%}
@@ -315,7 +362,9 @@
           offer_products: more_offers,
           strip_heading: section.settings.more_offers_heading,
           strip_id: more_offers_strip_id,
-          exclude_offer_id: product.id
+          exclude_offer_id: product.id,
+          pill_label: section.settings.card_pill_label,
+          cta_label: section.settings.card_cta_label
         -%}
       </div>
     {%- endif -%}
@@ -329,7 +378,14 @@
     <div class="offer-builder__bar-inner page-width">
       <div class="offer-builder__bar-summary">
         <div class="offer-builder__bar-progress">
-          <span class="offer-builder__bar-count" data-offer-counter>0 / {{ total_pick_count }}</span>
+          <span class="offer-builder__bar-count" data-offer-counter>
+            {%- comment -%}
+              Quantity mode has no fixed total to count towards, so the bar
+              shows a running count. Matches what offer-builder.js writes on
+              its first render, so the number never flickers.
+            {%- endcomment -%}
+            {%- if has_range_group -%}0{%- else -%}0 / {{ total_pick_count }}{%- endif -%}
+          </span>
           <span class="offer-builder__bar-label">{{ section.settings.selected_label }}</span>
         </div>
         <p class="offer-builder__bar-picks" data-offer-picks></p>
@@ -416,6 +472,18 @@
       "info": "The 01 / 02 / 03 strip between the header and the picker."
     },
     {
+      "type": "text",
+      "id": "steps_first_line",
+      "label": "Step 01 text",
+      "info": "Leave blank to auto-generate (\"Pick any 3 fragrances below\"). Set it on a duo, where there's no single pick count to name — e.g. \"Pick your perfume and your attar below\"."
+    },
+    {
+      "type": "text",
+      "id": "price_note",
+      "label": "Discount note",
+      "info": "The small line under the discount in the page header. Leave blank to auto-generate."
+    },
+    {
       "type": "header",
       "content": "Discount"
     },
@@ -471,6 +539,24 @@
       "label": "More offers heading",
       "default": "More offers",
       "info": "Shown above the other offer cards at the bottom of this page. The cards come from the \"offer\" collection automatically (the current offer is skipped)."
+    },
+    {
+      "type": "text",
+      "id": "more_offers_collection",
+      "label": "More offers come from",
+      "info": "Collection handle. Blank uses \"offer\". A duo page should use \"duo\" so it links to the other duos."
+    },
+    {
+      "type": "text",
+      "id": "card_pill_label",
+      "label": "More offers — card tag",
+      "info": "Blank uses \"Offer\". Use \"Duo\" on a duo page."
+    },
+    {
+      "type": "text",
+      "id": "card_cta_label",
+      "label": "More offers — card link text",
+      "info": "Blank uses \"Shop the offer\"."
     },
     {
       "type": "header",
@@ -542,13 +628,63 @@
           "info": "Used only when nothing is set above."
         },
         {
+          "type": "select",
+          "id": "pick_mode",
+          "options": [
+            { "value": "exact", "label": "Exactly this many items" },
+            { "value": "range", "label": "Any quantity in a range (duo)" }
+          ],
+          "default": "exact",
+          "label": "How many items",
+          "info": "\"Exactly this many\" is the classic offer picker (\"choose any 3\"). \"Any quantity in a range\" lets the customer set the quantity themselves — used by the duo page, where the price follows the quantities picked. Pair it with a Discount above, otherwise every quantity costs the same fixed bundle price."
+        },
+        {
           "type": "range",
           "id": "pick_count",
           "label": "Items to pick",
           "min": 1,
           "max": 10,
           "step": 1,
-          "default": 2
+          "default": 2,
+          "info": "Used when \"How many items\" is set to \"Exactly this many\"."
+        },
+        {
+          "type": "range",
+          "id": "min_pick",
+          "label": "Minimum quantity",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 1,
+          "info": "Range mode only. The customer can't check out with fewer than this from this group."
+        },
+        {
+          "type": "range",
+          "id": "max_pick",
+          "label": "Maximum quantity",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 5,
+          "info": "Range mode only."
+        },
+        {
+          "type": "select",
+          "id": "include",
+          "options": [
+            { "value": "bottles", "label": "Perfume bottles only" },
+            { "value": "rollons", "label": "Attar roll-ons only" },
+            { "value": "all", "label": "Both" }
+          ],
+          "default": "bottles",
+          "label": "Show",
+          "info": "Checked against membership of the \"attar-roll-ons\" collection, not against the collection chosen above — the store has same-named bottle and roll-on collections, so this is what keeps a duo's perfume group and attar group apart."
+        },
+        {
+          "type": "text",
+          "id": "noun",
+          "label": "What one item is called",
+          "info": "e.g. perfume, attar. Used by the sticky bar's \"Add 1 attar\" prompt so the customer knows which group is still short. Leave blank on single-group offers."
         },
         {
           "type": "checkbox",

@@ -139,98 +139,13 @@
     padding-top: 1.6rem;
   }
 
-  /* Quick add: a compact bar that rises just above the image's bottom
-     edge, not flush against it, with room on either side — closer to
-     Naseem's smaller-footprint treatment than an edge-to-edge bar. */
-  #collection-{{ section.id }} .quick-add-overlay {
-    position: absolute;
-    left: 1rem;
-    right: 1rem;
-    bottom: 1rem;
-    z-index: 2;
-    clip-path: inset(100% 0 0 0);
-    transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
-  }
-
-  #collection-{{ section.id }} .card-wrapper:hover .quick-add-overlay,
-  #collection-{{ section.id }} .card-wrapper:focus-within .quick-add-overlay {
-    clip-path: inset(0% 0 0 0);
-    pointer-events: auto;
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .quick-add {
-    margin: 0;
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit {
-    position: relative;
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-    border-radius: 0.3rem;
-    padding: 1.1rem;
-    font-size: 1.05rem;
-    letter-spacing: 0.12rem;
-    text-transform: uppercase;
-    background: rgb(var(--color-button));
-    color: rgb(var(--color-button-text));
-    box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.12);
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit:hover {
-    background: rgba(var(--color-button), 0.9);
-    box-shadow: 0 0.5rem 1.4rem rgba(0, 0, 0, 0.18);
-  }
-
-  /* Spark/reflection sweep on hover — a soft diagonal band of light
-     glides across the button once, rather than looping or glowing. */
-  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit:after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background-image: linear-gradient(
-      115deg,
-      transparent 42%,
-      rgba(255, 255, 255, 0.55) 50%,
-      transparent 58%
-    );
-    background-size: 260% 100%;
-    background-position: 150% 0;
-    background-repeat: no-repeat;
-    transition: background-position 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit:hover:after {
-    background-position: -60% 0;
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit span {
-    position: relative;
-    z-index: 2;
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .quick-add__submit.loading {
-    color: transparent;
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .loading__spinner {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .loading__spinner .path {
-    stroke: rgb(var(--color-button-text));
-  }
-
-  #collection-{{ section.id }} .quick-add-overlay .loading__spinner.hidden {
-    display: inline-block !important;
-  }
+  /* Quick add: the rising gold bar now lives in assets/component-card.css as
+     the shared `.quick-add-overlay` treatment, so this section and the
+     collection pages stay identical. It used to be duplicated here, scoped to
+     this section id — and that copy read `rgb(var(--color-button))` from
+     inside the button, which `.button--secondary` re-points at the pale
+     secondary colour, so it rendered grey rather than gold. Don't reintroduce
+     a scoped copy; edit the shared rules instead. */
 
   #collection-{{ section.id }} .quick-add-overlay .loading__spinner:not(.hidden) {
     opacity: 1;

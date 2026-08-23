@@ -13,6 +13,18 @@
 
   Source priority: group_products > group_collections > group_collection.
   - group_pick_count {Number} how many items must be picked from this group
+    (exact mode — the customer must pick precisely this many)
+  - group_min {Number} / group_max {Number} quantity mode instead of an exact
+    count: the customer picks any quantity between the two. Used by the duo
+    page ("1–5 perfumes AND 1–5 attars"), where the price follows the
+    quantities rather than a fixed pick count. When only group_pick_count is
+    given, min and max are both set to it, i.e. the original exact behaviour.
+  - group_include {String} which products may appear: 'bottles' (default —
+    perfume bottles only, roll-ons filtered out), 'rollons' (attar roll-ons
+    only), or 'all'. See the roll-on note further down for why this is checked
+    against collection membership rather than trusting the chosen collection.
+  - group_noun {String} what one item in this group is called, e.g. 'perfume'
+    or 'attar'. Used for the sticky bar's "Add 1 more attar" prompt.
   - group_open {Boolean} whether the accordion starts expanded
   - offer_product {Product} the offer product itself (excluded from the grid)
   - block_attributes {String} block.shopify_attributes, when rendered from a block
@@ -54,9 +66,37 @@
     assign title_list = group_collection.title
   endif
 
+  comment
+    Exact mode (min == max) is the original "pick exactly N" behaviour and stays
+    the default, so every existing offer page is unaffected. Quantity mode
+    (min != max) is what the duo page uses.
+  endcomment
+  assign pick_max = group_max | plus: 0
+  assign pick_min = group_min | plus: 0
+  if pick_max <= 0
+    assign pick_max = group_pick_count | plus: 0
+  endif
+  if pick_min <= 0
+    assign pick_min = pick_max
+  endif
+  if pick_max < pick_min
+    assign pick_max = pick_min
+  endif
+
+  assign is_range = false
+  if pick_min != pick_max
+    assign is_range = true
+  endif
+
+  assign include_mode = group_include | default: 'bottles'
+
   assign heading = group_heading
   if heading == blank
-    assign heading = 'Choose ' | append: group_pick_count | append: ' items'
+    if is_range
+      assign heading = 'Choose ' | append: pick_min | append: '–' | append: pick_max | append: ' items'
+    else
+      assign heading = 'Choose ' | append: pick_max | append: ' items'
+    endif
     if title_list != blank
       assign heading = heading | append: ' from ' | append: title_list
     endif
@@ -69,7 +109,11 @@
   class="offer-group"
   data-offer-group
   data-group-index="{{ group_index }}"
-  data-group-pick-count="{{ group_pick_count }}"
+  data-group-pick-count="{{ pick_max }}"
+  data-group-min="{{ pick_min }}"
+  data-group-max="{{ pick_max }}"
+  {% if is_range %}data-group-range="true"{% endif %}
+  {% if group_noun != blank %}data-group-noun="{{ group_noun | escape }}"{% endif %}
   data-group-name="{{ heading | escape }}"
   {{ block_attributes }}
 >
@@ -79,7 +123,9 @@
         <span class="offer-group__summary-text">{{ heading }}</span>
       </span>
       <span class="offer-group__summary-meta">
-        <span class="offer-group__pill" data-group-counter>0 / {{ group_pick_count }}</span>
+        <span class="offer-group__pill" data-group-counter>
+          {%- if is_range -%}Min {{ pick_min }}{%- else -%}0 / {{ pick_max }}{%- endif -%}
+        </span>
         <span class="offer-group__toggle" aria-hidden="true">
           {% render 'icon-caret' %}
         </span>
@@ -97,6 +143,13 @@
           {%- endif -%}
         </p>
       {%- else -%}
+        {%- comment -%}
+          Counted inside the loop below and read after it (Liquid keeps
+          for-loop assignments in scope), so a group whose source collection
+          has products but none of the right kind — an attar group pointed at
+          a bottles-only collection — says so instead of rendering a blank row.
+        {%- endcomment -%}
+        {%- assign rendered_count = 0 -%}
         <div class="offer-grid-wrap">
           <div class="offer-grid__nav" role="group" aria-label="Browse products">
             <button type="button" class="offer-grid__arrow offer-grid__arrow--prev" data-offer-grid-prev aria-label="Scroll left">
@@ -120,11 +173,15 @@
               {%- continue -%}
             {%- endif -%}
             {%- comment -%}
-              Offer pickers are perfume bottles only, never roll-ons — the
-              store has duplicate "Men"/"Women"/"Unisex" collections (one
-              roll-on-only, one bottle-only) with identical titles, so this
-              checks collection membership directly instead of trusting
-              whichever one admin picked.
+              Bottle/roll-on membership is checked directly rather than trusting
+              whichever collection admin picked: the store has duplicate
+              "Men"/"Women"/"Unisex" collections (one roll-on-only, one
+              bottle-only) with identical titles, so a group pointed at "Men"
+              would otherwise be a coin toss.
+
+              'bottles' is the default because a plain offer picker is perfume
+              bottles only. The duo page's attar group passes 'rollons' to get
+              the exact opposite set.
             {%- endcomment -%}
             {%- assign is_rollon = false -%}
             {%- for item_collection in item.collections -%}
@@ -133,13 +190,16 @@
                 {%- break -%}
               {%- endif -%}
             {%- endfor -%}
-            {%- if is_rollon -%}
+            {%- if include_mode == 'bottles' and is_rollon -%}
+              {%- continue -%}
+            {%- elsif include_mode == 'rollons' and is_rollon == false -%}
               {%- continue -%}
             {%- endif -%}
             {%- liquid
               assign variant = item.selected_or_first_available_variant
               assign card_id = 'OfferCard-' | append: group_index | append: '-' | append: forloop.index
               assign item_alt = item.title | escape
+              assign rendered_count = rendered_count | plus: 1
             -%}
             <div
               class="offer-card{% unless item.available %} offer-card--soldout{% endunless %}"
@@ -185,6 +245,7 @@
                             data-price="{{ v.price }}"
                             data-price-formatted="{{ v.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
                             data-variant-title="{{ v.title | escape }}"
+                            data-option1="{{ v.option1 | escape }}"
                             data-available="{{ v.available }}"
                             {% if v.id == variant.id %}
                               selected
@@ -233,6 +294,27 @@
           {%- endfor -%}
           </div>
         </div>
+
+        {%- if rendered_count == 0 -%}
+          <p class="offer-group__empty">
+            {%- if request.design_mode -%}
+              {%- case include_mode -%}
+                {%- when 'rollons' -%}
+                  None of this group&rsquo;s products are attar roll-ons. This
+                  group is set to show roll-ons only, so point it at a
+                  collection whose products are in &ldquo;attar-roll-ons&rdquo;.
+                {%- when 'bottles' -%}
+                  Every product in this group is an attar roll-on, and this
+                  group is set to show perfume bottles only. Point it at a
+                  bottles collection, or switch it to &ldquo;Attar roll-ons&rdquo;.
+                {%- else -%}
+                  No products to show in this group yet.
+              {%- endcase -%}
+            {%- else -%}
+              These items are being restocked. Please check back soon.
+            {%- endif -%}
+          </p>
+        {%- endif -%}
       {%- endif -%}
     </div>
   </details>

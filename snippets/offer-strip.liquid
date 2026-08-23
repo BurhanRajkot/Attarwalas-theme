@@ -9,6 +9,9 @@
   - strip_id {String} unique id for this instance
   - exclude_offer_id {Number} optional product id to skip (e.g. the offer page
     the strip is shown on, so it never links to itself)
+  - pill_label {String} the little corner tag on each card, default "Offer".
+    Duos pass "Duo" so the same card works for both.
+  - cta_label {String} the card's link text, default "Shop the offer"
   - block_attributes {String} block.shopify_attributes, when rendered from a block
 
   Usage:
@@ -80,7 +83,7 @@
             <span class="offer-deal__inner">
               <span class="offer-deal__pill">
                 {% render 'icon-discount' %}
-                <span>Offer</span>
+                <span>{{ pill_label | default: 'Offer' }}</span>
               </span>
 
               {%- if pick_count > 0 -%}
@@ -114,7 +117,7 @@
               <span class="offer-deal__perf" aria-hidden="true"></span>
 
               <span class="offer-deal__cta">
-                <span>Shop the offer</span>
+                <span>{{ cta_label | default: 'Shop the offer' }}</span>
                 {% render 'icon-arrow' %}
               </span>
             </span>

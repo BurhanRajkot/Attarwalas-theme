@@ -152,7 +152,14 @@
 }
 
 .discounts__discount {
-  display: inline-flex;
+  /* !important: cart-drawer.liquid's markup (and its stylesheet includes)
+     render on every page, including the cart page itself, so
+     component-discounts.css's plain `.discounts__discount { display: flex }`
+     can end up included a second time AFTER this file in the same document —
+     without !important that reasserts the stock full-width flex row last,
+     turning this into an oversized block instead of the small pill it's
+     meant to be. */
+  display: inline-flex !important;
   padding: 0.25rem 0.7rem;
   border: 1px solid rgba(var(--color-button), 0.4);
   color: rgba(var(--color-foreground), 0.75);
@@ -184,8 +191,26 @@
 
 /* ------------------------------- Quantity ----------------------------------- */
 
+/* Pill-shaped and a size down from Dawn's stock 14rem × 4.5rem box, which
+   reads oversized and boxy next to a slim cart line. Matches the pill
+   treatment the product page already gives its own quantity control (see
+   [id^="MainProduct-"] .product-form__quantity .quantity in
+   section-main-product.css) — this is the cart's equivalent, scoped via
+   .cart-item so it can't leak onto that product-page control. */
 .cart-item .quantity {
+  width: calc(11rem / var(--font-body-scale) + var(--inputs-border-width) * 2);
+  min-height: calc((var(--inputs-border-width) * 2) + 3.8rem);
+  border-radius: 999px;
   border-color: rgba(var(--color-foreground), 0.16);
+}
+
+.cart-item .quantity:before,
+.cart-item .quantity:after {
+  border-radius: 999px;
+}
+
+.cart-item .quantity__button {
+  width: calc(3.6rem / var(--font-body-scale));
 }
 
 .cart-item cart-remove-button .button {
@@ -217,6 +242,31 @@
   .cart-item__image {
     max-width: 100% !important;
   }
+}
+
+/* --------------------------------- Buttons ------------------------------------ */
+
+/* Every button in the cart — checkout, "Continue shopping", remove, close,
+   the quantity-rules info toggle — inherits the theme's global corner-radius
+   setting, which is 0 (square) everywhere except the product page, which
+   carries its own scoped pill override. Raising that setting globally would
+   also round the offer-builder's buttons, which are square on purpose (see
+   the design-language comment at the top of section-offer-builder.css) — so
+   the cart gets the same scoped treatment the product page already has,
+   instead of a site-wide setting change. */
+.cart-drawer .button,
+cart-items .button,
+#main-cart-footer .button {
+  border-radius: 999px;
+}
+
+.cart-drawer .button:before,
+.cart-drawer .button:after,
+cart-items .button:before,
+cart-items .button:after,
+#main-cart-footer .button:before,
+#main-cart-footer .button:after {
+  border-radius: 999px;
 }
 
 /* ---------------------------------- Drawer ----------------------------------- */

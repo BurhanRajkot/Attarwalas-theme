@@ -57,6 +57,9 @@ if (!customElements.get('offer-builder')) {
         this.useDiscount = this.discountType !== 'none' && this.discountAmount > 0;
 
         this.groups = Array.from(this.querySelectorAll('[data-offer-group]'));
+        // Quantity mode (the duo page): at least one group takes a range
+        // rather than an exact count, so there's no fixed total to count to.
+        this.hasRange = this.groups.some((group) => group.dataset.groupRange);
         this.cards = Array.from(this.querySelectorAll('[data-offer-card]'));
         this.counter = this.querySelector('[data-offer-counter]');
         this.picksElement = this.querySelector('[data-offer-picks]');
@@ -110,9 +113,28 @@ if (!customElements.get('offer-builder')) {
         return count;
       }
 
+      groupOf(groupIndex) {
+        return this.groups.find((element) => element.dataset.groupIndex === groupIndex);
+      }
+
+      // The most this group accepts. In exact mode min === max, which is the
+      // original "pick exactly N" behaviour every offer page still uses.
       groupLimit(groupIndex) {
-        const group = this.groups.find((element) => element.dataset.groupIndex === groupIndex);
-        return group ? parseInt(group.dataset.groupPickCount, 10) || 0 : 0;
+        const group = this.groupOf(groupIndex);
+        if (!group) return 0;
+        return parseInt(group.dataset.groupMax || group.dataset.groupPickCount, 10) || 0;
+      }
+
+      // The fewest this group accepts before the bundle can be added.
+      groupMin(groupIndex) {
+        const group = this.groupOf(groupIndex);
+        if (!group) return 0;
+        return parseInt(group.dataset.groupMin || group.dataset.groupPickCount, 10) || 0;
+      }
+
+      groupSatisfied(groupIndex) {
+        const count = this.countInGroup(groupIndex);
+        return count >= this.groupMin(groupIndex) && count <= this.groupLimit(groupIndex);
       }
 
       totalSelected() {
@@ -161,6 +183,7 @@ if (!customElements.get('offer-builder')) {
         }
 
         this.selections.set(card, 1);
+        this.syncGroupSize(card);
         this.render();
       }
 
@@ -184,7 +207,17 @@ if (!customElements.get('offer-builder')) {
 
       onVariantChange(card, select) {
         const option = select.options[select.selectedIndex];
+        this.applyVariantOption(card, select, option);
+        this.syncGroupSize(card);
+        this.render();
+      }
 
+      // Writes one <option>'s data onto its card (dataset + visible price) and
+      // onto the <select> itself. Shared by a direct user pick (onVariantChange)
+      // and a size cascaded in from another card (syncGroupSize) so both paths
+      // update state identically.
+      applyVariantOption(card, select, option) {
+        select.value = option.value;
         card.dataset.variantId = option.value;
         card.dataset.price = option.dataset.price;
         card.dataset.variantTitle = option.dataset.variantTitle || '';
@@ -192,13 +225,55 @@ if (!customElements.get('offer-builder')) {
 
         const priceElement = card.querySelector('[data-offer-price]');
         if (priceElement) priceElement.textContent = option.dataset.priceFormatted;
+      }
 
-        this.render();
+      /*
+        Keeps one Size across every bottle in a pick group: whichever size the
+        customer just set on `sourceCard` is applied to every other card in the
+        same group, whether that card is already added to the bundle or not.
+        Without this, each card's Size dropdown was fully independent — picking
+        50ML on one bottle left a second bottle at 100ML with no way to notice
+        until checkout.
+
+        Matches by `data-option1` (the Size option specifically), not the full
+        variant title, so a second product option (e.g. attar roll-ons' Box
+        Colour) never gets forced to match — only Size does. A sibling with no
+        option at that Size (rare — only if a product's Size set doesn't line
+        up with the others in its group) is left alone rather than guessed at.
+
+        Runs after every size pick (onVariantChange) and every fresh add
+        (select()), so the lock is established by whichever happens first and
+        stays in sync afterwards — the customer can still change their mind by
+        picking a different size anywhere; that becomes the new lock.
+      */
+      syncGroupSize(sourceCard) {
+        const sourceSelect = sourceCard.querySelector('[data-offer-variant]');
+        if (!sourceSelect) return;
+
+        const sourceOption = sourceSelect.options[sourceSelect.selectedIndex];
+        const targetSize = sourceOption && sourceOption.dataset.option1;
+        if (!targetSize) return;
+
+        const groupIndex = this.groupIndexOf(sourceCard);
+
+        this.cards.forEach((card) => {
+          if (card === sourceCard || this.groupIndexOf(card) !== groupIndex) return;
+
+          const select = card.querySelector('[data-offer-variant]');
+          if (!select) return;
+
+          const options = Array.from(select.options);
+          const match =
+            options.find((o) => o.dataset.option1 === targetSize && o.dataset.available === 'true') ||
+            options.find((o) => o.dataset.option1 === targetSize);
+          if (!match || match.value === select.value) return;
+
+          this.applyVariantOption(card, select, match);
+        });
       }
 
       flashGroup(groupIndex) {
-        const group = this.groups.find((element) => element.dataset.groupIndex === groupIndex);
-        const pill = group?.querySelector('[data-group-counter]');
+        const pill = this.groupOf(groupIndex)?.querySelector('[data-group-counter]');
         if (!pill) return;
 
         pill.classList.add('offer-group__pill--full');
@@ -232,26 +307,40 @@ if (!customElements.get('offer-builder')) {
           const groupIndex = group.dataset.groupIndex;
           const count = this.countInGroup(groupIndex);
           const limit = this.groupLimit(groupIndex);
+          const min = this.groupMin(groupIndex);
+          const satisfied = this.groupSatisfied(groupIndex);
           const pill = group.querySelector('[data-group-counter]');
 
           if (pill) {
-            pill.textContent = `${count} / ${limit}`;
-            pill.classList.toggle('offer-group__pill--complete', count === limit);
+            // Quantity mode has no "N of N" to count towards, so the pill
+            // shows the requirement until it's met, then the running count.
+            pill.textContent = group.dataset.groupRange
+              ? count === 0
+                ? `Min ${min}`
+                : `${count} selected`
+              : `${count} / ${limit}`;
+            pill.classList.toggle('offer-group__pill--complete', satisfied);
           }
-          group.classList.toggle('offer-group--complete', count === limit);
+          group.classList.toggle('offer-group--complete', satisfied);
         });
 
         const total = this.totalSelected();
-        const ready = this.groups.every(
-          (group) => this.countInGroup(group.dataset.groupIndex) === this.groupLimit(group.dataset.groupIndex)
-        );
+        const ready = this.groups.every((group) => this.groupSatisfied(group.dataset.groupIndex));
 
-        if (this.counter) this.counter.textContent = `${total} / ${this.totalPickCount}`;
+        if (this.counter) this.counter.textContent = this.hasRange ? String(total) : `${total} / ${this.totalPickCount}`;
         if (this.picksElement) this.picksElement.textContent = this.picksSummary();
 
         // Drives the fill line across the top of the sticky bar.
         if (this.bar) {
-          const progress = this.totalPickCount > 0 ? Math.min(100, (total / this.totalPickCount) * 100) : 0;
+          // In quantity mode the fill tracks how many groups are satisfied —
+          // counting units would read 100% off five perfumes and no attar.
+          const progress = this.hasRange
+            ? (this.groups.filter((group) => this.groupSatisfied(group.dataset.groupIndex)).length /
+                (this.groups.length || 1)) *
+              100
+            : this.totalPickCount > 0
+              ? Math.min(100, (total / this.totalPickCount) * 100)
+              : 0;
           this.bar.style.setProperty('--offer-progress', `${progress}%`);
           this.bar.classList.toggle('offer-builder__bar--ready', ready);
         }
@@ -264,16 +353,36 @@ if (!customElements.get('offer-builder')) {
         const priced = this.useDiscount || this.offerPrice > 0;
 
         this.addButton.disabled = !ready || !priced;
-        const remaining = this.totalPickCount - total;
-        this.addLabel.textContent = !priced
-          ? 'Offer unavailable'
-          : ready
-            ? this.readyLabel
-            : remaining === this.totalPickCount
-              ? `Select ${this.totalPickCount} items`
-              : `Select ${remaining} more`;
+        this.addLabel.textContent = !priced ? 'Offer unavailable' : ready ? this.readyLabel : this.promptLabel(total);
 
         this.hideError();
+      }
+
+      /*
+        What the sticky bar says while the bundle is still incomplete.
+
+        A single-group offer just counts down to the total ("Select 2 more").
+        That's useless on a duo, where "select 1 more" doesn't say whether the
+        customer still owes a perfume or an attar — so once any group names
+        what it holds (data-group-noun), the prompt calls out the first group
+        that's still short by name instead.
+      */
+      promptLabel(total) {
+        const short = this.groups
+          .map((group) => ({
+            noun: group.dataset.groupNoun,
+            need: this.groupMin(group.dataset.groupIndex) - this.countInGroup(group.dataset.groupIndex),
+          }))
+          .filter((group) => group.need > 0);
+
+        if (short.length && short.some((group) => group.noun)) {
+          const { noun, need } = short[0];
+          const name = noun || 'item';
+          return `Add ${need} ${name}${need > 1 ? 's' : ''}`;
+        }
+
+        const remaining = this.totalPickCount - total;
+        return remaining === this.totalPickCount ? `Select ${this.totalPickCount} items` : `Select ${remaining} more`;
       }
 
       renderWorth() {

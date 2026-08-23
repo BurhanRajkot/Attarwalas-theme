@@ -9,6 +9,7 @@
             "heading": "Choose any 5 perfumes",
             "collections": ["men-3", "women-1", "unisex-3"],
             "pick_count": 5,
+            "include": "bottles",
             "open_by_default": true
           }
         }

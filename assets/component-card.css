@@ -412,26 +412,50 @@
   }
 }
 
-/* Quick-add overlay: hover-revealed button + scrim over the card image,
-   used when card-product is rendered with quick_add_overlay: true.
-   .card__media is already position: absolute (see base rules above),
-   which is sufficient to anchor these absolutely-positioned children. */
+/* Quick-add overlay: hover-revealed button + scrim over the card image, used
+   when card-product is rendered with quick_add_overlay: true. It renders as a
+   sibling of .card__media (see the comment in snippets/card-product.liquid) and
+   is anchored by .card__inner, which covers the same box.
+
+   z-index 3 puts it above the card's whole-surface link (.card__heading
+   a::after, z-index 1) so the button is actually clickable. Lowering this, or
+   moving the markup back inside .card__media, silently turns the button into a
+   link to the product page. */
 .quick-add-overlay {
   position: absolute;
   left: 1rem;
   right: 1rem;
-  bottom: 1.2rem;
-  z-index: 2;
-  opacity: 0;
-  transform: translateY(0.5rem);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  bottom: 1rem;
+  z-index: 3;
+  /* Wipes up from its own bottom edge rather than fading in, so the bar
+     reads as rising out of the image. */
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
+}
+
+/*
+  The bar's colours are captured on .card-wrapper, not lower down, because
+  --color-button gets redefined twice between here and the button:
+
+  - `.card` carries its own color-scheme class (scheme-2 on these grids), which
+    re-points --color-button at that scheme's near-black.
+  - the button carries `.button--secondary`, which re-points it again at the
+    pale secondary colour.
+
+  .card-wrapper sits above both, so it still sees the *section's* scheme — the
+  brand gold. Aliasing into --quick-add-* here means neither of those rules can
+  shadow it on the way down. Don't move these onto .quick-add-overlay or the
+  button: the bar renders near-black from there.
+*/
+.card-wrapper {
+  --quick-add-bg: var(--color-button);
+  --quick-add-fg: var(--color-button-text);
 }
 
 .card-wrapper:hover .quick-add-overlay,
 .card-wrapper:focus-within .quick-add-overlay {
-  opacity: 1;
-  transform: translateY(0);
+  clip-path: inset(0 0 0 0);
   pointer-events: auto;
 }
 
@@ -460,22 +484,75 @@
 }
 
 .quick-add-overlay .quick-add__submit {
-  border-radius: 0.2rem;
-  min-width: 100%;
-  letter-spacing: 0.1rem;
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 0.3rem;
+  padding: 1.1rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.12rem;
   text-transform: uppercase;
-  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.18);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    color 0.25s ease;
+  background: rgb(var(--quick-add-bg));
+  color: rgb(var(--quick-add-fg));
+  box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.12);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .quick-add-overlay .quick-add__submit:hover {
-  transform: translateY(-0.1rem);
-  box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.24);
+  background: rgba(var(--quick-add-bg), 0.9);
+  box-shadow: 0 0.5rem 1.4rem rgba(0, 0, 0, 0.18);
+}
+
+/* Shine sweep on hover — a soft diagonal band of light glides across the bar
+   once. This also replaces Dawn's own .button::after, which draws the border
+   ring; the bar is a solid fill, so the ring isn't wanted. */
+.quick-add-overlay .quick-add__submit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, 0.55) 50%, transparent 58%);
+  background-size: 260% 100%;
+  background-position: 150% 0;
+  background-repeat: no-repeat;
+  transition: background-position 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.quick-add-overlay .quick-add__submit:hover::after {
+  background-position: -60% 0;
+}
+
+.quick-add-overlay .quick-add__submit span {
+  position: relative;
+  z-index: 2;
 }
 
 .quick-add-overlay .quick-add__submit.loading {
-  transform: scale(0.98);
+  color: transparent;
+}
+
+.quick-add-overlay .loading__spinner {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.quick-add-overlay .loading__spinner .path {
+  stroke: rgb(var(--quick-add-fg));
+}
+
+.quick-add-overlay .loading__spinner.hidden {
+  display: inline-block !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-add-overlay,
+  .quick-add-overlay .quick-add__submit::after {
+    transition: none;
+  }
 }
 
 /* Hover-to-reveal doesn't work on touch; hide the overlay so tapping a

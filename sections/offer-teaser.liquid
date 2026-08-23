@@ -41,7 +41,12 @@
       </div>
     {%- endif -%}
 
-    {%- render 'offer-strip', offer_products: offers, strip_id: section.id -%}
+    {%- render 'offer-strip',
+      offer_products: offers,
+      strip_id: section.id,
+      pill_label: section.settings.card_pill_label,
+      cta_label: section.settings.card_cta_label
+    -%}
   </div>
 </div>
 
@@ -91,6 +96,22 @@
       "id": "subtext",
       "label": "Subtext",
       "default": "Pick your perfumes and pay one bundle price."
+    },
+    {
+      "type": "header",
+      "content": "Cards"
+    },
+    {
+      "type": "text",
+      "id": "card_pill_label",
+      "label": "Card tag",
+      "info": "The little corner tag on every card. Blank uses \"Offer\". Set it to \"Duo\" when this section is showing duos."
+    },
+    {
+      "type": "text",
+      "id": "card_cta_label",
+      "label": "Card link text",
+      "info": "Blank uses \"Shop the offer\"."
     },
     {
       "type": "header",

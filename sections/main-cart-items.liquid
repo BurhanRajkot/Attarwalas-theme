@@ -235,14 +235,24 @@
                         <p class="product-option">{{ item.selling_plan_allocation.selling_plan.name }}</p>
                       {%- endif -%}
 
-                      <ul class="discounts list-unstyled" role="list" aria-label="{{ 'customer.order.discount' | t }}">
-                        {%- for discount in item.line_level_discount_allocations -%}
-                          <li class="discounts__discount">
-                            {%- render 'icon-discount' -%}
-                            {{ discount.discount_application.title }}
-                          </li>
-                        {%- endfor -%}
-                      </ul>
+                      {%- comment -%}
+                        Skipped on a free-gift line: the "Free gift" badge just
+                        above already says this line is free, so the discount
+                        function's own line here (its title, e.g. "Your free
+                        roll-on") is a second label saying the same thing.
+                        Still shown on every other discounted line (offer
+                        bundles etc.), where it's the only indicator.
+                      {%- endcomment -%}
+                      {%- unless item.properties._free_gift != blank and item.final_line_price == 0 -%}
+                        <ul class="discounts list-unstyled" role="list" aria-label="{{ 'customer.order.discount' | t }}">
+                          {%- for discount in item.line_level_discount_allocations -%}
+                            <li class="discounts__discount">
+                              {%- render 'icon-discount' -%}
+                              {{ discount.discount_application.title }}
+                            </li>
+                          {%- endfor -%}
+                        </ul>
+                      {%- endunless -%}
                     </td>
 
                     <td class="cart-item__totals right medium-hide large-up-hide">

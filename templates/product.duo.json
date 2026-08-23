@@ -1,0 +1,60 @@
+{
+  "sections": {
+    "offer-builder": {
+      "type": "offer-builder",
+      "blocks": {
+        "group-perfume": {
+          "type": "group",
+          "settings": {
+            "heading": "Choose your perfume",
+            "collections": ["men-3", "women-1", "unisex-3"],
+            "pick_mode": "range",
+            "min_pick": 1,
+            "max_pick": 5,
+            "include": "bottles",
+            "noun": "perfume",
+            "open_by_default": true
+          }
+        },
+        "group-attar": {
+          "type": "group",
+          "settings": {
+            "heading": "Choose your attar",
+            "collections": ["attar-roll-ons"],
+            "pick_mode": "range",
+            "min_pick": 1,
+            "max_pick": 5,
+            "include": "rollons",
+            "noun": "attar",
+            "open_by_default": true
+          }
+        }
+      },
+      "block_order": ["group-perfume", "group-attar"],
+      "settings": {
+        "config_mode": "editor",
+        "banner_full_width": false,
+        "badge": "",
+        "tagline": "One perfume, one attar — pick your quantities and the price follows.",
+        "perks": "Free shipping on duos\nMix any sizes you like",
+        "show_steps": true,
+        "steps_first_line": "Pick your perfume and your attar below",
+        "price_note": "on your duo, whatever you pick",
+        "discount_type": "percent",
+        "discount_amount": 20,
+        "button_label": "Add duo to cart",
+        "add_label": "Add to duo",
+        "soldout_label": "Sold out",
+        "selected_label": "in your duo",
+        "more_offers_heading": "More duos",
+        "more_offers_collection": "duo",
+        "card_pill_label": "Duo",
+        "card_cta_label": "Shop the duo",
+        "color_scheme": "scheme-1",
+        "padding_top": 40,
+        "padding_bottom": 40
+      }
+    }
+  },
+  "order": ["offer-builder"]
+}
