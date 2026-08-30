@@ -1,0 +1,111 @@
+{% comment %}
+  Renders an optional "choose your free perfume" picker directly on a
+  qualifying signature-series product's page, so the customer can pick their
+  free 10ml/35ml gift before ever reaching the cart, instead of only being
+  able to claim it from snippets/free-gift-picker.liquid once they're already
+  in the cart. Picking here is entirely optional — skipping it just leaves
+  the earned slot unclaimed in the cart exactly as before, so nothing about
+  the existing cart-based flow had to change.
+
+  Deliberately only ever offers ONE slot regardless of the quantity chosen on
+  this page (Burhan's call, 2026-08-29): buying multiple units here still
+  only earns one gift through this picker; any additional earned slots are
+  claimed the existing way, in the cart.
+
+  How the add actually happens: this can't be bundled into the same
+  /cart/add request as the main item — Dawn's <product-form> submits a single
+  variant via FormData, not a multi-item JSON payload, and touching that
+  shared file for this would risk every other product form on the site. So
+  this component waits for that request to succeed
+  (PUB_SUB_EVENTS.cartUpdate, matched by variant id so it only reacts to
+  *this* form, not some other product-form/quick-add on the same page), then
+  fires its own /cart/add.js call for the gift variant, mirroring
+  assets/free-gift.js's own add-then-notify pattern. Two network requests,
+  not one — but from the customer's perspective it's a single click, and if
+  the gift add ever fails silently, the slot just stays unclaimed and
+  reappears in the cart exactly like any other missed slot.
+
+  Accepts:
+  - product {Object} the product being viewed
+  - section_id {String} the id of the section rendering this, used to scope
+    PUB_SUB_EVENTS.variantChange/cartUpdate matching to only this product form
+
+  Usage:
+  {% render 'product-gift-picker', product: product, section_id: section.id %}
+{% endcomment %}
+{%- liquid
+  assign qualifying_collection = settings.free_gift_qualifying_collection
+  if qualifying_collection == blank
+    assign qualifying_collection = collections['signature-series']
+  endif
+
+  assign gift_collection = settings.free_gift_collection
+  if gift_collection == blank
+    assign gift_collection = collections['signature-series']
+  endif
+
+  assign in_qualifying_collection = false
+  for c in product.collections
+    if c.handle == qualifying_collection.handle
+      assign in_qualifying_collection = true
+      break
+    endif
+  endfor
+-%}
+{%- if settings.free_gift_enabled and in_qualifying_collection and gift_collection.products_count > 0 -%}
+  {%- assign initial_variant = product.selected_or_first_available_variant -%}
+  <product-gift-picker
+    class="product-gift-picker"
+    data-section="{{ section_id }}"
+    data-initial-variant-id="{{ initial_variant.id }}"
+    data-initial-size="{{ initial_variant.option1 }}"
+    data-gift-label="{{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
+  >
+    <p class="product-gift-picker__heading">
+      {{- settings.free_gift_heading | default: 'Your free perfume' -}}
+    </p>
+    <p class="product-gift-picker__subtext" data-gift-subtext>
+      Pick a free perfume with this order — optional, you can also choose one later in your cart.
+    </p>
+    <div class="product-gift-picker__select-wrap">
+      <select class="product-gift-picker__select" data-gift-select aria-label="Choose your free perfume">
+        <option value="" selected>Skip for now</option>
+        {%- liquid
+          assign gift_slot = 0
+        -%}
+        {%- for gift in gift_collection.products -%}
+          {%- liquid
+            assign gift_title_lower = gift.title | downcase
+            if gift_title_lower contains 'customize'
+              continue
+            endif
+          -%}
+          {%- assign gift_variant_50 = blank -%}
+          {%- assign gift_variant_100 = blank -%}
+          {%- for v in gift.variants -%}
+            {%- if v.option1 == '10ML' -%}
+              {%- assign gift_variant_50 = v -%}
+            {%- elsif v.option1 == '35ML' -%}
+              {%- assign gift_variant_100 = v -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if gift_variant_50 == blank and gift_variant_100 == blank -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- assign gift_slot = gift_slot | plus: 1 -%}
+          {%- if gift_slot > 12 -%}
+            {%- break -%}
+          {%- endif -%}
+          <option
+            value="{{ gift.id }}"
+            data-gift-variant-small="{{ gift_variant_50.id }}"
+            data-gift-variant-large="{{ gift_variant_100.id }}"
+          >
+            {{- gift.title | escape -}}
+          </option>
+        {%- endfor -%}
+      </select>
+    </div>
+    <p class="product-gift-picker__confirm" data-gift-confirm hidden></p>
+  </product-gift-picker>
+{%- endif -%}

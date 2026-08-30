@@ -1,7 +1,7 @@
 /**
- * <free-gift-picker> — lets the customer choose (and swap) their free
- * roll-ons from inside the cart, one per qualifying perfume unit. A slot's
- * roll-on size (10ml or 35ml) is locked to the bottle size that earned it.
+ * <free-gift-picker> — lets the customer choose (and swap) their free gift
+ * perfumes from inside the cart, one per qualifying perfume unit. A slot's
+ * gift size (10ml or 35ml) is locked to the bottle size that earned it.
  * Rendered by snippets/free-gift-picker.liquid, which draws one row per
  * earned slot: a claimed row (product + price + Change) or an empty row (a
  * dropdown).
@@ -38,7 +38,7 @@ if (!customElements.get('free-gift-picker')) {
     }
   
     connectedCallback() {
-      // Each bucket ('50' → filled with a 10ml roll-on, '100' → 35ml) is
+      // Each bucket ('50' → filled with a 10ml gift perfume, '100' → 35ml) is
       // trimmed independently: a bucket's excess must only take units from
       // that same bucket's rows, otherwise dropping a 50ml perfume from the
       // cart could remove a still-valid 35ml gift instead of the orphaned
@@ -170,7 +170,7 @@ if (!customElements.get('free-gift-picker')) {
           id: Number(variantId),
           quantity: 1,
           properties: {
-            Gift: this.dataset.giftLabel || 'Free roll-on',
+            Gift: this.dataset.giftLabel || 'Free perfume',
             _free_gift: '1',
           },
         },

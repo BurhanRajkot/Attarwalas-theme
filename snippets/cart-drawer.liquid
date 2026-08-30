@@ -21,7 +21,7 @@
   # to share a computed value across snippet scopes.
   assign gift_collection = settings.free_gift_collection
   if gift_collection == blank
-    assign gift_collection = collections['attar-roll-ons']
+    assign gift_collection = collections['signature-series']
   endif
 
   assign qualifying_collection = settings.free_gift_qualifying_collection
@@ -263,7 +263,7 @@
                             Skipped on a free-gift line: the "Free gift" badge
                             just above already says this line is free, so the
                             discount function's own line here (its title, e.g.
-                            "Your free roll-on") is a second label saying the
+                            "Your free perfume") is a second label saying the
                             same thing. Still shown on every other discounted
                             line (offer bundles etc.), where it's the only
                             indicator. Mirrors sections/main-cart-items.liquid.
@@ -594,7 +594,7 @@
             {{ 'sections.cart.checkout' | t }}
           </button>
           {%- if gift_pending -%}
-            <p class="cart__gift-pending-note">Pick your free roll-on above to continue.</p>
+            <p class="cart__gift-pending-note">Pick your free perfume above to continue.</p>
           {%- endif -%}
         </div>
       </div>

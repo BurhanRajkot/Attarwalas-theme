@@ -9,7 +9,7 @@
 <script src="{{ 'free-gift.js' | asset_url }}" defer="defer"></script>
 
 {%- comment -%}
-  Stale-render guard. Adding a bundle (or picking a roll-on) finishes server-side
+  Stale-render guard. Adding a bundle (or picking a free gift) finishes server-side
   a moment AFTER the cart page may have rendered — so a customer who lands on
   /cart while the add is still committing sees the empty state even though the
   cart actually has items, and only a refresh fixes it. This watches for that:
@@ -239,7 +239,7 @@
                         Skipped on a free-gift line: the "Free gift" badge just
                         above already says this line is free, so the discount
                         function's own line here (its title, e.g. "Your free
-                        roll-on") is a second label saying the same thing.
+                        perfume") is a second label saying the same thing.
                         Still shown on every other discounted line (offer
                         bundles etc.), where it's the only indicator.
                       {%- endcomment -%}

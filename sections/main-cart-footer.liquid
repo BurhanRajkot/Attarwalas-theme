@@ -4,14 +4,14 @@
 {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
 
 {%- liquid
-  # A qualifying perfume in the cart earns a free roll-on slot; checkout is
+  # A qualifying perfume in the cart earns a free gift slot; checkout is
   # blocked until every earned slot is claimed, so a customer can't skip
   # picking their free gift. Mirrors the eligibility math in
   # snippets/free-gift-picker.liquid — kept in sync manually since Liquid has
   # no way to share a computed value across snippet scopes.
   assign gift_collection = settings.free_gift_collection
   if gift_collection == blank
-    assign gift_collection = collections['attar-roll-ons']
+    assign gift_collection = collections['signature-series']
   endif
 
   assign qualifying_collection = settings.free_gift_qualifying_collection
@@ -133,7 +133,7 @@
                   {{ 'sections.cart.checkout' | t }}
                 </button>
                 {%- if gift_pending -%}
-                  <p class="cart__gift-pending-note">Pick your free roll-on above to continue.</p>
+                  <p class="cart__gift-pending-note">Pick your free perfume above to continue.</p>
                 {%- endif -%}
               </div>
 

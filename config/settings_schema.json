@@ -1482,7 +1482,7 @@
     "settings": [
       {
         "type": "paragraph",
-        "content": "Lets the customer choose a free roll-on from inside the cart. The roll-on's size matches the perfume bottle size bought — 50ml earns a 10ml roll-on, 100ml (or any other size) earns a 35ml roll-on. The roll-on goes in as a normal cart line — the offer discount (the same automatic discount that prices the bundles) is what takes it to ₹0. Changing the two collections below also means updating the discount function's collection ids."
+        "content": "Lets the customer choose a free 10ml/35ml perfume from inside the cart (from the signature-series collection, not a roll-on). The gift size matches the perfume bottle size bought — 50ml earns a free 10ml perfume, 100ml (or any other size) earns a free 35ml perfume. The gift goes in as a normal cart line — the offer discount (the same automatic discount that prices the bundles) is what takes it to ₹0. Changing the two collections below also means updating the discount function's collection ids."
       },
       {
         "type": "checkbox",
@@ -1493,20 +1493,20 @@
       {
         "type": "collection",
         "id": "free_gift_collection",
-        "label": "Roll-ons the customer can pick from",
-        "info": "Defaults to the \"attar-roll-ons\" collection. Only the first 12 products are shown."
+        "label": "Perfumes the customer can pick from (10ml/35ml gift sizes)",
+        "info": "Defaults to the \"signature-series\" collection. Only the first 12 products are shown. Each product needs its own 10ML and 35ML variants for the gift sizes to be selectable."
       },
       {
         "type": "collection",
         "id": "free_gift_qualifying_collection",
         "label": "Buying from this collection unlocks the gift",
-        "info": "Defaults to the \"non-alcoholic\" collection — i.e. one full-size perfume in the cart earns one free roll-on. Must match the qualifying collection id in the offer discount function."
+        "info": "Defaults to the \"signature-series\" collection — i.e. one full-size perfume in the cart earns one free 10ml/35ml perfume. Must match the qualifying collection id in the offer discount function."
       },
       {
         "type": "text",
         "id": "free_gift_heading",
         "label": "Heading",
-        "default": "Your free roll-on"
+        "default": "Your free perfume"
       },
       {
         "type": "text",
@@ -1518,7 +1518,7 @@
         "type": "text",
         "id": "free_gift_locked_text",
         "label": "Text before the gift is unlocked",
-        "default": "Add any perfume to unlock a free roll-on."
+        "default": "Add any perfume to unlock a free perfume."
       },
       {
         "type": "text",

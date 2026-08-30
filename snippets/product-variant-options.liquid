@@ -23,9 +23,34 @@
   assign variants_option3_arr = product.variants | map: 'option3'
 
   assign product_form_id = 'product-form-' | append: section.id
+
+  # The 10ML/35ML variants on signature-series products exist only to back
+  # the free-gift picker (snippets/free-gift-picker.liquid,
+  # snippets/product-gift-picker.liquid) — they aren't meant to be a normal
+  # purchase option here. Hidden from the Size picker specifically for those
+  # products (2026-08-30, Burhan: "perfume on the signature page it is only
+  # available in 2 size 50 and 100ml"). Scoped to the qualifying collection
+  # so this never touches roll-ons, which have their own legitimate,
+  # purchasable 10ML/35ML sizes with the same value strings.
+  assign hide_gift_only_sizes = false
+  if option.name == 'Size' and settings.free_gift_enabled
+    assign qualifying_collection = settings.free_gift_qualifying_collection
+    if qualifying_collection == blank
+      assign qualifying_collection = collections['signature-series']
+    endif
+    for c in product.collections
+      if c.handle == qualifying_collection.handle
+        assign hide_gift_only_sizes = true
+        break
+      endif
+    endfor
+  endif
 -%}
 
 {%- for value in option.values -%}
+  {%- if hide_gift_only_sizes and value == '10ML' or hide_gift_only_sizes and value == '35ML' -%}
+    {%- continue -%}
+  {%- endif -%}
   {%- liquid
     assign option_disabled = true
 

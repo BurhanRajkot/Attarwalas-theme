@@ -19,6 +19,20 @@ class FragrancePicker extends HTMLElement {
 
     this.addEventListener('focusout', this.onFocusOut.bind(this));
     this.addEventListener('change', this.close.bind(this));
+
+    // No fragrance is pre-selected (see snippets/fragrance-option-picker.liquid) —
+    // Dawn's own price/Add-to-cart state only gets recomputed on a 'change' event,
+    // so without this the button would render enabled on first load even though
+    // nothing is actually chosen yet. This runs once the moment the picker exists;
+    // Dawn's normal VariantSelects.onVariantChange takes over and re-enables it as
+    // soon as the customer picks a fragrance (or disables it again for any other
+    // genuinely unavailable combination), same as it always has.
+    if (!this.querySelector('.fragrance-picker__radio:checked')) {
+      const variantSelects = this.closest('variant-selects');
+      if (variantSelects && typeof variantSelects.toggleAddButton === 'function') {
+        variantSelects.toggleAddButton(true, 'Select a fragrance');
+      }
+    }
   }
 
   open() {

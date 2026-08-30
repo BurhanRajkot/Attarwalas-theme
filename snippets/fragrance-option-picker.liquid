@@ -5,6 +5,13 @@
   this picker reads product.options_with_values directly, so it always reflects whatever
   fragrances currently exist, no theme changes required.
 
+  No fragrance is pre-selected (2026-08-30, Burhan's call) — unlike Dawn's normal
+  variant pickers, which always default to product.selected_or_first_available_variant,
+  this one deliberately renders every radio unchecked so a customer can't add to cart
+  without consciously picking a fragrance. assets/fragrance-picker.js disables the Add
+  to Cart button on load to enforce that; it re-enables itself automatically the moment
+  a fragrance is chosen, via Dawn's existing VariantSelects change-handling.
+
   Accepts:
   - product: {Object} product object.
   - option: {Object} the option to render.
@@ -29,7 +36,13 @@
 >
   <legend class="form__label">
     {{ option.name | remove: ':' }}
-    <span data-selected-swatch-value="{{ option.name }}">{{ option.selected_value }}</span>
+    {%- comment -%}
+      Deliberately blank, not option.selected_value — Burhan asked that no
+      fragrance be pre-selected (2026-08-30), so nothing is "chosen" until the
+      customer actually picks one. Dawn's own VariantSelects.updateSelectedSwatchValue
+      fills this in automatically the moment a radio's `change` fires.
+    {%- endcomment -%}
+    <span data-selected-swatch-value="{{ option.name }}"></span>
   </legend>
 
   <fragrance-picker class="fragrance-picker">
@@ -105,9 +118,6 @@
             value="{{ value | escape }}"
             form="{{ product_form_id }}"
             class="fragrance-picker__radio visually-hidden{% if option_disabled %} disabled{% endif %}"
-            {% if option.selected_value == value %}
-              checked
-            {% endif %}
           >
           <label for="{{ input_id }}" class="fragrance-picker__label">
             <span class="fragrance-picker__name">{{ clean_name }}</span>

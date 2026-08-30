@@ -6,16 +6,18 @@ Guidance for working in this repo. Read this before making changes.
 
 Outstanding items to resolve before this theme goes live — check this list before submitting.
 
-- [ ] **Replace the dummy free-gift variants with a proper product collection.** The
-      50ml perfume variants and 10ml/35ml roll-on variants (added 2026-08-22) use
-      computed placeholder pricing (50ml = half the 100ml price; 10ml/35ml =
-      linear scale off each product's existing 6ml/12ml pricing) entered directly
-      as extra variants on the existing products, just to unblock the free-gift
-      picker feature. Burhan is going to redo this properly via a product
-      collection — swap the ad-hoc variants out for that once it exists, and
-      update `snippets/free-gift-picker.liquid` / the qualifying-collection logic
-      to match the new structure. See memory (`dummy-gift-variants-pending-collection-redo`)
-      for details.
+- [ ] **Decide real pricing for the 10ml/35ml gift-size perfume variants.** As
+      of 2026-08-29 the free-gift picker gives away a 10ml/35ml **perfume**
+      (from `signature-series`) instead of a roll-on — see "Free gift" below.
+      The 10ML/35ML variants added to each signature-series product to make
+      this possible use computed placeholder pricing (10ml = 10% of the
+      100ml price, 35ml = 35%), same kind of ad-hoc placeholder as the 50ml
+      size before it. Since these are never actually charged (the discount
+      function zeroes them), the pricing mostly matters for the order record
+      and for what these variants would cost if a customer bought one
+      directly rather than as a gift — worth a real pricing decision from
+      Burhan rather than leaving the formula in place indefinitely. See
+      memory (`dummy-gift-variants-pending-collection-redo`) for details.
 - [ ] **Add matching product variants for the new Fragrance metaobject entries.** As of
       2026-08-22, Burhan is bulk-importing fragrance entries into the `fragrance`
       metaobject via Matrixify (50+ entries added in one session, more expected — see
@@ -576,49 +578,72 @@ drifting apart. Every other discounted line (offer bundles, duo) is
 unaffected — its discount tag is the *only* thing telling the customer why
 that line is discounted, so it still needs to show.
 
-## Free gift — "pick your free roll-on" in the cart
+## Free gift — "pick your free perfume" in the cart
 
-Backs the announcement-bar promise ("Buy 1 Perfume • FREE Roll-On"), which
-was previously just text with nothing behind it.
+Backs the announcement-bar promise ("Buy 1 Perfume • FREE Roll-On" — the
+announcement bar copy is stale as of 2026-08-29, see below), which was
+previously just text with nothing behind it.
+
+**The gift changed from a roll-on to a small-size perfume bottle on
+2026-08-29** (Burhan: "instead of roll on we have option to give signature
+collection... just 35 and 10 ml"). The gift pool is now the **signature-series
+collection itself** — a customer earns a free 10ml (or 35ml) bottle of *any*
+signature-series perfume, not a roll-on. Roll-ons are unaffected as a product
+line; they're just no longer the gift source. Update the announcement bar copy
+in the theme editor when convenient — it still says "FREE Roll-On".
 
 | File | Role |
 | --- | --- |
-| `snippets/free-gift-picker.liquid` | the block itself: eligibility check, a dropdown of roll-ons, and the claimed state (chosen roll-on + ₹0 price + Change button) |
+| `snippets/free-gift-picker.liquid` | the block itself: eligibility check, a dropdown of gift perfumes, and the claimed state (chosen perfume + ₹0 price + Change button) |
 | `assets/free-gift.js` | `<free-gift-picker>` — add / swap / auto-remove the gift line, then re-render the cart sections |
 | `assets/component-free-gift.css` | styles, incl. the `.cart-item__free-gift-tag` "Free gift" badge |
 
 Rendered from **both** carts, inside `.js-contents` so Dawn's own quantity
 refresh re-evaluates eligibility for free:
 `sections/main-cart-items.liquid` (cart page) and `snippets/cart-drawer.liquid`.
+The checkout-blocking logic in `sections/main-cart-footer.liquid` and
+`snippets/cart-drawer.liquid` duplicates the same eligibility math (Liquid has
+no way to share a computed value across snippet scopes) and has its own copy
+of the gift-collection fallback — keep all of these in sync if the fallback
+ever changes again.
 
 Settings live in **Theme settings → Free gift** (`config/settings_schema.json`),
 so one place drives both carts: on/off, the gift collection (defaults to
-`attar-roll-ons`), the qualifying collection (defaults to `signature-series`,
-id `435023937824` — this collection was titled/handled `non-alcoholic` when
-this feature was built and got renamed since; the hardcoded Liquid fallback
-handle was updated to match on 2026-08-22, see the "stale collection handle"
-gotcha near the bottom of this section), and the copy.
+`signature-series`), the qualifying collection (also defaults to
+`signature-series`, id `435023937824` — this collection was titled/handled
+`non-alcoholic` when the feature was first built and got renamed since), and
+the copy. **Gift collection and qualifying collection are now the same
+collection by default** — this is new as of 2026-08-29 and is the reason for
+both gotchas below (exact-match, and the function's variant-size check).
 
 ### The gift size is matched to the bottle size (added 2026-08-21)
 
-Perfumes now come in **50ml and 100ml** variants (added to all 6
-`non-alcoholic` perfumes and the roll-on products alongside this feature: 50ml
-perfumes priced at half the 100ml price, roll-on 10ml/35ml priced by linearly
-scaling each product's existing 6ml/12ml pricing — see git history for the
-exact numbers). A 50ml bottle earns a slot fillable **only** with a 10ml
-roll-on; a 100ml bottle — or any size the snippet doesn't recognise, which
-covers every perfume sold before 50ml existed — earns a slot fillable only
-with a 35ml roll-on.
+Signature-series perfumes come in **100ml, 50ml, 35ml and 10ml** variants (the
+50ml size was added 2026-08-21 at half the 100ml price; the 10ml/35ml gift
+sizes were added 2026-08-29 at 10%/35% of the 100ml price — see git history
+for the exact numbers per product). A 50ml bottle earns a slot fillable
+**only** with a 10ml gift perfume; a 100ml bottle — or any size the snippet
+doesn't recognise, which covers every perfume sold before 50ml existed —
+earns a slot fillable only with a 35ml gift perfume.
 
 `free-gift-picker.liquid` tracks this as two separate pools (`_50` / `_100` in
 the Liquid variable names and the `data-qualifying-50` / `data-claimed-50` /
 `data-qualifying-100` / `data-claimed-100` attributes on `<free-gift-picker>`),
-each rendering its own dropdown filtered to roll-on variants whose `option1`
-(the Size option) contains `'10'` or `'35'` respectively. The bucket a
-bottle/gift line belongs to is inferred by checking whether
-`item.variant.option1 contains '50'` (bottles) or `contains '10'` (already-
-claimed roll-ons) — not a stored property — so it's derived fresh from the
-cart every render.
+each rendering its own dropdown filtered to gift variants whose `option1` (the
+Size option) is **exactly** `'10ML'` or `'35ML'`. The bucket a bottle/gift
+line belongs to is inferred by checking whether `item.variant.option1 ==
+'50ML'` (bottles) or `== '10ML'` (already-claimed gifts) — not a stored
+property — so it's derived fresh from the cart every render.
+
+**Gotcha: exact match, never `contains`.** Before 2026-08-29 this logic used
+`option1 contains '10'`/`contains '50'`, which was safe when the gift pool was
+roll-ons (only sizes 6/12/10/35ml). Once the gift pool became the same
+perfumes that also come in **100ML**, `contains '10'` would match "100ML" too
+(it contains the substring "10") — silently treating a customer's own
+full-price 100ml bottle as the 10ml gift variant. Every Size comparison in
+`free-gift-picker.liquid`, `sections/main-cart-footer.liquid`, and
+`snippets/cart-drawer.liquid` must stay an exact `==` check. Don't reintroduce
+`contains` here.
 
 `free-gift.js`'s stale-slot trim (`trimExcess`) is bucket-aware too: each
 claimed row carries `data-gift-bucket="50"` or `"100"`, and excess is computed
@@ -626,15 +651,34 @@ and trimmed per bucket. This matters because a flat/global trim could delete a
 still-earned 35ml gift instead of the orphaned 10ml one when a 50ml perfume
 line is removed from a mixed-size cart.
 
+**Gotcha: claimed rows must render even when `qualifies` is false.** Found
+live 2026-08-30 (Burhan: remove the perfume that earned a gift, and the gift
+line stayed in the cart). The claimed-rows loop used to be wrapped in `{%- if
+qualifies -%}`, and `qualifies` is only true when `qualifying_units > 0` —
+so the moment the qualifying perfume was removed (`qualifying_units` drops to
+0), the claimed row's markup (and its `data-gift-line-key`) simply never
+rendered at all, meaning `trimExcess` had nothing to find and nothing to
+remove. Fixed by changing the condition to `{%- if qualifies or claimed_units
+> 0 -%}`, so a claimed row keeps rendering — and stays trimmable — for as
+long as a gift line actually exists, independent of whether the cart still
+currently qualifies. `remaining_50`/`remaining_100` are unaffected (they're
+already clamped to 0), so no new "pick more" prompt appears alongside it.
+
+Fixing this alone wasn't enough — see "a claimed gift line must never count
+toward its own eligibility" further down, in the discount function section.
+Both bugs produced the identical customer-visible symptom (gift never goes
+away) from two unrelated causes: this one hid the row from the trim JS,
+the other kept the discount function itself perpetually re-earning the gift.
+
 ### How it works
 
 - Eligible once the cart holds ≥1 item from the qualifying collection. The check
   walks `item.product.collections` per cart line — this works in the sections API
   too, verified.
-- Choosing a roll-on adds an **ordinary cart line** with properties `Gift`
+- Choosing a gift perfume adds an **ordinary cart line** with properties `Gift`
   (visible, so it lands on the order) and `_free_gift` (hidden marker everything
   else keys off).
-- Swapping adds the new roll-on first, then removes the old line, so a failed add
+- Swapping adds the new gift first, then removes the old line, so a failed add
   can't leave the customer with no gift.
 - If the cart stops qualifying, `connectedCallback` removes the stale gift line
   (once per page load — `staleGiftRemovalTried` guards against a loop).
@@ -654,42 +698,250 @@ The zeroing is done by the **same discount function that prices the bundles**
 
 - Shopify runs **one** automatic product discount, so a separate Buy X get Y
   would compete with the bundle discount instead of stacking with it.
-- Buy X get Y can't see `_free_gift`, so it would also zero a roll-on the
-  customer deliberately added to buy. Keying off the marker means only the
-  picked gift is free.
+- Buy X get Y can't see `_free_gift`, so it would also zero a gift perfume the
+  customer deliberately added to buy at full price. Keying off the marker
+  means only the picked gift is free.
 
 What the function does (`extensions/offer-discount/src/index.js`): it counts
 total qualifying units in the cart (`qualifyingUnits`, size-agnostic — it
 doesn't distinguish 50ml from 100ml, only the theme's picker does that), then
 spends that budget **across every `_free_gift` line in cart order**, zeroing up
 to `qualifyingUnits` worth of units total. A cart can hold several different
-`_free_gift` lines at once (e.g. one 10ml roll-on line and one 35ml roll-on
-line, from a mixed 50ml+100ml cart) and all of them get their fair share
-zeroed, not just the first — so a customer who raises a slot's quantity past
-what's earned only pays for the extra units on that line.
+`_free_gift` lines at once (e.g. one 10ml gift line and one 35ml gift line,
+from a mixed 50ml+100ml cart) and all of them get their fair share zeroed, not
+just the first — so a customer who raises a slot's quantity past what's earned
+only pays for the extra units on that line.
 
 Line item properties come from the browser and can be forged, so eligibility is
 re-checked in the function against **collection membership**, via
-`inAnyCollection` in `src/run.graphql`. The collection ids are hardcoded there:
+`inAnyCollection` in `src/run.graphql`:
 
 | collection | id | role |
 | --- | --- | --- |
-| `attar-roll-ons` | `482701836576` | line must be in it to count as a gift |
-| `signature-series` (was `non-alcoholic`) | `435023937824` | a line in it unlocks the gift |
+| `signature-series` (was `non-alcoholic`) | `435023937824` | line must be in it to count as a gift, AND a line in it unlocks the gift |
 
-**These must match Theme settings → Free gift.** Changing either collection in
-the customizer means editing `run.graphql` and redeploying, otherwise the picker
-offers a roll-on the function refuses to discount. (Collection ids without admin
-access: `curl -s https://attarwalas-4203.myshopify.com/collections/<handle> |
-grep -o '"resourceId":[0-9]*'`.) The function keys on **id**, so the 2026-08-22
-rename of this collection's handle/title didn't require redeploying it — only
-the theme's hardcoded fallback handle (`snippets/free-gift-picker.liquid`) and
-`cart_drawer_collection` in `config/settings_data.json` needed fixing, since
-those referenced it by handle string.
+**Gotcha: the variant-size safeguard.** Before 2026-08-29 the gift collection
+(`attar-roll-ons`) and the qualifying collection (`signature-series`) were
+disjoint, so `isGiftProduct` and `isQualifyingProduct` could never both be true
+for the same line — that was what made collection membership alone a safe
+check. Now that both roles point at the **same** collection, a forged
+`_free_gift` property (properties come from the browser and can be forged) on
+a line for a customer's own full-price 100ml bottle would pass the collection
+check too. `run.graphql` also queries the variant's own `title` (these
+products have a single option, so title IS the Size value, e.g. `"10ML"`), and
+`index.js`'s `isGiftLine` additionally requires `variantTitle === '10ML' ||
+variantTitle === '35ML'` before zeroing anything. Don't remove this check
+while gift and qualifying collection remain the same collection.
+
+**Gotcha: a claimed gift line must never count toward its own eligibility.**
+Found live 2026-08-30 (reported by Burhan: remove the perfume that earned a
+gift, and the gift stayed free forever instead of reverting to full price).
+Cause: `qualifyingUnits` was being summed from every line where
+`product.isQualifyingProduct` is true — and a claimed 10ml/35ml gift line
+*is itself* a signature-series product, so it was silently counting toward
+its own qualifying budget. Once earned, a gift kept re-earning itself
+indefinitely, even after the real full-price purchase that unlocked it was
+removed. Fixed in `index.js` by computing `isGiftLine` first and excluding
+it from the `qualifyingUnits` sum (`if (product?.isQualifyingProduct &&
+!isGiftLine) qualifyingUnits += line.quantity;`). Any future change to this
+loop must keep gift lines excluded from their own qualifying count — this is
+easy to reintroduce by accident since both checks read the same
+`isQualifyingProduct`/`isGiftProduct` fields off the same collection.
+
+The theme-side symptom of this bug looked identical to a completely
+different, purely cosmetic issue also fixed 2026-08-30 (see "Claimed rows
+must render even when qualifies is false" in the free-gift section below) —
+both manifested as "the gift line doesn't go away after removing the
+perfume." Fixing only the theme-side rendering bug would have done nothing
+on its own, since the discount function was the one actually keeping the
+line priced at ₹0 — always check what the function itself is doing before
+assuming a leftover cart line is a front-end rendering problem.
+
+**These collection ids must match Theme settings → Free gift.** Changing
+either collection in the customizer means editing `run.graphql` and
+redeploying, otherwise the picker offers a gift the function refuses to
+discount. (Collection ids without admin access: `curl -s
+https://attarwalas-4203.myshopify.com/collections/<handle> | grep -o
+'"resourceId":[0-9]*'`.) The function keys on **id**, so a future rename of
+this collection's handle/title won't require redeploying it — only the
+theme's hardcoded fallback handle (`snippets/free-gift-picker.liquid`,
+`sections/main-cart-footer.liquid`, `snippets/cart-drawer.liquid`) would need
+fixing, since those reference it by handle string.
 
 Deploy after any change to the function: `shopify app deploy` from
 `~/Desktop/SHOPIFY/offer-transform-app`. Nothing to create in admin — the
 existing automatic discount picks up the new function version.
+
+### Gotcha: a legacy Globo Product Options field duplicated this whole feature
+
+Discovered 2026-08-29 when Burhan reported "Select 6ml Free Roll-On" text and
+having to re-pick a fragrance on the cart page. Neither symptom came from
+this theme's code at all — a **Globo Product Options** app option set
+(installed app embed block `globo-product-option`, see "Installed app embed
+blocks" above), configured directly in the Globo app's own admin UI, not in
+any file in this repo. It added a *required* dropdown ("Select 6ml Free
+Roll-On") to the exact same 6 signature-series products, asking the customer
+to pick a fragrance before they could add to cart, and it re-ran (re-prompting
+the same required field) on the cart page — that's what caused the "have to
+select again" complaint.
+
+This predates the current cart-based free-gift picker and is a strictly
+inferior, redundant version of the same idea: it only records the customer's
+pick as a **line-item property**, it never adds a real priced/discountable
+cart line, and it was still hardcoded to "6ml" from before the 50ml/100ml/
+10ml/35ml sizing existed. Confirmed via curl (`ons[<id>] = {...}` blob
+embedded in the product/cart page HTML — search for `"label":"Select 6ml
+Free Roll-On"`) rather than guessing, since this class of app-injected UI is
+invisible to a grep of the theme's own files.
+
+Deactivated (set to Draft, not hard-deleted — reversible) on 2026-08-29 in
+Globo's own admin: Apps → Globo Product Options → Option Sets → the set
+confusingly named **"New Option Set"** (id `684548`, 6 products, field
+labeled "Select 6ml Free Roll-On"). Globo's admin-facing option-set **Name**
+does not necessarily match the customer-facing field **Label** — don't trust
+the Name column alone when hunting for a specific field; open each set and
+check its actual field label. The store's other option sets ("Search Your
+Fragrance", "35ml complimentary", both "GPO_DEMO", "New option set") are
+unrelated to this bug and were left untouched.
+
+The double-prompt this caused was confirmed live, not assumed: Globo's field
+only ever wrote a cosmetic line-item property (the price never changed —
+Globo has no idea about `_free_gift` or the discount function), while the
+theme's own free-gift picker in the cart independently still asked "pick 1
+more" right below it, since it only tracks its own `_free_gift` cart lines
+and has no knowledge of Globo's field either. Two unrelated systems asking
+the same question, only one of which actually worked.
+
+If either symptom — a "Select ... Free ..." field on a product page, or a
+duplicate free-gift prompt in the cart — ever reappears, check Globo's option
+sets before assuming it's a theme bug; grep won't find it because it isn't
+theme code.
+
+### Outstanding: 10ml/35ml perfume variants across the catalog
+
+The 10ml/35ml gift-size variants only exist on the 6 products currently in
+`signature-series` (Oudh Eternal, Mystique Island, Florence Orchidia, Fresh
+Woodscape, Yameni Yakud, Ambre Intense) as of 2026-08-29, priced by linearly
+scaling each product's own 100ml price (10ml = 10%, 35ml = 35% — same formula
+already used for the 50ml size). If a product is added to `signature-series`
+later without matching 10ML/35ML variants, it silently won't appear in the
+gift dropdown (the picker skips any product missing the matching size, same
+behavior as the old roll-on picker) — not a bug, but easy to mistake for one.
+
+### 10ML/35ML hidden from the main Size picker (added 2026-08-30)
+
+Adding the 10ML/35ML variants (above) made them show up as normal,
+purchasable Size options on every signature-series product page — a
+customer could buy a "10ml Oudh Eternal" for ₹300 directly, which was never
+the intent; those sizes exist only to back the free-gift pickers. Burhan
+asked for the main product page to only ever offer 50ML/100ML.
+
+Fixed in `snippets/product-variant-options.liquid` (the shared snippet that
+renders every option's buttons/swatches/dropdown entries, used by
+`product-variant-picker.liquid` everywhere a variant picker renders): for
+the `Size` option specifically, on a product in the free-gift qualifying
+collection, `10ML`/`35ML` are skipped when iterating `option.values`. The
+underlying variants are untouched — still fully priced, still fully
+addable by variant id — only their *button* stops rendering, which is all
+the free-gift pickers need (both add gift lines directly by variant id, they
+never read this picker's UI).
+
+**Scoped by collection membership, not by value string**, on purpose: the
+attar roll-on products have their own genuinely-purchasable `10ML`/`35ML`
+sizes with the exact same value strings, and are not in the qualifying
+collection — a value-string-only filter would have hidden those too.
+Verified: `oudh-eternal-attar-roll-on` still shows all four of its real
+sizes (6ML/12ML/10ML/35ML) unaffected.
+
+Don't try to hide these sizes by marking the variants unavailable/out of
+stock instead — the free-gift pickers add them via `/cart/add.js` with
+`inventoryPolicy: CONTINUE` specifically so they're always addable
+regardless of stock; making them unavailable at the variant level would
+break the add call itself, not just the picker UI.
+
+### Pre-picking the gift on the product page (added 2026-08-30)
+
+Burhan asked for the free-gift choice to be offered on the *product* page
+too, not only once the customer is already in the cart — the cart-based
+picker (`snippets/free-gift-picker.liquid`) stays exactly as-is and remains
+the only way to claim a slot for anything that didn't go through this path
+(quick-add overlay, "Buy Now", a second qualifying unit beyond the one this
+picker covers, etc.).
+
+| File | Role |
+| --- | --- |
+| `snippets/product-gift-picker.liquid` | the picker itself: eligibility check (product must be in the qualifying collection), a dropdown of gift products with both size variants encoded as data attributes |
+| `assets/product-gift-picker.js` | `<product-gift-picker>` — reacts to the main add-to-cart succeeding, then separately adds the gift |
+| `assets/component-product-gift-picker.css` | styles, same rounded/flat-tint card language as `.free-gift` |
+
+Rendered unconditionally (no block, no theme-editor config) from
+`sections/main-product.liquid` right after the buy-box blocks loop, gated on
+`settings.free_gift_enabled` and the product being in the qualifying
+collection — same two checks `free-gift-picker.liquid` already does. CSS/JS
+are loaded conditionally too, following the exact pattern already used for
+`fragrance-option-picker` (`has_fragrance_option` flag → conditional
+stylesheet/script tags).
+
+**Deliberately scoped by Burhan's own choices, 2026-08-30:**
+- Only ever **one** picker regardless of quantity — buying 3 units of a
+  perfume here still only earns one gift through this control; the other 2
+  earned slots show up unclaimed in the cart exactly as before.
+- Picking is **optional** — skipping it (leaving "Skip for now" selected)
+  changes nothing; the slot just appears unclaimed in the cart, identical to
+  today's behavior before this feature existed.
+
+**Why this needs its own network request, not one combined add:** Dawn's
+`<product-form>` (`assets/product-form.js`) submits a single variant via
+`FormData` to `/cart/add` — there is no supported way to smuggle a second
+line item into that same request without rewriting a file every product page
+on the site depends on, which is far too much blast radius for one feature.
+Instead `product-gift-picker.js` waits for `PUB_SUB_EVENTS.cartUpdate`
+(published by `product-form.js` itself right after a successful, non-buy-now
+add), confirms it's a match for *this* form specifically by comparing variant
+ids, and only then fires its own `/cart/add.js` call for the gift — mirroring
+how `assets/free-gift.js` already adds a gift as an ordinary cart line with
+`Gift` + `_free_gift` properties. It publishes its own `cartUpdate` afterward
+so the cart drawer/bubble pick up the new line.
+
+**Known limitation: doesn't fire on "Buy Now."** `product-form.js` redirects
+straight to `/checkout` on that path without ever publishing `cartUpdate`, so
+there's no hook to attach to without touching that shared file. A customer
+using Buy Now on a qualifying product simply doesn't get the pre-pick
+opportunity — no worse than before this feature existed, since Buy Now
+already skipped the theme's cart (and its free-gift picker) entirely.
+
+**Gotcha hit while building this: `data-*` attributes with a digit right
+after the hyphen don't camelCase.** The first version used
+`data-variant-50` / `data-variant-100` on each `<option>`, read back in JS as
+`dataset.variant50` / `dataset.variant100` — silently always `undefined`,
+because the HTML spec's camelCasing rule only converts a hyphen followed by
+a *lowercase letter*; a hyphen followed by a digit is left as a literal
+hyphen in the resulting property name (so the real key would have been
+`dataset['variant-50']`, not `dataset.variant50`). Fixed by renaming the
+attributes to `data-gift-variant-small` / `data-gift-variant-large`
+(→ `dataset.giftVariantSmall` / `dataset.giftVariantLarge`), which sidesteps
+the rule entirely. Caught by adding temporary `console.log` around the
+lookup and testing live in a real browser — the failure was completely
+silent (an early `return`), so nothing in a design-mode preview or template
+render would ever have surfaced it.
+
+**Styling (updated 2026-08-30):** both `.free-gift` (cart) and
+`.product-gift-picker` (product page) were reworked from a sharp-cornered,
+gradient-backed box to a flatter, fully rounded one — `border-radius: 1.6rem`
+on the outer card, `999px` (pill) on the select, the claimed row, its "Free
+gift" tag, and the Change button — matching the pill treatment
+`component-cart-redesign.css` already established for cart buttons. No
+gradient background anymore, just a flat low-opacity gold tint. If either
+component ever needs a new interactive element, make it a pill too rather
+than a sharp rectangle, to stay consistent with this and the cart's own
+existing direction.
+
+**The "X added as your free gift" confirmation auto-hides now.** It used to
+stay on screen for the rest of the page session once shown, which read as
+"you're done here" even though the select underneath was already reset and
+ready to pick again. `product-gift-picker.js`'s `showConfirm()` now clears it
+after 5 seconds, or immediately if the customer touches the select again
+(`hideConfirm()`, wired to the select's own `change` event).
 
 ## Customize Perfume — fragrance search picker
 
@@ -748,6 +1000,39 @@ reference/content data only (used for the picker's search index, and available
 for future use like notes/family display). Pricing lives entirely on the
 product's real variants (Size × Type × Fragrance), same as any other Shopify
 product.
+
+### No fragrance pre-selected + duplicate focus-ring fix (added 2026-08-30)
+
+Burhan reported two problems on the search-box UI: it looked broken when
+clicked (two overlapping rounded borders), and a fragrance was always
+pre-selected on page load, which he didn't want.
+
+**The overlapping borders** were Dawn's own global accessibility rule,
+`*:focus-visible` (`assets/base.css`), applying its own box-shadow ring
+directly to the bare `<input>` (`border-radius: 0`) at the same time as
+`.fragrance-picker__search`'s own `:focus-within` ring on the *wrapper*
+(`border-radius: 999px`) — two different shapes, stacked, looking like two
+misaligned search boxes. Confirmed live via `getComputedStyle` on the input
+during focus (`box-shadow: rgb(252,250,245) 0 0 0 3px, rgba(43,36,24,0.3) 0 0
+5px 4px` — exactly `*:focus-visible`'s rule, matching this theme's
+`--color-background`/`--color-foreground`). Fixed by suppressing box-shadow
+and outline specifically on `.fragrance-picker__search-input:focus-visible`
+— the wrapper's own ring is the only focus indicator this component needs;
+the site-wide rule is untouched everywhere else.
+
+**No fragrance is pre-selected anymore.** `snippets/fragrance-option-picker.liquid`
+used to check whichever radio matched `option.selected_value` (Dawn's normal
+default-to-first-variant behavior) — removed entirely, so every radio starts
+unchecked and the legend's value span starts blank. Since Dawn's
+`VariantSelects` only recomputes the current variant on a `change` event (not
+on page load), a customer could otherwise still submit the form and silently
+get whatever fragrance was "selected" without ever touching the list.
+`assets/fragrance-picker.js` closes that gap: on construction, if no radio is
+checked, it calls the enclosing `<variant-selects>`'s own `toggleAddButton(true,
+'Select a fragrance')` — the exact method Dawn already uses for a genuinely
+unavailable variant — disabling Add to Cart until a fragrance is chosen. Once
+chosen, Dawn's existing `onVariantChange` flow takes over exactly as it
+already does for Size/Type, with no other changes needed.
 
 ### Outstanding: metaobjects ≠ variants
 

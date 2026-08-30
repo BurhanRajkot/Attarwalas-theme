@@ -26,6 +26,22 @@
   {%- if product.quantity_price_breaks_configured? -%}
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
+  {%- liquid
+    assign gift_qualifying_collection = settings.free_gift_qualifying_collection
+    if gift_qualifying_collection == blank
+      assign gift_qualifying_collection = collections['signature-series']
+    endif
+    assign product_gift_eligible = false
+    for c in product.collections
+      if c.handle == gift_qualifying_collection.handle
+        assign product_gift_eligible = true
+        break
+      endif
+    endfor
+  -%}
+  {% if settings.free_gift_enabled and product_gift_eligible %}
+    {{ 'component-product-gift-picker.css' | asset_url | stylesheet_tag }}
+  {% endif %}
 
   {%- style -%}
     .section-{{ section.id }}-padding {
@@ -45,6 +61,9 @@
   <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
   {% if has_fragrance_option %}
     <script src="{{ 'fragrance-picker.js' | asset_url }}" defer="defer"></script>
+  {% endif %}
+  {% if settings.free_gift_enabled and product_gift_eligible %}
+    <script src="{{ 'product-gift-picker.js' | asset_url }}" defer="defer"></script>
   {% endif %}
   {%- if product.quantity_price_breaks_configured? -%}
     <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
@@ -669,6 +688,7 @@
                 {% render 'icon-with-text', block: block %}
             {%- endcase -%}
           {%- endfor -%}
+          {% render 'product-gift-picker', product: product, section_id: section.id %}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
             {% render 'icon-arrow' %}

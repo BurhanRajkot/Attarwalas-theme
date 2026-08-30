@@ -58,6 +58,17 @@ fragrance-picker {
   outline: 0;
 }
 
+/* Dawn's global `*:focus-visible` (assets/base.css) puts its own box-shadow
+   ring directly on whatever element receives focus — which, on a bare
+   `<input>` with border-radius: 0, painted a second, squared-off glow right
+   on top of this pill's own rounded `:focus-within` ring on the wrapper,
+   looking like two overlapping, misaligned search boxes. The wrapper's ring
+   is the only focus indicator this component needs. */
+.fragrance-picker__search-input:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+
 .fragrance-picker__search-input::placeholder {
   color: rgba(var(--color-foreground), 0.5);
 }

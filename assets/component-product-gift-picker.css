@@ -1,0 +1,102 @@
+/* ==========================================================================
+   Product-page "choose your free perfume" picker — same rounded, flat-tint
+   card as .free-gift (assets/component-free-gift.css) so it reads as the
+   same feature, just offered a step earlier. Rendered by
+   snippets/product-gift-picker.liquid.
+   ========================================================================== */
+
+.product-gift-picker {
+  --gift-gold: var(--color-button);
+  --gift-ink: var(--color-foreground);
+  display: block;
+  margin: 2rem 0;
+  padding: 1.8rem 2rem;
+  border: 1px solid rgba(var(--gift-ink), 0.08);
+  border-radius: 1.6rem;
+  background: rgba(var(--gift-gold), 0.045);
+}
+
+.product-gift-picker__heading {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--gift-gold));
+}
+
+.product-gift-picker__subtext {
+  margin: 0.4rem 0 1.4rem;
+  font-size: 1.3rem;
+  line-height: 1.45;
+  color: rgba(var(--gift-ink), 0.68);
+}
+
+.product-gift-picker__select-wrap {
+  position: relative;
+}
+
+.product-gift-picker__select {
+  width: 100%;
+  padding: 1.2rem 4.6rem 1.2rem 1.8rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgb(var(--color-background));
+  border: 1px solid rgba(var(--gift-ink), 0.16);
+  border-radius: 999px;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  color: rgb(var(--gift-ink));
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.product-gift-picker__select:hover {
+  border-color: rgba(var(--gift-gold), 0.6);
+}
+
+.product-gift-picker__select:focus-visible {
+  outline: none;
+  border-color: rgb(var(--gift-gold));
+  box-shadow: 0 0 0 0.1rem rgb(var(--gift-gold));
+}
+
+.product-gift-picker__select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 1.8rem;
+  top: 50%;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-right: 2px solid rgb(var(--gift-gold));
+  border-bottom: 2px solid rgb(var(--gift-gold));
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.product-gift-picker__confirm {
+  margin: 1.4rem 0 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: rgb(var(--gift-gold));
+}
+
+.product-gift-picker__confirm[hidden] {
+  display: none;
+}
+
+@media screen and (max-width: 749px) {
+  .product-gift-picker {
+    padding: 1.6rem 1.6rem;
+    border-radius: 1.4rem;
+  }
+
+  .product-gift-picker__heading {
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+  }
+
+  .product-gift-picker__subtext {
+    font-size: 1.2rem;
+  }
+}
