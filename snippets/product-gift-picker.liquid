@@ -51,6 +51,13 @@
       break
     endif
   endfor
+
+  # Customize Perfume isn't in signature-series but still earns a gift the
+  # same way — mirrors the handle exception in free-gift-picker.liquid,
+  # main-cart-footer.liquid and cart-drawer.liquid.
+  if product.handle == 'customize-perfume-1'
+    assign in_qualifying_collection = true
+  endif
 -%}
 {%- if settings.free_gift_enabled and in_qualifying_collection and gift_collection.products_count > 0 -%}
   {%- assign initial_variant = product.selected_or_first_available_variant -%}

@@ -42,16 +42,31 @@
     gap: 2.5rem;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding-bottom: 0.5rem;
+    padding: 0 0 0.5rem 0;
     margin: 0;
     list-style: none;
   }
 
+  .aw-from-collection__list--single {
+    display: block;
+    overflow-x: visible;
+  }
+
+  .aw-from-collection__list--single .aw-from-collection__item {
+    width: 100%;
+  }
+
   @media screen and (min-width: 750px) {
     .aw-from-collection__list {
-      grid-auto-columns: minmax(0, 1fr);
+      display: grid;
+      grid-auto-flow: initial;
+      grid-auto-columns: initial;
       grid-template-columns: repeat(var(--aw-fc-cols, 4), 1fr);
       overflow-x: visible;
+    }
+
+    .aw-from-collection__list--single {
+      display: grid;
     }
   }
 
@@ -112,9 +127,6 @@
         endif
 
         assign fc_grid_cols = section.settings.columns_desktop
-        if fc_display_count > 0 and fc_display_count < fc_grid_cols
-          assign fc_grid_cols = fc_display_count
-        endif
       -%}
 
       <div class="aw-from-collection__title-row">
@@ -124,7 +136,7 @@
       </div>
 
       <ul
-        class="aw-from-collection__list"
+        class="aw-from-collection__list{% if fc_display_count == 1 %} aw-from-collection__list--single{% endif %}"
         role="list"
         style="--aw-fc-cols: {{ fc_grid_cols }};"
       >

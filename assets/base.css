@@ -3270,6 +3270,23 @@ details-disclosure > details {
     transform: translateY(0);
   }
 
+  /* Once the reveal animation has actually finished (see the matching
+     animationend listener in animations.js), cancel it and clear the
+     transform it leaves behind — animation-fill-mode: forwards otherwise
+     holds transform: translateY(0) on this element indefinitely, which is
+     visually identical to no transform but still traps any native <select>
+     nested inside (Chrome closes its dropdown immediately after opening
+     when a transformed ancestor is present). Cancelling the animation drops
+     its held opacity too, so that's restored explicitly here — otherwise
+     the element falls back to the base .animate--slide-in rule's
+     opacity: 0.01 and turns invisible. */
+  .scroll-trigger.animate--fade-in.scroll-trigger--settled,
+  .scroll-trigger.animate--slide-in.scroll-trigger--settled {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+
   @keyframes slideIn {
     from {
       transform: translateY(2rem);

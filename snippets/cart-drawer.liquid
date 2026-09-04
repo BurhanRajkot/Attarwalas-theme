@@ -42,12 +42,23 @@
       continue
     endif
 
+    assign in_qualifying_collection = false
     for c in item.product.collections
       if c.handle == qualifying_collection.handle
-        assign qualifying_units = qualifying_units | plus: item.quantity
+        assign in_qualifying_collection = true
         break
       endif
     endfor
+
+    # Customize Perfume also earns a gift, same handle-based exception as
+    # snippets/free-gift-picker.liquid — keep both in sync.
+    if item.product.handle == 'customize-perfume-1'
+      assign in_qualifying_collection = true
+    endif
+
+    if in_qualifying_collection
+      assign qualifying_units = qualifying_units | plus: item.quantity
+    endif
   endfor
 
   assign gift_pending = false

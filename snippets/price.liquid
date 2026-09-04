@@ -22,6 +22,54 @@
   assign price = target.price | default: 1999
   assign price_min = product.price_min
   assign price_max = product.price_max
+
+  # The 10ML/35ML variants on signature-series products only exist to back
+  # the free-gift pickers (snippets/free-gift-picker.liquid,
+  # snippets/product-gift-picker.liquid) — they're priced far below the
+  # product's real sizes (10%/35% of the 100ml price) purely as placeholder
+  # order-record pricing, and are already hidden from the Size picker on the
+  # product page (see snippets/product-variant-options.liquid). But
+  # product.price / price_min are computed by Shopify across ALL variants
+  # including those hidden ones, so collection cards and any "from" price
+  # were showing the 10ml gift price (e.g. "From Rs. 250") instead of the
+  # cheapest real, purchasable size. Recomputed here excluding those two
+  # sizes, scoped to the qualifying collection so roll-ons — which have
+  # their own genuinely-purchasable 10ML/35ML sizes — are unaffected.
+  # Reported by Burhan 2026-08-31.
+  assign hide_gift_only_sizes = false
+  if target == product and settings.free_gift_enabled
+    assign qualifying_collection = settings.free_gift_qualifying_collection
+    if qualifying_collection == blank
+      assign qualifying_collection = collections['signature-series']
+    endif
+    for c in product.collections
+      if c.handle == qualifying_collection.handle
+        assign hide_gift_only_sizes = true
+        break
+      endif
+    endfor
+  endif
+
+  if hide_gift_only_sizes
+    assign real_price_min = null
+    assign real_price_max = null
+    for variant in product.variants
+      unless variant.option1 == '10ML' or variant.option1 == '35ML'
+        if real_price_min == null or variant.price < real_price_min
+          assign real_price_min = variant.price
+        endif
+        if real_price_max == null or variant.price > real_price_max
+          assign real_price_max = variant.price
+        endif
+      endunless
+    endfor
+    if real_price_min != null
+      assign price = real_price_min
+      assign price_min = real_price_min
+      assign price_max = real_price_max
+    endif
+  endif
+
   assign available = target.available | default: false
   assign money_price = price | money
   assign money_price_min = price_min | money

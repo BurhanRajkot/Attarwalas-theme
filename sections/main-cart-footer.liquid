@@ -32,12 +32,23 @@
       continue
     endif
 
+    assign in_qualifying_collection = false
     for c in item.product.collections
       if c.handle == qualifying_collection.handle
-        assign qualifying_units = qualifying_units | plus: item.quantity
+        assign in_qualifying_collection = true
         break
       endif
     endfor
+
+    # Customize Perfume also earns a gift, same handle-based exception as
+    # snippets/free-gift-picker.liquid — keep both in sync.
+    if item.product.handle == 'customize-perfume-1'
+      assign in_qualifying_collection = true
+    endif
+
+    if in_qualifying_collection
+      assign qualifying_units = qualifying_units | plus: item.quantity
+    endif
   endfor
 
   assign gift_pending = false
@@ -80,13 +91,27 @@
         </cart-note>
       {%- endif -%}
 
-      <div class="cart__blocks">
+      {%- comment -%}
+        js-contents lives on this outer wrapper, not just the subtotal block,
+        so that both cart.js's quantity-change AJAX render and free-gift.js's
+        own render (both of which swap `#main-cart-footer .js-contents`
+        wholesale) also reach the checkout button below — its disabled state
+        and the "Pick your free perfume" note depend on gift_pending, which
+        changes on both kinds of update. Scoping js-contents to only the
+        subtotal block (as it was before) left the button's disabled/enabled
+        state frozen at whatever it was on the last full page load, since
+        that markup sat outside the swapped region entirely. Reported by
+        Burhan 2026-08-31: gift claimed in the cart, checkout still blocked
+        with "Pick your free perfume above to continue" until a manual
+        page refresh.
+      {%- endcomment -%}
+      <div class="cart__blocks js-contents">
         {% for block in section.blocks %}
           {%- case block.type -%}
             {%- when '@app' -%}
               {% render block %}
             {%- when 'subtotal' -%}
-              <div class="js-contents" {{ block.shopify_attributes }}>
+              <div {{ block.shopify_attributes }}>
                 <div>
                   {%- if cart.cart_level_discount_applications.size > 0 -%}
                     <ul class="discounts list-unstyled" role="list" aria-label="{{ 'customer.order.discount' | t }}">

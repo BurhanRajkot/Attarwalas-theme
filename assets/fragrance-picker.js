@@ -17,8 +17,24 @@ class FragrancePicker extends HTMLElement {
       this.clearButton.addEventListener('click', this.onClear.bind(this));
     }
 
+    // Mousedown on a list item blurs the search input (the radio it's
+    // labelling is visually-hidden, so the browser can't focus it as part of
+    // the same mousedown) before the click that actually checks the radio
+    // fires. onFocusOut used to react to that blur immediately and hide the
+    // list, so the click landed on whatever was underneath instead of the
+    // item — the item appeared to do nothing. Suppressing mousedown's
+    // default here keeps focus on the input through the whole click, so the
+    // list stays open until onChange closes it deliberately. Mouse only —
+    // see onFocusOut for the touch equivalent (preventDefault on touchstart
+    // would also block scrolling the list, which mousedown doesn't risk).
+    if (this.list) {
+      this.list.addEventListener('mousedown', (event) => event.preventDefault());
+    }
+
+    this.closeTimeout = null;
+
     this.addEventListener('focusout', this.onFocusOut.bind(this));
-    this.addEventListener('change', this.close.bind(this));
+    this.addEventListener('change', this.onChange.bind(this));
 
     // No fragrance is pre-selected (see snippets/fragrance-option-picker.liquid) —
     // Dawn's own price/Add-to-cart state only gets recomputed on a 'change' event,
@@ -36,6 +52,10 @@ class FragrancePicker extends HTMLElement {
   }
 
   open() {
+    if (this.closeTimeout) {
+      window.clearTimeout(this.closeTimeout);
+      this.closeTimeout = null;
+    }
     if (!this.list || !this.list.hidden) return;
     this.list.hidden = false;
     this.keepListInView();
@@ -54,9 +74,47 @@ class FragrancePicker extends HTMLElement {
     if (this.list) this.list.hidden = true;
   }
 
+  // Picking a fragrance used to leave the search box showing whatever the
+  // customer had typed (or empty, showing the placeholder) while the chosen
+  // name only appeared in the small legend text next to "Search Your
+  // Fragrance" — easy to miss and confusing next to an apparently-empty
+  // search box (Burhan, 2026-09-02). The box itself now shows the selection,
+  // like a normal combobox.
+  onChange() {
+    // Reads whichever radio actually ended up checked, rather than trusting
+    // event.target to be exactly that radio — label-forwarded activation
+    // (tapping/clicking the label, not the input) can be inconsistent about
+    // what a bubbled 'change' event reports as its target across mobile
+    // browsers, and this is robust to that regardless.
+    const radio = this.querySelector('.fragrance-picker__radio:checked');
+    if (radio) {
+      const item = radio.closest('[data-fragrance-item]');
+      const nameEl = item ? item.querySelector('.fragrance-picker__name') : null;
+      if (nameEl && this.searchInput) {
+        this.searchInput.value = nameEl.textContent.trim();
+      }
+    }
+    this.close();
+  }
+
+  // Touch equivalent of the mousedown fix above: tapping a list item blurs
+  // the search input at touchstart (mobile browsers dismiss the keyboard
+  // immediately on tap-outside), well before the touchend/click that
+  // actually selects the item fires — same race, different trigger, and one
+  // `mousedown.preventDefault()` can't cover both without also blocking
+  // touch-scrolling the list (preventDefault on touchstart kills the
+  // gesture's scroll too, not just the blur). Deferring the close instead of
+  // doing it synchronously gives that click/tap — and onChange's own
+  // close() — a chance to land first; open() cancels this if the list gets
+  // refocused before it fires, so a quick re-tap into the search box isn't
+  // yanked shut out from under it.
   onFocusOut(event) {
     if (this.contains(event.relatedTarget)) return;
-    this.close();
+    this.closeTimeout = window.setTimeout(() => {
+      this.closeTimeout = null;
+      if (this.contains(document.activeElement)) return;
+      this.close();
+    }, 300);
   }
 
   onSearch() {

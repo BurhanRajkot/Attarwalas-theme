@@ -69,60 +69,81 @@
     assign qualifying_collection = collections['signature-series']
   endif
 
+  # Two separate pools, keyed by the bottle size that earns them: '50' for a
+  # 50ml bottle (fillable with a 10ml gift perfume), '100' for everything else
+  # (fillable with a 35ml gift perfume — also the safe default for any perfume
+  # variant title this doesn't recognise). claimed_* may briefly exceed
+  # qualifying_* if the customer bumps a qualifying item's quantity down
+  # after claiming — free-gift.js trims the excess, per pool, on load.
+  assign qualifying_50 = 0
+  assign qualifying_100 = 0
+  assign claimed_50 = 0
+  assign claimed_100 = 0
+
+  for item in cart.items
+    if item.properties._free_gift != blank
+      if item.variant.option1 == '10ML'
+        assign claimed_50 = claimed_50 | plus: item.quantity
+      else
+        assign claimed_100 = claimed_100 | plus: item.quantity
+      endif
+      continue
+    endif
+
+    assign in_qualifying_collection = false
+    for c in item.product.collections
+      if c.handle == qualifying_collection.handle
+        assign in_qualifying_collection = true
+        break
+      endif
+    endfor
+
+    # Customize Perfume isn't in (and shouldn't be added to) the
+    # signature-series collection — it's a different product entirely — but
+    # Burhan wants a purchase of it to earn a free gift the same way a
+    # signature-series perfume does. Handle-based, not collection-based, so
+    # this one exception doesn't pull it into signature-series merchandising
+    # or the price/variant-picker logic scoped to that collection elsewhere.
+    # Attar roll-ons are deliberately not included — they live in their own
+    # `attar-roll-ons` collection, untouched by this check either way.
+    if item.product.handle == 'customize-perfume-1'
+      assign in_qualifying_collection = true
+    endif
+
+    if in_qualifying_collection
+      if item.variant.option1 == '50ML'
+        assign qualifying_50 = qualifying_50 | plus: item.quantity
+      else
+        assign qualifying_100 = qualifying_100 | plus: item.quantity
+      endif
+    endif
+  endfor
+
+  assign qualifying_units = qualifying_50 | plus: qualifying_100
+  assign claimed_units = claimed_50 | plus: claimed_100
+
+  assign qualifies = false
+  if qualifying_units > 0
+    assign qualifies = true
+  endif
+
+  # Only show this block once the cart actually qualifies (or already holds a
+  # claimed gift line that still needs to render so it stays trimmable — see
+  # the claimed-rows comment below). A cart holding only non-qualifying items
+  # (e.g. attar roll-ons only) gets no "unlock a free perfume" nudge at all —
+  # reported by Burhan 2026-08-31: the box was showing on an attar-only cart,
+  # which can never qualify (roll-ons aren't in the qualifying collection),
+  # so the nudge was pure clutter with nothing for the customer to do about it.
   assign show_block = false
-  if settings.free_gift_enabled and cart != empty and gift_collection.products_count > 0
-    assign show_block = true
+  if settings.free_gift_enabled and gift_collection.products_count > 0
+    if qualifies or claimed_units > 0
+      assign show_block = true
+    endif
   endif
 -%}
 
 {%- if show_block -%}
   {%- liquid
-    # Two separate pools, keyed by the bottle size that earns them: '50' for a
-    # 50ml bottle (fillable with a 10ml gift perfume), '100' for everything else
-    # (fillable with a 35ml gift perfume — also the safe default for any perfume
-    # variant title this doesn't recognise). claimed_* may briefly exceed
-    # qualifying_* if the customer bumps a qualifying item's quantity down
-    # after claiming — free-gift.js trims the excess, per pool, on load.
-    assign qualifying_50 = 0
-    assign qualifying_100 = 0
-    assign claimed_50 = 0
-    assign claimed_100 = 0
-
-    for item in cart.items
-      if item.properties._free_gift != blank
-        if item.variant.option1 == '10ML'
-          assign claimed_50 = claimed_50 | plus: item.quantity
-        else
-          assign claimed_100 = claimed_100 | plus: item.quantity
-        endif
-        continue
-      endif
-
-      assign in_qualifying_collection = false
-      for c in item.product.collections
-        if c.handle == qualifying_collection.handle
-          assign in_qualifying_collection = true
-          break
-        endif
-      endfor
-
-      if in_qualifying_collection
-        if item.variant.option1 == '50ML'
-          assign qualifying_50 = qualifying_50 | plus: item.quantity
-        else
-          assign qualifying_100 = qualifying_100 | plus: item.quantity
-        endif
-      endif
-    endfor
-
-    assign qualifying_units = qualifying_50 | plus: qualifying_100
-    assign claimed_units = claimed_50 | plus: claimed_100
-
-    assign qualifies = false
-    if qualifying_units > 0
-      assign qualifies = true
-    endif
-
     assign remaining_50 = qualifying_50 | minus: claimed_50
     if remaining_50 < 0
       assign remaining_50 = 0

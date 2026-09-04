@@ -51,7 +51,6 @@ Outstanding items to resolve before this theme goes live — check this list bef
       Theme Customizer (Perfumer bio section → Photo/Bio text/Name fields) — which is
       why every product looked identical. Burhan needs to go through each perfume
       product and fill in its own Perfumer photo + bio to make them distinct.
-
 ## What this is
 
 A Shopify **Online Store 2.0 Liquid theme** (Dawn-family architecture: JSON templates,
@@ -616,6 +615,82 @@ the copy. **Gift collection and qualifying collection are now the same
 collection by default** — this is new as of 2026-08-29 and is the reason for
 both gotchas below (exact-match, and the function's variant-size check).
 
+### Qualifying purchases: signature-series + Customize Perfume, never roll-ons (added 2026-08-31)
+
+Burhan: "i want this free perfume only in the signature series and customize
+not in attar roll ons." Checked live first — roll-ons already didn't qualify
+(they're in their own `attar-roll-ons` collection, separate from
+`signature-series`), but **Customize Perfume didn't qualify either**, and
+Burhan wants it to.
+
+Customize Perfume (`customize-perfume-1`) isn't in, and deliberately isn't
+being added to, the `signature-series` collection — that collection also
+drives the price-card fix and the Size-picker hiding above, both scoped to
+"products in this collection," and dumping an unrelated product into it would
+also make it show up on the `/collections/signature-series` grid. Instead
+every qualifying-eligibility check now OR's in a handle check
+(`item.product.handle == 'customize-perfume-1'`) alongside the existing
+collection-membership check:
+
+- `snippets/free-gift-picker.liquid` (the picker itself)
+- `sections/main-cart-footer.liquid` and `snippets/cart-drawer.liquid`
+  (checkout-blocking math)
+
+A Customize Perfume line's `option1` is a Fragrance name, never `'50ML'`, so
+it always falls into the existing "unrecognised size" fallback and earns the
+35ml gift bucket — same safe default already used for any signature-series
+variant title the bucket logic doesn't recognise.
+
+**Update 2026-08-31: the product-page pre-pick picker now covers Customize
+Perfume too** (`snippets/product-gift-picker.liquid` and
+`sections/main-product.liquid`'s `product_gift_eligible` both got the same
+handle exception) — see the Globo gotcha section below for why. Originally
+left out on purpose (claiming only happened in the cart for this product),
+but that gap is what let a broken Globo dropdown stand in for it unnoticed.
+
+**This also required updating the pricing app, not just the theme.** The
+₹0 discount is applied by a separate app
+(`~/Desktop/SHOPIFY/offer-transform-app`, extension `offer-discount` — see
+"What makes it ₹0" below), which re-checks eligibility server-side via
+collection membership only (`isQualifyingProduct` in `src/run.graphql`).
+Without updating it too, the theme would have shown the gift as claimable and
+unblocked checkout for a Customize Perfume purchase, but the discount function
+would never actually zero the gift line's price — the customer would be
+charged full price for what the UI told them was free. Fixed the same way,
+by handle: `run.graphql` now also fetches `product.handle`, and
+`index.js` OR's `product?.handle === 'customize-perfume-1'` into
+`isQualifyingProduct`. **Needs `shopify app deploy` from
+`~/Desktop/SHOPIFY/offer-transform-app` to take effect** — Burhan runs this
+himself, same as theme dev (see [[user-runs-shopify-cli-commands]] in memory).
+
+### Gotcha: the checkout button never learned the gift was claimed (fixed 2026-08-31)
+
+Burhan reported picking the free gift in the cart and still seeing "Pick your
+free perfume above to continue" with checkout disabled. Reproduced live: the
+cart line was added correctly (₹0, `_free_gift` set, `qualifying_units ==
+claimed_units`), and re-fetching the footer section's HTML directly confirmed
+the server-side Liquid was computing `gift_pending: false` correctly — the bug
+was purely that the browser never saw that new HTML.
+
+Both `assets/cart.js` (Dawn's own quantity-change AJAX) and `assets/free-gift.js`
+patch `#main-cart-footer` by finding its `.js-contents` child and replacing
+its `innerHTML` wholesale. But in `sections/main-cart-footer.liquid`,
+`.js-contents` only wrapped the **subtotal** block's markup — the checkout
+`<button>` and its `gift_pending`-driven `disabled`/note lived in a sibling
+`<div class="cart__ctas">` block one level up, entirely outside that wrapper.
+So the subtotal/price *did* refresh live, but the button's disabled state
+stayed frozen at whatever it was on the last full page load, no matter what
+triggered the re-render (this affected native quantity changes too, not just
+the gift picker — same root cause).
+
+Fixed by moving `.js-contents` up to wrap the whole `.cart__blocks` container
+(both the subtotal block and the CTA block), so a single wholesale replace
+reaches the button too. Don't re-narrow that wrapper back down to just the
+subtotal block, and don't add a second `.js-contents` inside it — both
+`cart.js` and `free-gift.js` grab only the *first* `.js-contents` match via
+`querySelector`, so two of them in the same section would silently mean the
+second one (whichever it is) never gets refreshed again.
+
 ### The gift size is matched to the bottle size (added 2026-08-21)
 
 Signature-series perfumes come in **100ml, 50ml, 35ml and 10ml** variants (the
@@ -817,6 +892,61 @@ duplicate free-gift prompt in the cart — ever reappears, check Globo's option
 sets before assuming it's a theme bug; grep won't find it because it isn't
 theme code.
 
+**A second instance of this exact bug, found and fixed 2026-08-31.** Burhan
+first reported the cart looking "cluttered" on mobile when it held a
+Customize Perfume line, and — separately, later the same day — reported that
+picking a fragrance in the "Select Complimentary 10ml/35ml Perfume" dropdown
+and adding to cart didn't actually add anything; the customer had to go
+re-claim a gift from the cart's own free-gift picker instead. Both symptoms
+traced to the same **required** Globo dropdown on `customize-perfume-1`
+(option set id `1665587`, field label "Select Complimentary 10ml/35ml
+Perfume", written to the cart as the line-item property "Selected
+Complimentary 10ml/35ml Perfume") — almost certainly the option set logged
+above as "35ml complimentary" and assumed unrelated on 2026-08-29, since it's
+on a different product than the 6 signature-series ones that cleanup
+covered. Same failure mode as before: it's a required field that forces
+every customer to pick a "complimentary" perfume, then only ever writes a
+plain cart line-item property — Globo can't touch pricing or add a real cart
+line, so nothing about the pick is actually free or actually added. In the
+cart UI this also rendered as an extra unstyled line wrapped into the same
+`<dl>` as the real Fragrance/Size/Type options (`snippets/cart-drawer.liquid`
+/ `sections/main-cart-items.liquid`), which is what read as "clutter" — the
+underlying flex-wrap layout was working as designed, there was just a 4th,
+redundant item flowing through it.
+
+Burhan was asked 2026-08-31 whether to deactivate it the same way as the
+other one and initially chose to leave it active; once he reported the
+broken add-to-cart behavior later that same day, he asked for it to be
+fixed — then asked specifically for a real fix rather than just removing
+the feature. Two changes:
+
+1. **Deactivated** (set to Draft, not deleted — reversible) in Globo's own
+   admin → Option Sets → set id `1665587`, same as the 2026-08-29 fix.
+2. **Wired up the theme's own working product-page gift picker for this
+   product**, so the "pick a free perfume" experience doesn't just disappear.
+   `snippets/product-gift-picker.liquid` (see "Pre-picking the gift on the
+   product page" below) already does this correctly for every
+   signature-series product — real `/cart/add.js` call, real `_free_gift`
+   line, zeroed by the same discount function — but its own eligibility
+   check only tested collection membership, and `customize-perfume-1` was
+   never in `signature-series` (same reason it needed a handle-based
+   exception everywhere else — see "Qualifying purchases" above). Added the
+   identical `product.handle == 'customize-perfume-1'` exception to both
+   `snippets/product-gift-picker.liquid`'s own eligibility check and
+   `sections/main-product.liquid`'s `product_gift_eligible` (which gates
+   whether the picker's CSS/JS even load on the page).
+
+Verified live end-to-end on `https://www.attarwalas.com/products/customize-perfume-1`
+(preview of this draft theme): Globo's dropdown no longer renders; the
+theme's "Your free perfume" picker renders in its place; picking a fragrance,
+picking "Oudh Eternal" as the gift, and adding to cart produced two real
+cart lines — Customize Perfume at full price, and Oudh Eternal 35ML tagged
+**Free gift** at Rs. 0.00 (struck through from Rs. 1,050.00) — with the
+cart's own free-gift box correctly showing it as claimed. The Globo change
+is app config, not a theme file, so it took effect immediately on both the
+live theme and this draft theme; the two Liquid file edits sync the same way
+any other theme change does (`shopify theme dev` must be running).
+
 ### Outstanding: 10ml/35ml perfume variants across the catalog
 
 The 10ml/35ml gift-size variants only exist on the 6 products currently in
@@ -827,6 +957,29 @@ already used for the 50ml size). If a product is added to `signature-series`
 later without matching 10ML/35ML variants, it silently won't appear in the
 gift dropdown (the picker skips any product missing the matching size, same
 behavior as the old roll-on picker) — not a bug, but easy to mistake for one.
+
+### Gotcha: the 10ml/35ml placeholder price leaked into collection cards (fixed 2026-08-31)
+
+Burhan reported the `signature-series` collection page showing "From Rs. 250"
+for products that actually start at Rs. 1,499+ — clicking through to the
+product page showed the real price. Cause: Shopify's `product.price` /
+`product.price_min` are computed across **every** variant, including the
+10ml/35ml gift-only ones added above, and those are deliberately priced far
+below the real sizes (10%/35% of the 100ml price). So the cheapest variant on
+a signature-series product was always one of the two sizes nobody can
+actually buy through the storefront (they're hidden from the Size picker —
+see below — but hidden ≠ excluded from Shopify's own min/max computation).
+
+Fixed in `snippets/price.liquid`: when rendering a product's own price (not
+a selected variant's, i.e. collection cards and any other "from" price) for
+a product in the free-gift qualifying collection, price/price_min/price_max
+are recomputed from `product.variants` excluding `10ML`/`35ML`, mirroring the
+same qualifying-collection scoping `snippets/product-variant-options.liquid`
+already uses to hide those sizes from the picker. Roll-ons (which have real,
+purchasable 10ML/35ML sizes) are unaffected since they aren't in the
+qualifying collection. Verified against live variant data (Mystique Island:
+50ml @ Rs. 1,499 is now the correct "from" price, not the 10ml gift price of
+Rs. 250).
 
 ### 10ML/35ML hidden from the main Size picker (added 2026-08-30)
 
@@ -1034,6 +1187,92 @@ unavailable variant — disabling Add to Cart until a fragrance is chosen. Once
 chosen, Dawn's existing `onVariantChange` flow takes over exactly as it
 already does for Size/Type, with no other changes needed.
 
+### Gotcha: clicking a search result could silently do nothing (fixed 2026-09-04)
+
+Burhan reported picking a fragrance from the search results (e.g. "Love Forever
+Inspired") sometimes left the search box showing whatever partial text he'd
+typed instead of the full name, and that clicking the result again did
+nothing at all.
+
+Root cause confirmed via event-level tracing: `.fragrance-picker__radio` is
+`visually-hidden`, so a `mousedown` on its `<label>` can't focus the radio in
+the same tick — the browser instead blurs the search input immediately
+(`relatedTarget` lands on `<main tabindex="-1">`, not the radio). That blur
+triggers `onFocusOut`, which closes the list (`list.hidden = true`)
+**before** the `click` event that actually checks the radio (via the label's
+native `for` activation) gets a chance to fire. Once the list is
+`display: none`, the browser's hit-test at mouseup finds nothing there, so
+the click is silently lost — same failure whether the customer picks the
+first result or scrolls to a later one.
+
+Fixed in `assets/fragrance-picker.js`: the list itself now calls
+`event.preventDefault()` on `mousedown`, which suppresses the browser's
+default focus-shifting behavior (so the search input never blurs mid-click)
+without suppressing the label's own `click` activation. This is the standard
+fix used by every combobox/listbox implementation with this shape (Radix,
+downshift, react-select, etc.) — the list stays open through the full click,
+and `onChange` closes it deliberately afterward, same as before.
+
+**A second, related bug surfaced while chasing this one.** Dawn's stock
+`VariantSelects.updateVariantStatuses()` (`assets/global.js`) assumes every
+option always has a `:checked` descendant — true for stock Dawn, false here
+since Fragrance is deliberately left unchecked until picked (see "No
+fragrance is pre-selected" above). Picking Size or Type before Fragrance threw
+`TypeError: Cannot read properties of null (reading 'value')` inside that
+function, silently aborting the rest of `onVariantChange` (price/availability
+updates) for that interaction. Fixed by guarding both `:checked` lookups in
+`updateVariantStatuses()` and returning early (skipping that option's
+availability pass) when nothing's checked yet, instead of throwing — this
+only changes behavior while Fragrance is still unset, where there's nothing
+meaningful to compute Size/Type availability from anyway. Verified: selecting
+Size **then** Fragrance no longer throws, and the button correctly reaches
+"Add to cart" with the right price.
+
+Both fixes were verified with a full synthetic `mousedown` → `mouseup` →
+`click` sequence dispatched at the real on-screen point of the label (not
+`label.click()`, which only fires `click` and would never have exercised the
+blur race in the first place) — confirms the fix holds for a real mouse
+click, not just a programmatic one.
+
+**Touch needed a second, different fix (Burhan: "on touch also should
+work").** Mobile browsers blur a focused input at `touchstart` (to dismiss
+the keyboard immediately on tap-outside) — before the `touchend`/`click` that
+actually selects the item fires. Same race as the mouse one, but
+`mousedown.preventDefault()` doesn't fire for touch, and adding the same
+`preventDefault()` on `touchstart` would also cancel the gesture's scroll —
+you can't distinguish "tapping an item" from "starting a scroll drag that
+happens to begin on an item" at `touchstart` time, and this list scrolls.
+
+Fixed differently: `onFocusOut` no longer closes the list synchronously — it
+defers via `window.setTimeout(..., 300)`, giving whatever click/tap triggered
+the blur a chance to land (and `onChange` to close the list deliberately)
+first. `open()` cancels a pending deferred close (`this.closeTimeout`), so a
+quick re-tap into the search box right after a blur isn't yanked shut from
+under it. If nothing else happens within 300ms, the deferred close still
+runs, so tapping away without selecting still closes the list as before —
+verified both the positive case (blur → selection 50ms later still succeeds)
+and the negative case (blur with no follow-up still closes at the deferred
+mark) by dispatching a real bubbling `focusout` (a manually constructed
+`FocusEvent` does **not** bubble by default the way the native event does —
+first pass at this test silently exercised nothing, passing for the wrong
+reason, until `bubbles: true` was added).
+
+The `mousedown.preventDefault()` fix stays for mouse — the two are
+complementary, not redundant: mouse gets an immediate, no-flicker fix, touch
+gets the deferred one it actually needs, and each is a no-op on the other
+input type.
+
+**`onChange` no longer trusts `event.target`.** Burhan reported selection
+itself working (radio visibly checked, Add to Cart enabled) but the search
+box staying on the typed query instead of updating to the full name — on a
+device this couldn't be reproduced live on. `onChange` used to require
+`event.target` to literally be the `.fragrance-picker__radio` before filling
+the box; on label-forwarded activation (tapping/clicking the label rather
+than the input) some mobile browsers can report a bubbled `change` event's
+target inconsistently. Changed to read `this.querySelector('.fragrance-picker__radio:checked')`
+directly instead — indifferent to what triggered the change, as long as a
+radio ends up checked, which is the only thing that actually matters here.
+
 ### Outstanding: metaobjects ≠ variants
 
 Burhan is bulk-populating the `fragrance` metaobject via Matrixify (50+ entries
@@ -1196,6 +1435,65 @@ Gotchas:
   The lift itself was checked against the real widget on the live theme: at a
   lift of 0 the activator lands pixel-identical to Inbox's default, and at 120px
   it rises 120px and stays fully visible.
+
+## Gotcha: scroll-reveal animations trap native `<select>` dropdowns (fixed 2026-08-31)
+
+Burhan reported the "Your free perfume" dropdown on the Customize Perfume
+product page (`snippets/product-gift-picker.liquid`) opening and closing
+again almost instantly on click, on desktop — the option list flashed and
+disappeared before he could pick anything.
+
+Root cause is a Chromium behavior, not this theme's JS: when
+`settings.animations_reveal_on_scroll` is on (it is —
+`config/settings_data.json`), `sections/main-product.liquid` wraps the whole
+buy box in `.product__info-wrapper.scroll-trigger.animate--slide-in`. Dawn's
+stock reveal animation (`--animation-slide-in` in `assets/base.css`) uses
+`animation-fill-mode: forwards`, so once the slide-in finishes it holds
+`transform: translateY(0)` on that wrapper **permanently** — visually a
+no-op (0 is no shift), but a `transform` value of any kind, including
+`translateY(0)`, still creates a new CSS containing block. Chrome has a
+long-standing bug where a native `<select>` nested inside a transformed
+ancestor opens its popup and immediately closes it again. Confirmed live via
+`element.getAnimations()`/computed style on `.product__info-wrapper`, and
+confirmed the CSS fix by manually toggling the class described below and
+checking `getComputedStyle(...).transform` flips from
+`matrix(1,0,0,1,0,20)` to `none`.
+
+This is a general risk, not specific to the free-gift picker: **any** native
+form control (`<select>`, and in principle anything relying on
+`position: fixed` positioning) nested inside a `.scroll-trigger` element is
+exposed to this once animations are on, site-wide, not just this one
+product page.
+
+**Fix, not a workaround** — `assets/animations.js`'s `onIntersection` now
+attaches a one-time `animationend` listener when an element's reveal starts,
+adding a `scroll-trigger--settled` class once the animation genuinely
+finishes. `assets/base.css` has a matching rule
+(`.scroll-trigger.animate--slide-in.scroll-trigger--settled` /
+`.animate--fade-in.scroll-trigger--settled`) that sets `animation: none;
+transform: none; opacity: 1`. The `opacity: 1` is necessary, not decorative
+— cancelling the animation (`animation: none`) drops **everything** the
+fill-mode was holding, including the opacity fade-in's held `opacity: 1`;
+without restoring it explicitly the element falls back to the base
+`.scroll-trigger.animate--slide-in { opacity: 0.01 }` rule and the whole
+block goes invisible. Caught this exact regression while testing live —
+first version of the fix cleared `transform` correctly but made the entire
+buy box disappear.
+
+**Known verification limit**, same class of issue as the announcement-bar
+marquee (see "Gotcha: don't trust 'it's not moving' from an unfocused
+automated browser" above): in a browser-automation tab without real OS
+focus, `element.getAnimations()` can report `currentTime: 0` /
+`startTime: 0` indefinitely even seconds after navigation — the animation
+timeline itself is frozen, not just unpainted. `document.hasFocus()`
+returning `true` after a synthetic click did **not** unfreeze it here (unlike
+the marquee case). The CSS side of this fix was verified correct by manually
+adding `scroll-trigger--settled` and checking computed styles; the JS side
+(the `animationend` listener actually firing and adding that class within
+~0.6s of a real page load) could not be fully confirmed through automation
+and should be spot-checked in a normal, focused browser: open Customize
+Perfume (or any product with `animations_reveal_on_scroll` on), wait a
+second, click the free-gift select, and confirm the option list stays open.
 
 ## Useful Shopify CLI commands
 

@@ -12,6 +12,17 @@ function onIntersection(elements, observer) {
         elementTarget.classList.remove(SCROLL_ANIMATION_OFFSCREEN_CLASSNAME);
         if (elementTarget.hasAttribute('data-cascade'))
           elementTarget.setAttribute('style', `--animation-order: ${index};`);
+        // animation-fill-mode: forwards (--animation-slide-in) holds the
+        // reveal's final transform: translateY(0) on this element forever.
+        // That's visually a no-op, but a lingering transform still creates a
+        // new containing block — Chrome then closes any native <select>
+        // dropdown nested inside immediately after it opens. Drop it once
+        // the reveal has actually finished (see the matching CSS rule).
+        elementTarget.addEventListener(
+          'animationend',
+          () => elementTarget.classList.add('scroll-trigger--settled'),
+          { once: true }
+        );
       }
       observer.unobserve(elementTarget);
     } else {

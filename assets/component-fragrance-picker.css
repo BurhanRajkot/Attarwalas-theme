@@ -8,6 +8,15 @@ fragrance-picker {
   margin-bottom: 1.6rem;
 }
 
+/* The selected fragrance now shows inside the search box itself (see
+   assets/fragrance-picker.js's onChange), not appended to this legend —
+   showing the name in both places at once read as confusing/broken
+   (Burhan, 2026-09-02). Scoped to the fragrance picker only; Size/Type
+   options elsewhere keep Dawn's normal legend behavior. */
+.product-form__input--fragrance [data-selected-swatch-value] {
+  display: none;
+}
+
 .fragrance-picker__search {
   position: relative;
   display: flex;

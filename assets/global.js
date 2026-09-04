@@ -1070,14 +1070,26 @@ class VariantSelects extends HTMLElement {
   }
 
   updateVariantStatuses() {
+    // The fragrance picker (snippets/fragrance-option-picker.liquid) deliberately
+    // leaves option1 unchecked until the customer picks one, unlike Dawn's normal
+    // options which always default to a checked value. Stock Dawn assumed every
+    // option always has a `:checked` descendant, so changing Size/Type before
+    // picking a fragrance threw here (`:checked` is null) and silently aborted the
+    // rest of onVariantChange. Both checks below just skip the availability pass
+    // for that option instead of throwing — harmless, since without a fragrance
+    // chosen there's nothing meaningful yet to compute Size/Type availability from.
+    const checkedOptionOne = this.querySelector(':checked');
+    if (!checkedOptionOne) return;
     const selectedOptionOneVariants = this.variantData.filter(
-      (variant) => this.querySelector(':checked').value === variant.option1
+      (variant) => checkedOptionOne.value === variant.option1
     );
     const inputWrappers = [...this.querySelectorAll('.product-form__input')];
     inputWrappers.forEach((option, index) => {
       if (index === 0) return;
       const optionInputs = [...option.querySelectorAll('input[type="radio"], option')];
-      const previousOptionSelected = inputWrappers[index - 1].querySelector(':checked').value;
+      const previousChecked = inputWrappers[index - 1].querySelector(':checked');
+      if (!previousChecked) return;
+      const previousOptionSelected = previousChecked.value;
       const availableOptionInputsValue = selectedOptionOneVariants
         .filter((variant) => variant.available && variant[`option${index}`] === previousOptionSelected)
         .map((variantOption) => variantOption[`option${index + 1}`]);
