@@ -1,0 +1,107 @@
+{% comment %}
+  Compact "Signature Duos" teaser — a row of fragrance images, each linking to
+  that fragrance's own single-duo page (sections/duo-pairs.liquid's hero view,
+  reached via ?duo=(perfume handle)). Meant for a regular product page, as a
+  cross-sell into the duo page — not the duo page itself.
+
+  Accepts:
+  - duo_product {Product} the product that renders the duo page. Required —
+    without it there's nowhere for the cards to link to. Its own Theme
+    template doesn't strictly need to be set to `duo` — every link below
+    forces `?view=duo` explicitly, so this keeps working even before that's
+    set (e.g. while testing on a stand-in product, or before the real duo
+    product's template can be set — see the Theme template gotcha in
+    CLAUDE.md's "Duo — signature perfume" section).
+  - heading {String} default "Signature Duos"
+  - max_items {Number} how many fragrance cards to show, default 4
+  - perfume_collection {Collection} optional override; defaults the same way
+    sections/duo-pairs.liquid does (free-gift qualifying collection, then
+    "signature-series")
+  - block_attributes {String} block.shopify_attributes, when rendered from a block
+
+  Usage:
+  {% render 'duo-teaser', duo_product: block.settings.duo_product %}
+{% endcomment %}
+
+{{ 'section-offer-teaser.css' | asset_url | stylesheet_tag }}
+{{ 'component-duo-pairs.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  if duo_product == blank
+    if request.design_mode
+      echo '<p class="offer-deals__setup-hint">Pick a "Duo product" (the product whose Theme template is set to duo) in this block’s settings to show the Signature Duos teaser here.</p>'
+    endif
+  else
+    assign perfume_collection = perfume_collection
+    if perfume_collection == blank
+      assign perfume_collection = settings.free_gift_qualifying_collection
+    endif
+    if perfume_collection == blank
+      assign perfume_collection = collections['signature-series']
+    endif
+
+    assign rollon_collection = collections['attar-roll-ons']
+    assign shown = 0
+    assign limit = max_items | plus: 0
+    if limit <= 0
+      assign limit = 4
+    endif
+  endif
+-%}
+
+{%- if duo_product != blank -%}
+  <div class="offer-deals duo-teaser">
+    <div class="offer-deals__heading">
+      <span class="offer-deals__heading-rule" aria-hidden="true"></span>
+      <span>{{ heading | default: 'Signature Duos' }}</span>
+      <span class="offer-deals__heading-rule" aria-hidden="true"></span>
+    </div>
+
+    <ul class="duo-teaser__grid" role="list">
+      {%- for perfume in perfume_collection.products -%}
+        {%- if shown >= limit -%}
+          {%- break -%}
+        {%- endif -%}
+
+        {%- assign matched_rollon = blank -%}
+        {%- for candidate in rollon_collection.products -%}
+          {%- if candidate.title contains perfume.title -%}
+            {%- assign matched_rollon = candidate -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- if matched_rollon == blank -%}
+          {%- continue -%}
+        {%- endif -%}
+
+        {%- assign shown = shown | plus: 1 -%}
+
+        <li class="duo-teaser__item">
+          <a class="duo-teaser__card" href="{{ duo_product.url }}?view=duo&duo={{ perfume.handle }}">
+            <span class="duo-teaser__media">
+              {%- if perfume.featured_image -%}
+                {{
+                  perfume.featured_image
+                  | image_url: width: 400
+                  | image_tag:
+                    loading: 'lazy',
+                    widths: '200, 300, 400',
+                    sizes: '(min-width: 750px) 20vw, 40vw',
+                    class: 'duo-teaser__image',
+                    alt: perfume.title | escape
+                }}
+              {%- else -%}
+                {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg duo-teaser__image' }}
+              {%- endif -%}
+            </span>
+            <span class="duo-teaser__title">{{ perfume.title | escape }}</span>
+            <span class="duo-teaser__cta">
+              <span>Shop the duo</span>
+              {% render 'icon-arrow' %}
+            </span>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+{%- endif -%}

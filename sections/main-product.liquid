@@ -514,6 +514,13 @@
                   strip_id: block.id,
                   block_attributes: block.shopify_attributes
                 -%}
+              {%- when 'duo_teaser' -%}
+                {%- render 'duo-teaser',
+                  duo_product: block.settings.duo_product,
+                  heading: block.settings.heading,
+                  max_items: block.settings.max_items,
+                  block_attributes: block.shopify_attributes
+                -%}
               {%- when 'rating' -%}
                 {%- if product.metafields.reviews.rating.value != blank -%}
                   <div class="rating-wrapper">
@@ -874,6 +881,37 @@
           "id": "collection",
           "label": "…or a collection of offers",
           "info": "Used only when no products are picked above. Handy when you add new offers often."
+        }
+      ]
+    },
+    {
+      "type": "duo_teaser",
+      "name": "Signature Duos teaser",
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Shows a row of fragrance images (perfume + its own attar roll-on, matched automatically the same way the duo page does). Each image links straight to that one fragrance's duo page — the customer picks perfume size and roll-on size there, like a normal product page, without seeing the full \"browse all 6\" duo page."
+        },
+        {
+          "type": "product",
+          "id": "duo_product",
+          "label": "Duo product",
+          "info": "The product whose Theme template is set to \"duo\". Required — without it these cards have nowhere to link."
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Signature Duos"
+        },
+        {
+          "type": "range",
+          "id": "max_items",
+          "label": "Fragrances to show",
+          "min": 1,
+          "max": 6,
+          "step": 1,
+          "default": 4
         }
       ]
     },

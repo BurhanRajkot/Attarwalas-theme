@@ -1,0 +1,328 @@
+/* ==========================================================================
+   Duo Pairs — additive styles on top of section-offer-builder.css.
+
+   The grid/card/sticky-bar chrome (.offer-grid, .offer-card, .offer-card__*,
+   .offer-builder__bar*) is shared verbatim with the offer pages — this file
+   only adds the bits unique to a duo card: two always-visible size selects,
+   a fragrance subtitle, and a retail/duo price breakdown.
+   ========================================================================== */
+
+/*
+  duo-pairs.js toggles the grid view / hero view / individual hero cards via
+  the plain `hidden` attribute, which normally works via the browser's [hidden]
+  UA-stylesheet rule (display: none) — but any author rule that sets `display`
+  on the same element (`.duo-hero { display: grid }` below, in particular)
+  silently wins over that UA rule regardless of selector specificity, since
+  author styles always beat UA styles. Without this, a hidden hero still
+  rendered in normal flow — found live: selecting Fresh Woodscape from the
+  grid still showed Oudh Eternal's hero on screen (first in DOM order) while
+  the sticky bar correctly priced Fresh Woodscape, since the bar reads
+  selection state via JS/classes, not visibility.
+*/
+[data-duo-grid-view][hidden],
+[data-duo-hero-view][hidden],
+.duo-hero[hidden] {
+  display: none !important;
+}
+
+.duo-card__subtitle {
+  margin: -0.4rem 0 0.4rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(var(--offer-ink), 0.5);
+}
+
+.duo-card .offer-card__variant-row + .offer-card__variant-row {
+  margin-top: -0.2rem;
+}
+
+.duo-card__breakdown {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.duo-card__retail {
+  font-size: 1.2rem;
+  color: rgba(var(--offer-ink), 0.45);
+}
+
+.duo-card__retail[hidden] {
+  display: none;
+}
+
+/* ------------------------------ Single-duo hero ---------------------------
+   The "product page" view for one fragrance, reached via ?duo=<handle>
+   (see snippets/duo-teaser.liquid and duo-pairs.js's setupHeroView). Two
+   columns on desktop — image left, buy box right — same shape as the
+   theme's real product page; one stacked column on mobile.
+   ========================================================================== */
+
+/*
+  The sticky bar below (.offer-builder__bar, position: sticky; bottom: 0) is
+  ~110px tall on mobile (stacked name/price/button rows) and ~86px on
+  desktop (one row) — both taller than the 4rem this used to reserve, so it
+  visually covered the roll-on size select at the bottom of the form on
+  mobile (reported live on the Yameni Yakud Duo page). Sticky elements don't
+  push preceding siblings out of the way on their own; the container has to
+  reserve the room itself. Padding here is comfortably larger than either
+  measured height so text reflow/safe-area-inset doesn't reopen the gap.
+*/
+.duo-hero-view {
+  padding-bottom: 13rem;
+}
+
+@media screen and (min-width: 750px) {
+  .duo-hero-view {
+    padding-bottom: 8rem;
+  }
+}
+
+.duo-hero__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 2.4rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--offer-ink), 0.7);
+  text-decoration: none;
+}
+
+.duo-hero__back svg {
+  width: 1.4rem;
+  height: 1rem;
+  transform: rotate(180deg);
+}
+
+.duo-hero__back:hover {
+  color: rgb(var(--offer-gold));
+}
+
+.duo-hero {
+  display: grid;
+  gap: 3.2rem;
+  align-items: start;
+}
+
+@media screen and (min-width: 750px) {
+  .duo-hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 5rem;
+  }
+}
+
+.duo-hero__media {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(var(--offer-ink), 0.03);
+}
+
+.duo-hero__image,
+.duo-hero__media .placeholder-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.duo-hero__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.duo-hero__eyebrow {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(var(--offer-gold));
+}
+
+.duo-hero__title {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-heading-family);
+  font-weight: 400;
+  font-size: clamp(2.8rem, 3.6vw, 3.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.duo-hero__tagline {
+  margin: 0.8rem 0 1rem;
+  font-size: 1.4rem;
+  line-height: 1.55;
+  color: rgba(var(--offer-ink), 0.62);
+}
+
+.duo-hero .offer-card__variant-row {
+  max-width: 40rem;
+  margin-top: 1rem;
+}
+
+.duo-hero .offer-card__variant {
+  padding: 1.1rem 2.6rem 1.1rem 1.2rem;
+  font-size: 1.4rem;
+}
+
+.duo-hero__price {
+  margin-top: 1.6rem;
+  gap: 1.2rem;
+  font-size: 2.2rem;
+}
+
+.duo-hero__price .duo-card__retail {
+  font-size: 1.5rem;
+}
+
+.duo-hero__perks {
+  margin-top: 1.6rem;
+}
+
+/* --------------------------------- Teaser ---------------------------------
+   snippets/duo-teaser.liquid — a compact "Signature Duos" cross-sell row for
+   a normal product page. Reuses .offer-deals/.offer-deals__heading from
+   section-offer-teaser.css for the outer container + heading; only the
+   image-tile grid itself is new.
+   ========================================================================== */
+
+/*
+  Mobile: a small swipeable row of thumbnails (same carousel idiom as
+  .offer-deals__grid in section-offer-teaser.css) rather than a cramped
+  2-column grid — reported as looking bad/grid-like on phones. Desktop keeps
+  the plain 4-across grid. Sized noticeably smaller than the offer-ticket
+  carousel's cards (those are full coupon cards; these are square thumbnails,
+  so ~3 fit on screen with the next one peeking rather than 1 card at a time).
+*/
+.duo-teaser__grid {
+  display: flex;
+  gap: 1.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.6rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.duo-teaser__grid::-webkit-scrollbar {
+  display: none;
+}
+
+.duo-teaser__item {
+  flex: 0 0 29%;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+@media screen and (max-width: 419px) {
+  .duo-teaser__item {
+    flex: 0 0 37%;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .duo-teaser__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .duo-teaser__item {
+    flex: initial;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duo-teaser__grid {
+    scroll-behavior: auto;
+  }
+}
+
+.duo-teaser__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.duo-teaser__media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(var(--color-foreground), 0.03);
+  border: 1px solid rgba(var(--color-foreground), 0.1);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.duo-teaser__card:hover .duo-teaser__media {
+  border-color: rgb(var(--color-button));
+  transform: translateY(-2px);
+}
+
+.duo-teaser__image,
+.duo-teaser__media .placeholder-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.duo-teaser__title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.duo-teaser__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--color-button));
+  white-space: nowrap;
+}
+
+.duo-teaser__cta svg {
+  width: 1.2rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* Smaller thumbnails on mobile read cleaner with less text crammed in —
+   "Shop the duo" wraps/overflows awkwardly on a ~29vw tile, so only the
+   arrow shows; the title alone plus an arrow reads as "tap to shop" fine. */
+@media screen and (max-width: 749px) {
+  .duo-teaser__title {
+    font-size: 1.2rem;
+  }
+
+  .duo-teaser__cta span {
+    display: none;
+  }
+
+  .duo-teaser__cta svg {
+    width: 1.4rem;
+    height: 1rem;
+  }
+}

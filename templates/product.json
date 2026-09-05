@@ -49,6 +49,13 @@
             "gender_tags": "Men, Masculine, Feminine, Unisex",
             "occasion_tags": "Day & Night"
           }
+        },
+        "duo_teaser": {
+          "type": "duo_teaser",
+          "settings": {
+            "heading": "Signature Duos",
+            "max_items": 4
+          }
         }
       },
       "block_order": [
@@ -59,7 +66,8 @@
         "quantity_selector",
         "buy_buttons",
         "share",
-        "best_fit"
+        "best_fit",
+        "duo_teaser"
       ],
       "settings": {
         "enable_sticky_info": true,

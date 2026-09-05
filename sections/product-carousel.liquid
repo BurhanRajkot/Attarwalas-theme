@@ -30,6 +30,26 @@
       if carousel_products == blank or carousel_products.size == 0
         assign carousel_products = section.settings.collection.products
       endif
+
+      comment
+        Duo mode: each card is a real product that exists only to host a
+        duo product page (sections/duo-pairs.liquid) — same idea as the
+        "Signature Duos teaser" block on the product page
+        (snippets/duo-teaser.liquid). Forces ?view=duo on every card's link
+        so it opens correctly even before each product's own Theme template
+        can be set to "duo" (Shopify's admin template picker only lists
+        templates from the *published* theme — see CLAUDE.md). The specific
+        fragrance shown is derived from the duo product's own title (e.g.
+        "Oudh Eternal Duo" becomes "Oudh Eternal"), matched against the
+        perfume collection, so a duo product's title has to end with " Duo"
+        exactly.
+      endcomment
+      if section.settings.link_to_duo_pages
+        assign duo_perfume_collection = settings.free_gift_qualifying_collection
+        if duo_perfume_collection == blank
+          assign duo_perfume_collection = collections['signature-series']
+        endif
+      endif
     -%}
     {%- if carousel_products == blank or carousel_products.size == 0 -%}
       <p class="product-carousel__empty">
@@ -77,6 +97,22 @@
         <div class="product-carousel__viewport">
           <ul id="ProductCarousel-{{ section.id }}" class="product-carousel__list" data-carousel-track role="list">
             {%- for product in carousel_products limit: section.settings.products_to_show -%}
+              {%- liquid
+                assign card_url = product.url
+                if section.settings.link_to_duo_pages
+                  assign duo_fragrance_name = product.title | remove: ' Duo' | strip
+                  assign duo_matched_perfume = blank
+                  for p in duo_perfume_collection.products
+                    if p.title == duo_fragrance_name
+                      assign duo_matched_perfume = p
+                      break
+                    endif
+                  endfor
+                  if duo_matched_perfume != blank
+                    assign card_url = product.url | append: '?view=duo&duo=' | append: duo_matched_perfume.handle
+                  endif
+                endif
+              -%}
               <li class="product-carousel__slide" data-carousel-slide data-index="{{ forloop.index0 }}">
                 <div class="product-carousel__card">
                   <div class="product-carousel__media">
@@ -89,7 +125,7 @@
                         {%- endif -%}
                       </span>
                     {%- endif -%}
-                    <a href="{{ product.url }}" class="product-carousel__image-link" tabindex="-1" aria-hidden="true">
+                    <a href="{{ card_url }}" class="product-carousel__image-link" tabindex="-1" aria-hidden="true">
                       {%- if product.featured_media -%}
                         {{
                           product.featured_media
@@ -106,7 +142,7 @@
                     </a>
                   </div>
                   <div class="product-carousel__info">
-                    <a href="{{ product.url }}" class="product-carousel__title">{{ product.title }}</a>
+                    <a href="{{ card_url }}" class="product-carousel__title">{{ product.title }}</a>
                     {%- if section.settings.show_description and product.description != blank -%}
                       <p class="product-carousel__desc">{{ product.description | strip_html | truncatewords: 5 }}</p>
                     {%- endif -%}
@@ -272,6 +308,13 @@
       "id": "collection",
       "label": "…or a collection",
       "info": "Used only when no products are hand-picked above."
+    },
+    {
+      "type": "checkbox",
+      "id": "link_to_duo_pages",
+      "label": "Link cards to their duo page",
+      "default": false,
+      "info": "For the Duo carousel only: each card's product must be a real product titled \"<fragrance> Duo\" (e.g. \"Oudh Eternal Duo\") existing only to host that fragrance's duo page. This forces the link open correctly regardless of that product's own Theme template."
     },
     {
       "type": "range",

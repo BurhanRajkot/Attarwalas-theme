@@ -1,0 +1,663 @@
+{{ 'section-offer-builder.css' | asset_url | stylesheet_tag }}
+{{ 'component-duo-pairs.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'duo-pairs.js' | asset_url }}" defer="defer"></script>
+
+{%- comment -%}
+  Duo page: one card per signature-series fragrance, each card pairing that
+  fragrance's own perfume with its own attar roll-on (matched by title, not by
+  a curated list — see the pairing loop below). The customer can only change
+  each item's size (ml); which fragrance and which two products are in the
+  duo is fixed per card, not pickable. Always exactly 1 perfume + 1 roll-on.
+
+  This intentionally does NOT reuse the offer-builder custom element — that
+  component is built around picking N products from a shared pool across one
+  or more groups,
+  whereas a duo card is a single fixed pair with two independent size
+  selects. Reusing it here would have meant bending its group/quantity model
+  to breaking point, at real risk to every existing offer page.
+{%- endcomment -%}
+
+{%- liquid
+  assign perfume_collection = section.settings.perfume_collection
+  if perfume_collection == blank
+    assign perfume_collection = settings.free_gift_qualifying_collection
+  endif
+  if perfume_collection == blank
+    assign perfume_collection = collections['signature-series']
+  endif
+
+  assign rollon_collection = collections['attar-roll-ons']
+
+  comment
+    "All Signature Duos" back link target. Deliberately NOT product.url of
+    whichever duo product happens to be showing right now — since each of
+    the 6 real per-fragrance duo products is in the "Duo" collection, their
+    own bare URL now triggers layout/theme.liquid's redirect straight back
+    into their own hero (see CLAUDE.md's "homepage Duo carousel" gotcha),
+    so that link would never reach the grid at all. Always ?view=duo forced
+    too, since the grid product's own Theme template can't be set to `duo`
+    yet either (same draft-theme limitation).
+  endcomment
+  assign all_duos_product = section.settings.all_duos_product
+  if all_duos_product == blank
+    assign all_duos_product = all_products['signature-duo']
+  endif
+  assign all_duos_url = '#'
+  if all_duos_product != blank
+    assign all_duos_url = all_duos_product.url | append: '?view=duo'
+  endif
+
+  assign discount_type = section.settings.discount_type | downcase
+  assign discount_amount = section.settings.discount_amount | plus: 0
+  assign use_discount = false
+  if discount_type != 'none' and discount_type != blank and discount_amount > 0
+    assign use_discount = true
+  endif
+
+  assign badge_text = section.settings.badge
+  if badge_text == blank and use_discount
+    if discount_type == 'fixed'
+      assign discount_money = discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
+      assign badge_text = 'Flat ' | append: discount_money | append: ' off every duo'
+    else
+      assign badge_text = discount_amount | append: '% off every duo'
+    endif
+  endif
+-%}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<duo-pairs
+  id="DuoPairs-{{ section.id }}"
+  class="offer-builder duo-pairs color-{{ section.settings.color_scheme }}"
+  data-money-format="{{ shop.money_format | strip_html | escape }}"
+  data-ready-label="{{ section.settings.button_label | escape }}"
+  {% if use_discount %}
+    data-discount-type="{{ discount_type }}"
+    data-discount-amount="{{ discount_amount }}"
+  {% endif %}
+>
+  <div class="page-width section-{{ section.id }}-padding" data-duo-grid-view>
+    <header class="offer-builder__intro">
+      {%- if badge_text != blank -%}
+        <div class="offer-builder__badge">
+          {% render 'icon-discount' %}
+          <span>{{ badge_text }}</span>
+        </div>
+      {%- endif -%}
+
+      <h1 class="offer-builder__title">{{ section.settings.heading | default: 'Signature Duos' }}</h1>
+
+      {%- if section.settings.tagline != blank -%}
+        <p class="offer-builder__tagline">{{ section.settings.tagline }}</p>
+      {%- endif -%}
+
+      {%- liquid
+        if section.settings.perks != blank
+          assign perks = section.settings.perks | strip | newline_to_br | replace: '<br />', '||' | strip_html | split: '||'
+        endif
+      -%}
+      {%- if perks != blank and perks.size > 0 -%}
+        <ul class="offer-builder__perks">
+          {%- for perk in perks -%}
+            {%- if perk != blank -%}
+              <li>
+                {% render 'icon-checkmark' %}
+                <span>{{ perk | strip }}</span>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </header>
+
+    <div class="offer-grid-wrap">
+      <div class="offer-grid__nav" role="group" aria-label="Browse duos">
+        <button type="button" class="offer-grid__arrow offer-grid__arrow--prev" data-offer-grid-prev aria-label="Scroll left">
+          {% render 'icon-arrow' %}
+        </button>
+        <button type="button" class="offer-grid__arrow offer-grid__arrow--next" data-offer-grid-next aria-label="Scroll right">
+          {% render 'icon-arrow' %}
+        </button>
+      </div>
+
+      <div class="offer-grid" data-offer-grid>
+        {%- assign rendered_count = 0 -%}
+        {%- for perfume in perfume_collection.products -%}
+          {%- comment -%}
+            Matched by title, not handle — the roll-on handles don't follow a
+            consistent "<perfume-handle>-attar-roll-on" pattern (one of the
+            six is a legacy handle from before a rename), but every roll-on's
+            title is its perfume's title with " Attar Roll-On" appended, which
+            IS consistent. A perfume with no matching roll-on is skipped
+            rather than shown with half a duo.
+          {%- endcomment -%}
+          {%- assign matched_rollon = blank -%}
+          {%- for candidate in rollon_collection.products -%}
+            {%- if candidate.title contains perfume.title -%}
+              {%- assign matched_rollon = candidate -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if matched_rollon == blank -%}
+            {%- continue -%}
+          {%- endif -%}
+
+          {%- comment -%}
+            Perfume sizes: only 50ML/100ML are real purchasable sizes here —
+            10ML/35ML exist solely to back the free-gift picker (see
+            "Outstanding: 10ml/35ml perfume variants" in CLAUDE.md) and must
+            never be offered for direct sale. Fixed order (not source order)
+            so 50ML always lists before 100ML regardless of variant order.
+          {%- endcomment -%}
+          {%- assign perfume_sizes = '50ML,100ML' | split: ',' -%}
+          {%- assign rollon_sizes = '6ML,12ML' | split: ',' -%}
+
+          {%- assign perfume_variant_count = 0 -%}
+          {%- for size in perfume_sizes -%}
+            {%- assign found = blank -%}
+            {%- for v in perfume.variants -%}
+              {%- assign v_size = v.option1 | upcase -%}
+              {%- if v.option1 != blank and v_size == size -%}
+                {%- assign found = v -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if found != blank -%}
+              {%- assign perfume_variant_count = perfume_variant_count | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- comment -%}
+            Roll-on default box colour: always whichever variant comes first
+            for that size (Red, consistently, across every product checked —
+            see "Duo" notes in CLAUDE.md). The customer never picks colour
+            here, only size, same as the brief asked for.
+          {%- endcomment -%}
+          {%- assign rollon_variant_count = 0 -%}
+          {%- for size in rollon_sizes -%}
+            {%- assign found = blank -%}
+            {%- for v in matched_rollon.variants -%}
+              {%- assign v_size = v.option1 | upcase -%}
+              {%- if v.option1 != blank and v_size == size -%}
+                {%- assign found = v -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if found != blank -%}
+              {%- assign rollon_variant_count = rollon_variant_count | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- if perfume_variant_count == 0 or rollon_variant_count == 0 -%}
+            {%- continue -%}
+          {%- endif -%}
+
+          {%- assign rendered_count = rendered_count | plus: 1 -%}
+          {%- assign card_id = 'DuoCard-' | append: section.id | append: '-' | append: forloop.index0 -%}
+
+          <div
+            class="offer-card duo-card"
+            data-duo-card
+            data-fragrance="{{ perfume.title | escape }}"
+            data-bundle-handle="{{ perfume.handle }}"
+          >
+            <div class="offer-card__media">
+              {%- if perfume.featured_image -%}
+                {{
+                  perfume.featured_image
+                  | image_url: width: 600
+                  | image_tag:
+                    loading: 'lazy',
+                    widths: '240, 360, 480, 600',
+                    sizes: '(min-width: 990px) 22vw, (min-width: 750px) 30vw, 56vw',
+                    class: 'offer-card__image',
+                    alt: perfume.title | escape
+                }}
+              {%- else -%}
+                {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg offer-card__image' }}
+              {%- endif -%}
+              <span class="offer-card__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
+            </div>
+
+            <div class="offer-card__body">
+              <h3 class="offer-card__title">{{ perfume.title | escape }} Duo</h3>
+              <p class="duo-card__subtitle">Perfume + Attar Roll-On</p>
+
+              <div class="offer-card__variant-row">
+                <label class="offer-card__variant-label" for="{{ card_id }}-perfume">Perfume</label>
+                <div class="select offer-card__variant-select">
+                  <select class="offer-card__variant select__select" id="{{ card_id }}-perfume" data-duo-perfume-select>
+                    {%- for size in perfume_sizes -%}
+                      {%- assign found = blank -%}
+                      {%- for v in perfume.variants -%}
+                        {%- assign v_size = v.option1 | upcase -%}
+              {%- if v.option1 != blank and v_size == size -%}
+                          {%- assign found = v -%}
+                          {%- break -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                      {%- if found != blank -%}
+                        <option
+                          value="{{ found.id }}"
+                          data-price="{{ found.price }}"
+                          data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
+                          {% unless found.available %}disabled{% endunless %}
+                        >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </select>
+                  {% render 'icon-caret' %}
+                </div>
+              </div>
+
+              <div class="offer-card__variant-row">
+                <label class="offer-card__variant-label" for="{{ card_id }}-rollon">Roll-on</label>
+                <div class="select offer-card__variant-select">
+                  <select class="offer-card__variant select__select" id="{{ card_id }}-rollon" data-duo-rollon-select>
+                    {%- for size in rollon_sizes -%}
+                      {%- assign found = blank -%}
+                      {%- for v in matched_rollon.variants -%}
+                        {%- assign v_size = v.option1 | upcase -%}
+              {%- if v.option1 != blank and v_size == size -%}
+                          {%- assign found = v -%}
+                          {%- break -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                      {%- if found != blank -%}
+                        <option
+                          value="{{ found.id }}"
+                          data-price="{{ found.price }}"
+                          data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
+                          {% unless found.available %}disabled{% endunless %}
+                        >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </select>
+                  {% render 'icon-caret' %}
+                </div>
+              </div>
+
+              <div class="duo-card__breakdown">
+                <span class="duo-card__retail" data-duo-retail hidden></span>
+                <span class="offer-card__price" data-duo-price></span>
+              </div>
+
+              <button type="button" class="offer-card__add" data-duo-select-btn>
+                {{ section.settings.select_label | default: 'Select this duo' }}
+              </button>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+
+    {%- if rendered_count == 0 -%}
+      <p class="offer-group__empty">
+        {%- if request.design_mode -%}
+          No signature-series perfume currently has a matching attar roll-on
+          with both 50ML/100ML (perfume) and 6ML/12ML (roll-on) variants —
+          check the perfume collection setting above, and that each
+          roll-on's title starts with its perfume's title.
+        {%- else -%}
+          Duos are being restocked. Please check back soon.
+        {%- endif -%}
+      </p>
+    {%- endif -%}
+  </div>
+
+  {%- comment -%}
+    Single-duo "product page" view: reached via ?duo=<perfume-handle> on this
+    same page (e.g. from snippets/duo-teaser.liquid on a product page). Every
+    hero below is rendered but hidden by default — duo-pairs.js reads the
+    query param on load, shows the one matching hero and the grid view above
+    stays hidden, so this reads as a dedicated page for that one fragrance
+    rather than the "browse all 6" page. No query param (or no match) means
+    this whole block stays hidden and the grid view above is what's shown —
+    unchanged from before this existed.
+  {%- endcomment -%}
+  <div class="page-width duo-hero-view" data-duo-hero-view hidden>
+    <a class="duo-hero__back" href="{{ all_duos_url }}">
+      {% render 'icon-arrow' %}
+      <span>All Signature Duos</span>
+    </a>
+
+    {%- for perfume in perfume_collection.products -%}
+      {%- assign matched_rollon = blank -%}
+      {%- for candidate in rollon_collection.products -%}
+        {%- if candidate.title contains perfume.title -%}
+          {%- assign matched_rollon = candidate -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if matched_rollon == blank -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign perfume_sizes = '50ML,100ML' | split: ',' -%}
+      {%- assign rollon_sizes = '6ML,12ML' | split: ',' -%}
+
+      {%- assign perfume_variant_count = 0 -%}
+      {%- for size in perfume_sizes -%}
+        {%- assign found = blank -%}
+        {%- for v in perfume.variants -%}
+          {%- assign v_size = v.option1 | upcase -%}
+          {%- if v.option1 != blank and v_size == size -%}
+            {%- assign found = v -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- if found != blank -%}
+          {%- assign perfume_variant_count = perfume_variant_count | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- assign rollon_variant_count = 0 -%}
+      {%- for size in rollon_sizes -%}
+        {%- assign found = blank -%}
+        {%- for v in matched_rollon.variants -%}
+          {%- assign v_size = v.option1 | upcase -%}
+          {%- if v.option1 != blank and v_size == size -%}
+            {%- assign found = v -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- if found != blank -%}
+          {%- assign rollon_variant_count = rollon_variant_count | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- if perfume_variant_count == 0 or rollon_variant_count == 0 -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign hero_id = 'DuoHero-' | append: section.id | append: '-' | append: forloop.index0 -%}
+
+      {%- comment -%}
+        Carries the same data-duo-card / data-duo-*-select / data-duo-price /
+        data-duo-retail attributes the grid cards use — duo-pairs.js treats
+        every element matching [data-duo-card] the same way (price render,
+        selection), so a hero needs zero JS changes to work, only markup.
+      {%- endcomment -%}
+      <div
+        class="duo-hero"
+        data-duo-card
+        data-duo-hero
+        data-fragrance="{{ perfume.title | escape }}"
+        data-bundle-handle="{{ perfume.handle }}"
+        hidden
+      >
+        <div class="duo-hero__media">
+          {%- if perfume.featured_image -%}
+            {{
+              perfume.featured_image
+              | image_url: width: 1200
+              | image_tag:
+                loading: 'eager',
+                widths: '480, 720, 960, 1200',
+                sizes: '(min-width: 750px) 44vw, 92vw',
+                class: 'duo-hero__image',
+                alt: perfume.title | escape
+            }}
+          {%- else -%}
+            {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg duo-hero__image' }}
+          {%- endif -%}
+        </div>
+
+        <div class="duo-hero__info">
+          <p class="duo-hero__eyebrow">Signature Duo</p>
+          <h1 class="duo-hero__title">{{ perfume.title | escape }} Duo</h1>
+          <p class="duo-card__subtitle">Perfume + Attar Roll-On</p>
+
+          {%- if section.settings.tagline != blank -%}
+            <p class="duo-hero__tagline">{{ section.settings.tagline }}</p>
+          {%- endif -%}
+
+          <div class="offer-card__variant-row">
+            <label class="offer-card__variant-label" for="{{ hero_id }}-perfume">Perfume</label>
+            <div class="select offer-card__variant-select">
+              <select class="offer-card__variant select__select" id="{{ hero_id }}-perfume" data-duo-perfume-select>
+                {%- for size in perfume_sizes -%}
+                  {%- assign found = blank -%}
+                  {%- for v in perfume.variants -%}
+                    {%- assign v_size = v.option1 | upcase -%}
+                    {%- if v.option1 != blank and v_size == size -%}
+                      {%- assign found = v -%}
+                      {%- break -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- if found != blank -%}
+                    <option
+                      value="{{ found.id }}"
+                      data-price="{{ found.price }}"
+                      data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
+                      {% unless found.available %}disabled{% endunless %}
+                    >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+                  {%- endif -%}
+                {%- endfor -%}
+              </select>
+              {% render 'icon-caret' %}
+            </div>
+          </div>
+
+          <div class="offer-card__variant-row">
+            <label class="offer-card__variant-label" for="{{ hero_id }}-rollon">Roll-on</label>
+            <div class="select offer-card__variant-select">
+              <select class="offer-card__variant select__select" id="{{ hero_id }}-rollon" data-duo-rollon-select>
+                {%- for size in rollon_sizes -%}
+                  {%- assign found = blank -%}
+                  {%- for v in matched_rollon.variants -%}
+                    {%- assign v_size = v.option1 | upcase -%}
+                    {%- if v.option1 != blank and v_size == size -%}
+                      {%- assign found = v -%}
+                      {%- break -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- if found != blank -%}
+                    <option
+                      value="{{ found.id }}"
+                      data-price="{{ found.price }}"
+                      data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
+                      {% unless found.available %}disabled{% endunless %}
+                    >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+                  {%- endif -%}
+                {%- endfor -%}
+              </select>
+              {% render 'icon-caret' %}
+            </div>
+          </div>
+
+          <div class="duo-card__breakdown duo-hero__price">
+            <span class="duo-card__retail" data-duo-retail hidden></span>
+            <span class="offer-card__price" data-duo-price></span>
+          </div>
+
+          {%- if section.settings.perks != blank -%}
+            <ul class="offer-builder__perks duo-hero__perks">
+              {%- for perk in perks -%}
+                {%- if perk != blank -%}
+                  <li>
+                    {% render 'icon-checkmark' %}
+                    <span>{{ perk | strip }}</span>
+                  </li>
+                {%- endif -%}
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+
+  <div class="offer-builder__bar" data-offer-bar>
+    <div class="offer-builder__bar-track" aria-hidden="true">
+      <span class="offer-builder__bar-fill"></span>
+    </div>
+
+    <div class="offer-builder__bar-inner page-width">
+      <div class="offer-builder__bar-summary">
+        <div class="offer-builder__bar-progress">
+          <span class="offer-builder__bar-count" data-duo-selected-name>—</span>
+          <span class="offer-builder__bar-label">selected duo</span>
+        </div>
+        <p class="offer-builder__bar-picks" data-duo-picks></p>
+      </div>
+
+      <div class="offer-builder__bar-cta">
+        <div class="offer-builder__bar-pricing">
+          <span class="offer-builder__bar-price" data-duo-bar-price>Select a duo</span>
+          <span class="offer-builder__bar-worth" data-duo-worth hidden></span>
+        </div>
+        <button type="button" class="offer-builder__bar-add" data-duo-add disabled>
+          <span data-duo-add-label>{{ section.settings.button_label | default: 'Add duo to cart' }}</span>
+          {% render 'loading-spinner' %}
+        </button>
+      </div>
+    </div>
+    <p class="offer-builder__bar-error" data-duo-error hidden role="alert"></p>
+  </div>
+</duo-pairs>
+
+{% schema %}
+{
+  "name": "Duo Pairs",
+  "tag": "section",
+  "class": "section section--duo-pairs",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "One card per signature-series fragrance, each pairing that fragrance's own perfume with its own attar roll-on (matched automatically by title — nothing to configure per fragrance). The customer only changes each item's size; add a new fragrance to the perfume collection below and, once it has a matching roll-on, a card appears for it automatically."
+    },
+    {
+      "type": "collection",
+      "id": "perfume_collection",
+      "label": "Perfume collection",
+      "info": "Defaults to the free-gift qualifying collection (Theme settings → Free gift), which itself defaults to \"signature-series\"."
+    },
+    {
+      "type": "product",
+      "id": "all_duos_product",
+      "label": "\"Browse all duos\" product",
+      "info": "Where the \"All Signature Duos\" back link (shown on a single fragrance's page) goes. Defaults to the product with handle \"signature-duo\" if left blank. Always opened with ?view=duo forced, so it shows this grid regardless of that product's own Theme template."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Signature Duos"
+    },
+    {
+      "type": "text",
+      "id": "badge",
+      "label": "Badge text",
+      "info": "Leave blank to auto-generate from the discount below."
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Tagline",
+      "default": "Your signature scent, in perfume and attar — pick your sizes below."
+    },
+    {
+      "type": "textarea",
+      "id": "perks",
+      "label": "Perks (one per line)",
+      "default": "Free shipping on duos\nMix any sizes you like"
+    },
+    {
+      "type": "header",
+      "content": "Discount"
+    },
+    {
+      "type": "select",
+      "id": "discount_type",
+      "options": [
+        { "value": "none", "label": "No discount" },
+        { "value": "fixed", "label": "Fixed amount off (₹)" },
+        { "value": "percent", "label": "Percentage off (%)" }
+      ],
+      "default": "percent",
+      "label": "Discount type"
+    },
+    {
+      "type": "number",
+      "id": "discount_amount",
+      "label": "Discount amount",
+      "default": 20,
+      "info": "In ₹ for \"Fixed amount off\", in % for \"Percentage off\". Applied to the retail total of the chosen perfume size + roll-on size, computed live."
+    },
+    {
+      "type": "header",
+      "content": "Labels"
+    },
+    {
+      "type": "text",
+      "id": "select_label",
+      "label": "Card select button",
+      "default": "Select this duo"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Add to cart button",
+      "default": "Add duo to cart"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        { "value": "scheme-1", "label": "Scheme 1" },
+        { "value": "scheme-2", "label": "Scheme 2" },
+        { "value": "scheme-3", "label": "Scheme 3" },
+        { "value": "scheme-4", "label": "Scheme 4" }
+      ],
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 40
+    }
+  ],
+  "presets": [
+    {
+      "name": "Duo Pairs"
+    }
+  ]
+}
+{% endschema %}

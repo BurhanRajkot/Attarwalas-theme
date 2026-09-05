@@ -226,7 +226,8 @@
       "settings": {
         "full_width": true,
         "title": "Duo",
-        "collection": "men",
+        "collection": "duo",
+        "link_to_duo_pages": true,
         "products_to_show": 8,
         "discount_percent": 20,
         "show_badge": true,

@@ -7,6 +7,67 @@
     <meta name="theme-color" content="">
     <link rel="canonical" href="{{ canonical_url }}">
 
+    {%- comment -%}
+      Duo placeholder products (Oudh Eternal Duo, Mystique Island Duo, etc. —
+      every product in the "Duo" collection) exist only to be linked to with
+      ?view=duo&duo=<fragrance> from the homepage carousel / product-page
+      teaser, which forces sections/duo-pairs.liquid to render. None of their
+      Theme templates can actually be set to `duo` yet — Shopify's admin
+      template picker only lists templates from the *published* theme, and
+      this one's a draft (see CLAUDE.md). So if someone lands on the bare
+      product URL directly (search engines, a shared link, clicking "View" in
+      admin), Shopify falls back to the *default* product template — a real,
+      unmodified buy box selling this placeholder at full price with no
+      duo discount and no actual perfume/roll-on behind it. Reported live by
+      Burhan on /products/yameni-yakud-duo.
+
+      Fixed with an instant client-side redirect into the correct duo page,
+      synchronous and in <head> (before the browser paints any of the wrong
+      buy box) so there's effectively no window for an add-to-cart click on
+      the broken page. Scoped tightly — only fires when template_suffix is
+      genuinely blank, so it goes inert on its own the moment a real `duo`
+      template is properly assigned later; no future cleanup needed.
+    {%- endcomment -%}
+    {%- comment -%}
+      template.suffix, not product.template_suffix: the latter is the
+      product's saved Theme template and never changes just because ?view=duo
+      is on the URL — checking it here caused a redirect loop (this page ->
+      itself -> itself), freezing the tab, since the already-correct duo page
+      kept satisfying "template_suffix is blank" and redirecting to its own
+      URL forever. template.suffix reflects what's actually rendering right
+      now, "duo" once ?view=duo (or a real assignment) is in effect either way.
+    {%- endcomment -%}
+    {%- if template.name == 'product' and template.suffix == blank -%}
+      {%- assign is_duo_placeholder = false -%}
+      {%- for product_collection in product.collections -%}
+        {%- if product_collection.handle == 'duo' -%}
+          {%- assign is_duo_placeholder = true -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if is_duo_placeholder -%}
+        {%- assign duo_perfume_collection = settings.free_gift_qualifying_collection -%}
+        {%- if duo_perfume_collection == blank -%}
+          {%- assign duo_perfume_collection = collections['signature-series'] -%}
+        {%- endif -%}
+        {%- assign duo_fragrance_name = product.title | remove: ' Duo' | strip -%}
+        {%- assign duo_matched_perfume = blank -%}
+        {%- for p in duo_perfume_collection.products -%}
+          {%- if p.title == duo_fragrance_name -%}
+            {%- assign duo_matched_perfume = p -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- if duo_matched_perfume != blank -%}
+          <script>
+            window.location.replace(
+              {{ product.url | append: '?view=duo&duo=' | append: duo_matched_perfume.handle | json }}
+            );
+          </script>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+
     {%- if settings.favicon != blank -%}
       <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
     {%- endif -%}
