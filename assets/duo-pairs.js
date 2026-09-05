@@ -3,7 +3,9 @@
   perfume + attar roll-on pair. The customer picks exactly one card (radio
   behaviour, like offer-builder's groups but always a single winner across
   the whole grid) and can only change each item's size via that card's own
-  two <select>s. Add-to-cart sends both variants as ordinary cart lines
+  two chip pickers (native radio inputs, styled to match the real product
+  page's Size picker — see component-duo-pairs.css). Add-to-cart sends both
+  variants as ordinary cart lines
   tagged with the same `_bundle` / `_bundle_price` / `_bundle_size`
   properties every other bundle on this site uses, so the existing "Offer
   bundle discount" function (shared with offer-builder.js, doesn't inspect
@@ -65,12 +67,9 @@ if (!customElements.get('duo-pairs')) {
 
         this.cards.forEach((card) => {
           card.querySelector('[data-duo-select-btn]')?.addEventListener('click', () => this.selectCard(card));
-          card
-            .querySelector('[data-duo-perfume-select]')
-            ?.addEventListener('change', () => this.renderCard(card));
-          card
-            .querySelector('[data-duo-rollon-select]')
-            ?.addEventListener('change', () => this.renderCard(card));
+          card.querySelectorAll('[data-duo-perfume-group] input, [data-duo-rollon-group] input').forEach((input) => {
+            input.addEventListener('change', () => this.renderCard(card));
+          });
 
           this.renderCard(card);
         });
@@ -113,11 +112,15 @@ if (!customElements.get('duo-pairs')) {
 
       /* ------------------------------- pricing -------------------------------- */
 
+      selectedSizeInput(card, groupSelector) {
+        return card.querySelector(`${groupSelector} input:checked`);
+      }
+
       cardRetail(card) {
-        const perfumeSelect = card.querySelector('[data-duo-perfume-select]');
-        const rollonSelect = card.querySelector('[data-duo-rollon-select]');
-        const perfumePrice = parseInt(perfumeSelect?.selectedOptions[0]?.dataset.price, 10) || 0;
-        const rollonPrice = parseInt(rollonSelect?.selectedOptions[0]?.dataset.price, 10) || 0;
+        const perfumeInput = this.selectedSizeInput(card, '[data-duo-perfume-group]');
+        const rollonInput = this.selectedSizeInput(card, '[data-duo-rollon-group]');
+        const perfumePrice = parseInt(perfumeInput?.dataset.price, 10) || 0;
+        const rollonPrice = parseInt(rollonInput?.dataset.price, 10) || 0;
         return perfumePrice + rollonPrice;
       }
 
@@ -175,8 +178,10 @@ if (!customElements.get('duo-pairs')) {
 
         if (this.picksElement) {
           if (ready) {
-            const perfumeLabel = card.querySelector('[data-duo-perfume-select]')?.selectedOptions[0]?.textContent || '';
-            const rollonLabel = card.querySelector('[data-duo-rollon-select]')?.selectedOptions[0]?.textContent || '';
+            const perfumeInput = this.selectedSizeInput(card, '[data-duo-perfume-group]');
+            const rollonInput = this.selectedSizeInput(card, '[data-duo-rollon-group]');
+            const perfumeLabel = perfumeInput?.nextElementSibling?.textContent || '';
+            const rollonLabel = rollonInput?.nextElementSibling?.textContent || '';
             this.picksElement.textContent = `Perfume ${perfumeLabel} · Roll-on ${rollonLabel}`;
           } else {
             this.picksElement.textContent = '';
@@ -251,10 +256,10 @@ if (!customElements.get('duo-pairs')) {
         if (this.addButton.disabled || !this.selectedCard) return;
 
         const card = this.selectedCard;
-        const perfumeSelect = card.querySelector('[data-duo-perfume-select]');
-        const rollonSelect = card.querySelector('[data-duo-rollon-select]');
-        const perfumeVariantId = perfumeSelect?.value;
-        const rollonVariantId = rollonSelect?.value;
+        const perfumeInput = this.selectedSizeInput(card, '[data-duo-perfume-group]');
+        const rollonInput = this.selectedSizeInput(card, '[data-duo-rollon-group]');
+        const perfumeVariantId = perfumeInput?.value;
+        const rollonVariantId = rollonInput?.value;
         if (!perfumeVariantId || !rollonVariantId) return;
 
         const retail = this.cardRetail(card);

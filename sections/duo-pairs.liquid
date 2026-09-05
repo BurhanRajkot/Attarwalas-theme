@@ -236,57 +236,61 @@
               <h3 class="offer-card__title">{{ perfume.title | escape }} Duo</h3>
               <p class="duo-card__subtitle">Perfume + Attar Roll-On</p>
 
-              <div class="offer-card__variant-row">
-                <label class="offer-card__variant-label" for="{{ card_id }}-perfume">Perfume</label>
-                <div class="select offer-card__variant-select">
-                  <select class="offer-card__variant select__select" id="{{ card_id }}-perfume" data-duo-perfume-select>
-                    {%- for size in perfume_sizes -%}
-                      {%- assign found = blank -%}
-                      {%- for v in perfume.variants -%}
-                        {%- assign v_size = v.option1 | upcase -%}
-              {%- if v.option1 != blank and v_size == size -%}
-                          {%- assign found = v -%}
-                          {%- break -%}
-                        {%- endif -%}
-                      {%- endfor -%}
-                      {%- if found != blank -%}
-                        <option
-                          value="{{ found.id }}"
-                          data-price="{{ found.price }}"
-                          data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
-                          {% unless found.available %}disabled{% endunless %}
-                        >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+              <div class="duo-size-row">
+                <span class="duo-size-row__label">Perfume</span>
+                <div class="duo-size-group" data-duo-perfume-group>
+                  {%- for size in perfume_sizes -%}
+                    {%- assign found = blank -%}
+                    {%- for v in perfume.variants -%}
+                      {%- assign v_size = v.option1 | upcase -%}
+                      {%- if v.option1 != blank and v_size == size -%}
+                        {%- assign found = v -%}
+                        {%- break -%}
                       {%- endif -%}
                     {%- endfor -%}
-                  </select>
-                  {% render 'icon-caret' %}
+                    {%- if found != blank -%}
+                      <input
+                        type="radio"
+                        class="duo-size-input"
+                        name="{{ card_id }}-perfume-size"
+                        id="{{ card_id }}-perfume-{{ size }}"
+                        value="{{ found.id }}"
+                        data-price="{{ found.price }}"
+                        {% if forloop.first %}checked{% endif %}
+                        {% unless found.available %}disabled{% endunless %}
+                      >
+                      <label class="duo-size-label" for="{{ card_id }}-perfume-{{ size }}">{{ size }}</label>
+                    {%- endif -%}
+                  {%- endfor -%}
                 </div>
               </div>
 
-              <div class="offer-card__variant-row">
-                <label class="offer-card__variant-label" for="{{ card_id }}-rollon">Roll-on</label>
-                <div class="select offer-card__variant-select">
-                  <select class="offer-card__variant select__select" id="{{ card_id }}-rollon" data-duo-rollon-select>
-                    {%- for size in rollon_sizes -%}
-                      {%- assign found = blank -%}
-                      {%- for v in matched_rollon.variants -%}
-                        {%- assign v_size = v.option1 | upcase -%}
-              {%- if v.option1 != blank and v_size == size -%}
-                          {%- assign found = v -%}
-                          {%- break -%}
-                        {%- endif -%}
-                      {%- endfor -%}
-                      {%- if found != blank -%}
-                        <option
-                          value="{{ found.id }}"
-                          data-price="{{ found.price }}"
-                          data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
-                          {% unless found.available %}disabled{% endunless %}
-                        >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+              <div class="duo-size-row">
+                <span class="duo-size-row__label">Roll-on</span>
+                <div class="duo-size-group" data-duo-rollon-group>
+                  {%- for size in rollon_sizes -%}
+                    {%- assign found = blank -%}
+                    {%- for v in matched_rollon.variants -%}
+                      {%- assign v_size = v.option1 | upcase -%}
+                      {%- if v.option1 != blank and v_size == size -%}
+                        {%- assign found = v -%}
+                        {%- break -%}
                       {%- endif -%}
                     {%- endfor -%}
-                  </select>
-                  {% render 'icon-caret' %}
+                    {%- if found != blank -%}
+                      <input
+                        type="radio"
+                        class="duo-size-input"
+                        name="{{ card_id }}-rollon-size"
+                        id="{{ card_id }}-rollon-{{ size }}"
+                        value="{{ found.id }}"
+                        data-price="{{ found.price }}"
+                        {% if forloop.first %}checked{% endif %}
+                        {% unless found.available %}disabled{% endunless %}
+                      >
+                      <label class="duo-size-label" for="{{ card_id }}-rollon-{{ size }}">{{ size }}</label>
+                    {%- endif -%}
+                  {%- endfor -%}
                 </div>
               </div>
 
@@ -425,57 +429,61 @@
             <p class="duo-hero__tagline">{{ section.settings.tagline }}</p>
           {%- endif -%}
 
-          <div class="offer-card__variant-row">
-            <label class="offer-card__variant-label" for="{{ hero_id }}-perfume">Perfume</label>
-            <div class="select offer-card__variant-select">
-              <select class="offer-card__variant select__select" id="{{ hero_id }}-perfume" data-duo-perfume-select>
-                {%- for size in perfume_sizes -%}
-                  {%- assign found = blank -%}
-                  {%- for v in perfume.variants -%}
-                    {%- assign v_size = v.option1 | upcase -%}
-                    {%- if v.option1 != blank and v_size == size -%}
-                      {%- assign found = v -%}
-                      {%- break -%}
-                    {%- endif -%}
-                  {%- endfor -%}
-                  {%- if found != blank -%}
-                    <option
-                      value="{{ found.id }}"
-                      data-price="{{ found.price }}"
-                      data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
-                      {% unless found.available %}disabled{% endunless %}
-                    >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+          <div class="duo-size-row">
+            <span class="duo-size-row__label">Perfume</span>
+            <div class="duo-size-group" data-duo-perfume-group>
+              {%- for size in perfume_sizes -%}
+                {%- assign found = blank -%}
+                {%- for v in perfume.variants -%}
+                  {%- assign v_size = v.option1 | upcase -%}
+                  {%- if v.option1 != blank and v_size == size -%}
+                    {%- assign found = v -%}
+                    {%- break -%}
                   {%- endif -%}
                 {%- endfor -%}
-              </select>
-              {% render 'icon-caret' %}
+                {%- if found != blank -%}
+                  <input
+                    type="radio"
+                    class="duo-size-input"
+                    name="{{ hero_id }}-perfume-size"
+                    id="{{ hero_id }}-perfume-{{ size }}"
+                    value="{{ found.id }}"
+                    data-price="{{ found.price }}"
+                    {% if forloop.first %}checked{% endif %}
+                    {% unless found.available %}disabled{% endunless %}
+                  >
+                  <label class="duo-size-label" for="{{ hero_id }}-perfume-{{ size }}">{{ size }}</label>
+                {%- endif -%}
+              {%- endfor -%}
             </div>
           </div>
 
-          <div class="offer-card__variant-row">
-            <label class="offer-card__variant-label" for="{{ hero_id }}-rollon">Roll-on</label>
-            <div class="select offer-card__variant-select">
-              <select class="offer-card__variant select__select" id="{{ hero_id }}-rollon" data-duo-rollon-select>
-                {%- for size in rollon_sizes -%}
-                  {%- assign found = blank -%}
-                  {%- for v in matched_rollon.variants -%}
-                    {%- assign v_size = v.option1 | upcase -%}
-                    {%- if v.option1 != blank and v_size == size -%}
-                      {%- assign found = v -%}
-                      {%- break -%}
-                    {%- endif -%}
-                  {%- endfor -%}
-                  {%- if found != blank -%}
-                    <option
-                      value="{{ found.id }}"
-                      data-price="{{ found.price }}"
-                      data-price-formatted="{{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}"
-                      {% unless found.available %}disabled{% endunless %}
-                    >{{ size }} — {{ found.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹' }}</option>
+          <div class="duo-size-row">
+            <span class="duo-size-row__label">Roll-on</span>
+            <div class="duo-size-group" data-duo-rollon-group>
+              {%- for size in rollon_sizes -%}
+                {%- assign found = blank -%}
+                {%- for v in matched_rollon.variants -%}
+                  {%- assign v_size = v.option1 | upcase -%}
+                  {%- if v.option1 != blank and v_size == size -%}
+                    {%- assign found = v -%}
+                    {%- break -%}
                   {%- endif -%}
                 {%- endfor -%}
-              </select>
-              {% render 'icon-caret' %}
+                {%- if found != blank -%}
+                  <input
+                    type="radio"
+                    class="duo-size-input"
+                    name="{{ hero_id }}-rollon-size"
+                    id="{{ hero_id }}-rollon-{{ size }}"
+                    value="{{ found.id }}"
+                    data-price="{{ found.price }}"
+                    {% if forloop.first %}checked{% endif %}
+                    {% unless found.available %}disabled{% endunless %}
+                  >
+                  <label class="duo-size-label" for="{{ hero_id }}-rollon-{{ size }}">{{ size }}</label>
+                {%- endif -%}
+              {%- endfor -%}
             </div>
           </div>
 
