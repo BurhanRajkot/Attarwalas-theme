@@ -44,10 +44,6 @@
   color: rgba(var(--offer-ink), 0.5);
 }
 
-.duo-size-row + .duo-size-row {
-  margin-top: -0.2rem;
-}
-
 /*
   Size chips — matches the real product page's own Size picker exactly
   (assets/section-main-product.css, [id^="MainProduct-"] .product-form__input--pill),
@@ -56,13 +52,22 @@
   free keyboard/screen-reader semantics as a radio group. Was previously a
   bare <select> with a caret icon, which is what actually read as "kind of
   bad" / inconsistent with the rest of the site.
+
+  Row spacing was a second round of the same complaint: the real product
+  page gives each option group `margin-bottom: 2.2rem` of its own breathing
+  room (component-product-variant-picker.css), but this used to cram the
+  Perfume and Roll-on rows together with a *negative* margin between them —
+  the chips themselves were correct, the rhythm around them wasn't. Applied
+  uniformly (not just "row after the first") so the gap above the very
+  first row, under the "Perfume + Attar Roll-On" subtitle, matches too.
 */
 .duo-size-row {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.7rem;
+  gap: 0.9rem;
   width: 100%;
+  margin-top: 1.6rem;
 }
 
 .duo-size-row__label {
@@ -136,7 +141,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.8rem;
-  margin-top: 0.2rem;
+  margin-top: 1.4rem;
 }
 
 .duo-card__retail {
@@ -261,7 +266,7 @@
 
 .duo-hero .duo-size-row {
   max-width: 40rem;
-  margin-top: 1rem;
+  margin-top: 2rem;
 }
 
 .duo-hero .duo-size-label {
