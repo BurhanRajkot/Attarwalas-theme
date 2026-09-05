@@ -36,6 +36,7 @@
 
   assign qualifying_units = 0
   assign claimed_units = 0
+  assign gift_has_bogus_line = false
   for item in cart.items
     if item.properties._free_gift != blank
       assign claimed_units = claimed_units | plus: item.quantity
@@ -57,13 +58,26 @@
     endif
 
     if in_qualifying_collection
-      assign qualifying_units = qualifying_units | plus: item.quantity
+      if item.variant.option1 == '10ML' or item.variant.option1 == '35ML'
+        # Bare gift-size line, no `_free_gift` marker — see the matching
+        # comment in snippets/free-gift-picker.liquid.
+        assign gift_has_bogus_line = true
+      else
+        assign qualifying_units = qualifying_units | plus: item.quantity
+      endif
     endif
   endfor
 
   assign gift_pending = false
   if gift_active and qualifying_units > claimed_units
     assign gift_pending = true
+  endif
+
+  # Hard backstop, independent of free-gift.js's client-side auto-trim — see
+  # the matching comment in sections/main-cart-footer.liquid.
+  assign gift_excess = false
+  if claimed_units > qualifying_units
+    assign gift_excess = true
   endif
 -%}
 
@@ -598,7 +612,7 @@
             class="cart__checkout-button button"
             name="checkout"
             form="CartDrawer-Form"
-            {% if cart == empty or gift_pending %}
+            {% if cart == empty or gift_pending or gift_excess or gift_has_bogus_line %}
               disabled
             {% endif %}
           >
@@ -606,6 +620,10 @@
           </button>
           {%- if gift_pending -%}
             <p class="cart__gift-pending-note">Pick your free perfume above to continue.</p>
+          {%- elsif gift_excess -%}
+            <p class="cart__gift-pending-note">Your free gift no longer matches your cart — click "Change" on it above to continue.</p>
+          {%- elsif gift_has_bogus_line -%}
+            <p class="cart__gift-pending-note">One of your items isn't available for individual purchase — please remove it above to continue.</p>
           {%- endif -%}
         </div>
       </div>

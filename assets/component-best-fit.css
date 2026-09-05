@@ -1,0 +1,64 @@
+/* ==========================================================================
+   ATTARWALAS — "Best Fit For" disclosure
+   A dropdown-styled button that expands to a single line of plain-text tags.
+   ========================================================================== */
+
+.product__best-fit {
+  --bf-gold: var(--color-button);
+  --bf-ink: var(--color-foreground);
+  --bf-bg: var(--color-background);
+  margin: 2rem 0;
+}
+
+.best-fit__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.8rem;
+  border: 1px solid rgba(var(--bf-gold), 0.35);
+  border-radius: 999px;
+  background: rgb(var(--bf-bg));
+  color: rgb(var(--bf-ink));
+  font-family: var(--font-body-family);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.best-fit__button::-webkit-details-marker {
+  display: none;
+}
+
+.best-fit__button:focus-visible {
+  outline: 2px solid rgb(var(--bf-gold));
+  outline-offset: 2px;
+}
+
+.best-fit__chevron {
+  width: 1rem;
+  height: 0.6rem;
+  color: rgb(var(--bf-gold));
+  transition: transform 0.25s ease;
+}
+
+details[open] > .best-fit__button .best-fit__chevron {
+  transform: rotate(180deg);
+}
+
+.best-fit__line {
+  margin-top: 1rem;
+  padding: 0 0.4rem;
+  font-family: var(--font-body-family);
+  font-size: 1.3rem;
+  color: rgba(var(--bf-ink), 0.85);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.best-fit__dot {
+  color: rgb(var(--bf-gold));
+}

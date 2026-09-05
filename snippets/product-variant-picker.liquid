@@ -10,10 +10,24 @@
   {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
 {% endcomment %}
 {%- unless product.has_only_default_variant -%}
+  {%- comment -%}
+    product.variants in Liquid (and the /product.js endpoint) is silently
+    truncated to 250 items for products with more variants than that (e.g.
+    Customize Perfume, 594 variants across 99 fragrances x 3 sizes x 2
+    types) - variants past the cutoff simply can't be matched, so those
+    fragrances looked pickable but could never produce a real variant/price.
+    Capture how many 250-item pages actually exist so the extra pages can be
+    fetched and merged client-side (see connectedCallback in global.js).
+  {%- endcomment -%}
+  {%- assign variant_total_pages = 1 -%}
+  {%- paginate product.variants by 250 -%}
+    {%- assign variant_total_pages = paginate.pages -%}
+  {%- endpaginate -%}
   <variant-selects
     id="variant-selects-{{ section.id }}"
     data-section="{{ section.id }}"
     data-url="{{ product.url }}"
+    data-variant-total-pages="{{ variant_total_pages }}"
     {% if update_url == false %}
       data-update-url="false"
     {% endif %}
@@ -91,8 +105,10 @@
         </div>
       {%- endif -%}
     {%- endfor -%}
-    <script type="application/json">
-      {{ product.variants | json }}
-    </script>
+    {%- paginate product.variants by 250 -%}
+      <script type="application/json" data-variant-json>
+        {{ product.variants | json }}
+      </script>
+    {%- endpaginate -%}
   </variant-selects>
 {%- endunless -%}

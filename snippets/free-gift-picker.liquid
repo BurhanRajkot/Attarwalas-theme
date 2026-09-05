@@ -79,6 +79,7 @@
   assign qualifying_100 = 0
   assign claimed_50 = 0
   assign claimed_100 = 0
+  assign bogus_gift_line_keys = ''
 
   for item in cart.items
     if item.properties._free_gift != blank
@@ -111,7 +112,16 @@
     endif
 
     if in_qualifying_collection
-      if item.variant.option1 == '50ML'
+      if item.variant.option1 == '10ML' or item.variant.option1 == '35ML'
+        # A 10ml/35ml line with no `_free_gift` marker is the gift-only
+        # placeholder-priced variant added directly (not through the gift
+        # pickers) — it must never count as a real qualifying purchase (that
+        # would silently hand out an extra free gift slot it didn't earn),
+        # and it must never be treated as an ordinarily sellable line either.
+        # Flagged here and force-removed by free-gift.js / blocked at
+        # checkout as a hard backstop — see sections/main-cart-footer.liquid.
+        assign bogus_gift_line_keys = bogus_gift_line_keys | append: item.key | append: ','
+      elsif item.variant.option1 == '50ML'
         assign qualifying_50 = qualifying_50 | plus: item.quantity
       else
         assign qualifying_100 = qualifying_100 | plus: item.quantity
@@ -140,6 +150,16 @@
       assign show_block = true
     endif
   endif
+
+  # A bogus (bare, non-`_free_gift`) 10ml/35ml line must render this block
+  # regardless of the above — it's the only place free-gift.js's cleanup can
+  # find it and force it out of the cart, and the only place checkout gets
+  # blocked while it's still there. Independent of settings.free_gift_enabled:
+  # these placeholder-priced sizes must never be sellable even if the whole
+  # gift feature is switched off.
+  if bogus_gift_line_keys != ''
+    assign show_block = true
+  endif
 -%}
 
 {%- if show_block -%}
@@ -164,11 +184,28 @@
     id="FreeGift-{{ context | default: 'page' }}"
     data-context="{{ context | default: 'page' }}"
     data-qualifies="{{ qualifies }}"
-    data-qualifying-50="{{ qualifying_50 }}"
-    data-claimed-50="{{ claimed_50 }}"
-    data-qualifying-100="{{ qualifying_100 }}"
-    data-claimed-100="{{ claimed_100 }}"
+    {%- comment -%}
+      Named "-ten"/"-thirtyfive", not "-50"/"-100": a data-* attribute name
+      with a hyphen immediately followed by a digit does NOT camelCase per
+      the HTML spec (only hyphen+lowercase-letter converts), so
+      data-qualifying-50 would silently read back as undefined via
+      dataset.qualifying50 — the exact bug that made the excess-trim below
+      compute 0 no matter what the cart actually held. Same landmine already
+      documented for product-gift-picker.js's data-gift-variant-small/large.
+    {%- endcomment -%}
+    data-qualifying-ten="{{ qualifying_50 }}"
+    data-claimed-ten="{{ claimed_50 }}"
+    data-qualifying-thirtyfive="{{ qualifying_100 }}"
+    data-claimed-thirtyfive="{{ claimed_100 }}"
+    data-bogus-gift-keys="{{ bogus_gift_line_keys | strip_newlines | strip }}"
     data-gift-label="{{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
+    {%- comment -%}
+      Rendered purely so free-gift.js can find and force-remove a bogus line
+      when the cart otherwise has nothing qualifying or claimed — nothing
+      user-facing belongs on screen in that case, just a "pick your free
+      perfume" promo with no perfume in the cart to earn it.
+    {%- endcomment -%}
+    {%- if qualifies == false and claimed_units == 0 %} hidden{% endif %}
   >
     <div class="free-gift__head">
       <span class="free-gift__icon" aria-hidden="true">{% render 'icon-discount' %}</span>

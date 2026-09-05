@@ -41,6 +41,14 @@
           "settings": {
             "share_label": "Share"
           }
+        },
+        "best_fit": {
+          "type": "best_fit",
+          "settings": {
+            "heading": "Best Fit For",
+            "gender_tags": "Men, Masculine, Feminine, Unisex",
+            "occasion_tags": "Day & Night"
+          }
         }
       },
       "block_order": [
@@ -50,7 +58,8 @@
         "variant_picker",
         "quantity_selector",
         "buy_buttons",
-        "share"
+        "share",
+        "best_fit"
       ],
       "settings": {
         "enable_sticky_info": true,

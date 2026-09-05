@@ -22,39 +22,66 @@
 // re-executing is harmless: a bare `let`/`class` at top level would throw
 // "Identifier has already been declared" on the second run.
 if (!customElements.get('free-gift-picker')) {
-  // One shot per page load. Without this, a change.js call that keeps failing
-  // would re-trigger connectedCallback on every re-render and loop forever.
-  let staleTrimTried = false;
-
   class FreeGiftPicker extends HTMLElement {
     constructor() {
       super();
-  
+
       this.errorEl = this.querySelector('[data-free-gift-error]');
       this.busy = false;
-  
+      // One shot per element instance, not per page load — every cart
+      // mutation (e.g. removing the perfume that earned the gift) tears down
+      // and recreates this element via the section-HTML replace in
+      // renderSections()/cart.js, so a fresh instance means a fresh trim
+      // attempt. Without being scoped to the instance, one successful trim
+      // earlier in the page session would permanently block ever trimming a
+      // later, unrelated excess — which is exactly what let a stale gift
+      // line sit in the cart, un-zeroed and fully chargeable, after its
+      // qualifying perfume was removed.
+      this.staleTrimTried = false;
+
       this.addEventListener('click', this.onClick.bind(this));
       this.addEventListener('change', this.onChange.bind(this));
     }
-  
+
     connectedCallback() {
       // Each bucket ('50' → filled with a 10ml gift perfume, '100' → 35ml) is
       // trimmed independently: a bucket's excess must only take units from
       // that same bucket's rows, otherwise dropping a 50ml perfume from the
       // cart could remove a still-valid 35ml gift instead of the orphaned
       // 10ml one.
+      //
+      // The '50'/'100' bucket codes below are internal only — they map to
+      // dataset keys via bucketAttr, never read directly as
+      // `qualifying${bucket}`. data-qualifying-50 would read back as
+      // dataset.qualifying50, which the browser never creates: a data-*
+      // attribute's hyphen only camelCases when followed by a lowercase
+      // letter, not a digit, so that key is silently always undefined. This
+      // is exactly what made every excess computation come out as 0
+      // regardless of the actual cart contents — see the matching comment
+      // in snippets/free-gift-picker.liquid.
+      const bucketAttr = { 50: 'Ten', 100: 'Thirtyfive' };
       const buckets = ['50', '100'];
       const excessByBucket = buckets
         .map((bucket) => {
-          const qualifying = parseInt(this.dataset[`qualifying${bucket}`], 10) || 0;
-          const claimed = parseInt(this.dataset[`claimed${bucket}`], 10) || 0;
+          const qualifying = parseInt(this.dataset[`qualifying${bucketAttr[bucket]}`], 10) || 0;
+          const claimed = parseInt(this.dataset[`claimed${bucketAttr[bucket]}`], 10) || 0;
           return { bucket, excess: claimed - qualifying };
         })
         .filter(({ excess }) => excess > 0);
 
-      if (excessByBucket.length > 0 && !staleTrimTried) {
-        staleTrimTried = true;
-        this.trimExcess(excessByBucket);
+      // A 10ml/35ml line with no `_free_gift` marker (added directly, not
+      // through a gift picker) — these placeholder-priced sizes must never
+      // sit in the cart as an ordinarily purchasable line, regardless of
+      // whether the cart even qualifies for a gift. Published by
+      // snippets/free-gift-picker.liquid as `bogus_gift_line_keys`.
+      const bogusKeys = (this.dataset.bogusGiftKeys || '')
+        .split(',')
+        .map((key) => key.trim())
+        .filter(Boolean);
+
+      if ((excessByBucket.length > 0 || bogusKeys.length > 0) && !this.staleTrimTried) {
+        this.staleTrimTried = true;
+        this.trimExcess(excessByBucket, bogusKeys);
       }
     }
   
@@ -132,9 +159,12 @@ if (!customElements.get('free-gift-picker')) {
      * bucket's last rows in DOM order (grouped by line, since several rows
      * can share one line when the same roll-on fills more than one slot).
      * Buckets are trimmed independently so a 50ml perfume dropping out of the
-     * cart can never take a still-valid 35ml gift with it.
+     * cart can never take a still-valid 35ml gift with it. Also force-removes
+     * any bogus (bare, non-`_free_gift`) 10ml/35ml line entirely — those have
+     * no row of their own in this component (they're never claimed gifts),
+     * so they're always dropped to 0 outright rather than trimmed by units.
      */
-    trimExcess(excessByBucket) {
+    trimExcess(excessByBucket, bogusKeys = []) {
       const allRows = Array.from(this.querySelectorAll('[data-free-gift-row][data-gift-line-key]'));
 
       /** @type {Map<string, number>} */
@@ -146,17 +176,19 @@ if (!customElements.get('free-gift-picker')) {
           unitsToRemoveByLine.set(key, (unitsToRemoveByLine.get(key) || 0) + 1);
         });
       });
-      if (unitsToRemoveByLine.size === 0) return;
+      if (unitsToRemoveByLine.size === 0 && bogusKeys.length === 0) return;
 
       const rows = allRows;
       this.setBusy(true);
-  
-      const tasks = Array.from(unitsToRemoveByLine.entries()).map(([key, units]) => () => {
+
+      const trimTasks = Array.from(unitsToRemoveByLine.entries()).map(([key, units]) => () => {
         const row = rows.find((r) => r.dataset.giftLineKey === key);
         const currentQty = parseInt(row?.dataset.lineQuantity, 10) || units;
         return this.changeLine(key, Math.max(0, currentQty - units));
       });
-  
+      const bogusTasks = bogusKeys.map((key) => () => this.changeLine(key, 0));
+      const tasks = trimTasks.concat(bogusTasks);
+
       tasks
         .reduce((chain, task) => chain.then(task), Promise.resolve())
         .then((state) => this.renderSections(state))

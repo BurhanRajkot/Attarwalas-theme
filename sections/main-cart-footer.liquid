@@ -26,6 +26,7 @@
 
   assign qualifying_units = 0
   assign claimed_units = 0
+  assign gift_has_bogus_line = false
   for item in cart.items
     if item.properties._free_gift != blank
       assign claimed_units = claimed_units | plus: item.quantity
@@ -47,13 +48,32 @@
     endif
 
     if in_qualifying_collection
-      assign qualifying_units = qualifying_units | plus: item.quantity
+      if item.variant.option1 == '10ML' or item.variant.option1 == '35ML'
+        # Bare gift-size line, no `_free_gift` marker — added directly, not
+        # via a gift picker. Must never count as a qualifying purchase (see
+        # the matching comment in snippets/free-gift-picker.liquid) and must
+        # never be checkout-able either — see gift_has_bogus_line below.
+        assign gift_has_bogus_line = true
+      else
+        assign qualifying_units = qualifying_units | plus: item.quantity
+      endif
     endif
   endfor
 
   assign gift_pending = false
   if gift_active and qualifying_units > claimed_units
     assign gift_pending = true
+  endif
+
+  # Hard backstop, independent of free-gift.js's client-side auto-trim: if a
+  # claimed gift now exceeds what the cart actually qualifies for (its
+  # qualifying perfume was removed/reduced), block checkout rather than let
+  # the customer pay full price for what the UI told them was free. The JS
+  # trim normally clears this within one round trip; this only bites if that
+  # somehow doesn't happen (JS disabled, a failed request, stale page).
+  assign gift_excess = false
+  if claimed_units > qualifying_units
+    assign gift_excess = true
   endif
 -%}
 
@@ -150,7 +170,7 @@
                   id="checkout"
                   class="cart__checkout-button button"
                   name="checkout"
-                  {% if cart == empty or gift_pending %}
+                  {% if cart == empty or gift_pending or gift_excess or gift_has_bogus_line %}
                     disabled
                   {% endif %}
                   form="cart"
@@ -159,10 +179,14 @@
                 </button>
                 {%- if gift_pending -%}
                   <p class="cart__gift-pending-note">Pick your free perfume above to continue.</p>
+                {%- elsif gift_excess -%}
+                  <p class="cart__gift-pending-note">Your free gift no longer matches your cart — click "Change" on it above to continue.</p>
+                {%- elsif gift_has_bogus_line -%}
+                  <p class="cart__gift-pending-note">One of your items isn't available for individual purchase — please remove it above to continue.</p>
                 {%- endif -%}
               </div>
 
-              {%- if additional_checkout_buttons and gift_pending == false -%}
+              {%- if additional_checkout_buttons and gift_pending == false and gift_excess == false and gift_has_bogus_line == false -%}
                 <div class="cart__dynamic-checkout-buttons additional-checkout-buttons">
                   {{ content_for_additional_checkout_buttons }}
                 </div>

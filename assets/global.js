@@ -981,6 +981,42 @@ class VariantSelects extends HTMLElement {
     this.addEventListener('change', this.onVariantChange);
   }
 
+  connectedCallback() {
+    // Products with more than 250 variants (e.g. Customize Perfume, 594
+    // variants) get truncated by Liquid/`.js` to the first 250 - variants
+    // past that are invisible to getVariantData() no matter what's picked,
+    // even though they're real, priced variants in Shopify. The remaining
+    // pages are fetched here (via the Section Rendering API, which respects
+    // the same ?page= the product-variant-picker snippet paginated by) and
+    // merged into variantData once they land.
+    const totalPages = parseInt(this.dataset.variantTotalPages, 10) || 1;
+    if (totalPages > 1) this.loadRemainingVariantPages(totalPages);
+  }
+
+  async loadRemainingVariantPages(totalPages) {
+    const pageFetches = [];
+    for (let page = 2; page <= totalPages; page++) {
+      pageFetches.push(
+        fetch(`${this.dataset.url}?section_id=${this.dataset.section}&page=${page}`)
+          .then((response) => response.text())
+          .then((responseText) => {
+            const html = new DOMParser().parseFromString(responseText, 'text/html');
+            const script = html.querySelector(`#variant-selects-${this.dataset.section} [data-variant-json]`);
+            return script ? JSON.parse(script.textContent) : [];
+          })
+          .catch(() => [])
+      );
+    }
+
+    const extraPages = await Promise.all(pageFetches);
+    const seenIds = new Set(this.getVariantData().map((variant) => variant.id));
+    extraPages.flat().forEach((variant) => {
+      if (seenIds.has(variant.id)) return;
+      seenIds.add(variant.id);
+      this.variantData.push(variant);
+    });
+  }
+
   onVariantChange(event) {
     this.updateOptions();
     this.updateMasterId();
@@ -1078,12 +1114,20 @@ class VariantSelects extends HTMLElement {
     // rest of onVariantChange. Both checks below just skip the availability pass
     // for that option instead of throwing — harmless, since without a fragrance
     // chosen there's nothing meaningful yet to compute Size/Type availability from.
-    const checkedOptionOne = this.querySelector(':checked');
+    //
+    // `checkedOptionOne` must come from the *first* option wrapper specifically,
+    // not `this.querySelector(':checked')` globally — stock Dawn's version relied
+    // on option1 always being pre-checked (and therefore always the first checked
+    // element in DOM order). Once option1 (Fragrance) is left unchecked, that
+    // global query "leaks" onto whichever option the customer actually picks
+    // first (e.g. Size), misreading it as the fragrance choice and corrupting
+    // every availability check downstream of it.
+    const inputWrappers = [...this.querySelectorAll('.product-form__input')];
+    const checkedOptionOne = inputWrappers[0]?.querySelector(':checked');
     if (!checkedOptionOne) return;
     const selectedOptionOneVariants = this.variantData.filter(
       (variant) => checkedOptionOne.value === variant.option1
     );
-    const inputWrappers = [...this.querySelectorAll('.product-form__input')];
     inputWrappers.forEach((option, index) => {
       if (index === 0) return;
       const optionInputs = [...option.querySelectorAll('input[type="radio"], option')];

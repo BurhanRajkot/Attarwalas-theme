@@ -1,0 +1,50 @@
+{% comment %}
+  Renders the "Best Fit For" disclosure — a button that expands to reveal one
+  line of plain-text tags (gender/persona + occasion), configured on the block.
+
+  Accepts:
+  - block: {Object} Shopify block object with customizer settings
+  - section_id: {String} Unique section identifier
+{% endcomment %}
+
+{{ 'component-best-fit.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign heading = block.settings.heading
+  if heading == blank
+    assign heading = 'Best Fit For'
+  endif
+
+  assign gender_tags_raw = block.settings.gender_tags
+  if gender_tags_raw == blank
+    assign gender_tags_raw = 'Men, Masculine, Feminine, Unisex'
+  endif
+
+  assign occasion_tags_raw = block.settings.occasion_tags
+  if occasion_tags_raw == blank
+    assign occasion_tags_raw = 'Day & Night'
+  endif
+
+  assign all_tags_raw = gender_tags_raw | append: ',' | append: occasion_tags_raw
+  assign all_tags = all_tags_raw | split: ','
+-%}
+
+<div class="product__best-fit" {{ block.shopify_attributes }}>
+  <details class="best-fit__details" id="Details-{{ block.id }}-{{ section_id }}">
+    <summary class="best-fit__button" role="button">
+      <span>{{ heading }}</span>
+      <svg class="best-fit__chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M1 1L5 5L9 1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </summary>
+    <div class="best-fit__line">
+      {%- for tag in all_tags -%}
+        {%- assign clean_tag = tag | strip -%}
+        {%- if clean_tag != blank -%}
+          {%- unless forloop.first -%}<span class="best-fit__dot" aria-hidden="true">·</span>{%- endunless -%}
+          <span class="best-fit__tag">{{ clean_tag }}</span>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </details>
+</div>
