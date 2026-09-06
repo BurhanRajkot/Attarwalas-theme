@@ -569,6 +569,13 @@
   transition: color var(--duration-short) ease, padding-left var(--duration-short) ease;
 }
 
+.footer-block__details-content .rte a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 0.1rem;
   background: var(--aw-gold);
   transition: width var(--duration-default) ease;
 }

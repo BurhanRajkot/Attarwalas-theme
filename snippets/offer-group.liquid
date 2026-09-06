@@ -48,13 +48,27 @@
   elsif group_collections != blank
     assign handles_list = group_collections | split: ','
     assign first_handle = handles_list | first | strip
-    assign merged_products = collections[first_handle].products
+
+    comment
+      `| reverse | reverse` is NOT a no-op here — don't "simplify" it away.
+      `collection.products` is a paginated drop, not an Array, and Liquid's
+      `concat` rejects a non-Array *argument*: the assign below silently fails
+      and every collection after the first is dropped from the picker. Symptom
+      (found 2026-09-05): offer-2/3/5 merge "men-3, women-1, unisex-3" but
+      rendered only men-3's five perfumes — Florence Orchidia, which is only in
+      women-1, never appeared on any offer page, and "Offer for 5" therefore
+      demanded all five of the only five products it showed. `reverse` forces
+      the drop to a real Array; applying it twice keeps each collection's own
+      order intact.
+    endcomment
+    assign merged_products = collections[first_handle].products | reverse | reverse
     assign title_list = collections[first_handle].title
     for h in handles_list offset: 1
       assign h_clean = h | strip
       assign col = collections[h_clean]
       if col != blank
-        assign merged_products = merged_products | concat: col.products
+        assign col_products = col.products | reverse | reverse
+        assign merged_products = merged_products | concat: col_products
         assign title_list = title_list | append: ', ' | append: col.title
       endif
     endfor
@@ -89,6 +103,17 @@
   endif
 
   assign include_mode = group_include | default: 'bottles'
+
+  # 10ML/35ML variants on signature-series products exist only to back the
+  # free-gift picker, never a normal purchase option — hidden from this
+  # bundle page's own size dropdown the same way
+  # snippets/product-variant-options.liquid hides them on the main product
+  # page. Scoped to the qualifying collection so roll-ons (which have their
+  # own legitimate, purchasable 10ML/35ML sizes) are unaffected.
+  assign gift_qualifying_collection = settings.free_gift_qualifying_collection
+  if gift_qualifying_collection == blank
+    assign gift_qualifying_collection = collections['signature-series']
+  endif
 
   assign heading = group_heading
   if heading == blank
@@ -196,7 +221,26 @@
               {%- continue -%}
             {%- endif -%}
             {%- liquid
+              assign is_gift_qualifying = false
+              if settings.free_gift_enabled
+                for c in item.collections
+                  if c.handle == gift_qualifying_collection.handle
+                    assign is_gift_qualifying = true
+                    break
+                  endif
+                endfor
+              endif
+
               assign variant = item.selected_or_first_available_variant
+              if is_gift_qualifying and variant.option1 == '10ML' or is_gift_qualifying and variant.option1 == '35ML'
+                for v in item.variants
+                  unless v.option1 == '10ML' or v.option1 == '35ML'
+                    assign variant = v
+                    break
+                  endunless
+                endfor
+              endif
+
               assign card_id = 'OfferCard-' | append: group_index | append: '-' | append: forloop.index
               assign item_alt = item.title | escape
               assign rendered_count = rendered_count | plus: 1
@@ -240,6 +284,9 @@
                     <div class="select offer-card__variant-select">
                       <select class="offer-card__variant select__select" id="{{ card_id }}-variant" data-offer-variant>
                         {%- for v in item.variants -%}
+                          {%- if is_gift_qualifying and v.option1 == '10ML' or is_gift_qualifying and v.option1 == '35ML' -%}
+                            {%- continue -%}
+                          {%- endif -%}
                           <option
                             value="{{ v.id }}"
                             data-price="{{ v.price }}"

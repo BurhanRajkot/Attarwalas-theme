@@ -497,7 +497,7 @@
                   section_id: section.id
                 -%}
               {%- when 'best_fit' -%}
-                {% render 'product-best-fit', block: block, section_id: section.id %}
+                {% render 'product-best-fit', product: product, block: block, section_id: section.id %}
               {%- when 'offer_tickets' -%}
                 {%- liquid
                   assign strip_offers = block.settings.offer_products
@@ -1111,16 +1111,16 @@
         {
           "type": "text",
           "id": "gender_tags",
-          "label": "Gender & Persona (comma-separated)",
-          "default": "Men, Masculine, Feminine, Unisex",
-          "info": "List target personas separated by commas"
+          "label": "Gender & Persona (fallback only)",
+          "default": "Unisex",
+          "info": "Only used if the product isn't in a men/women/unisex collection — most products get this automatically from their collections instead."
         },
         {
           "type": "text",
           "id": "occasion_tags",
-          "label": "Occasion & Timing (comma-separated)",
+          "label": "Occasion & Timing (fallback only)",
           "default": "Day & Night",
-          "info": "List wear occasions separated by commas"
+          "info": "Only used if the product isn't a roll-on or signature-series perfume — those get occasion tags automatically."
         }
       ]
     },

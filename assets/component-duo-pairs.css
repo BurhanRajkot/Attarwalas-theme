@@ -26,14 +26,18 @@
 }
 
 /*
-  A plain 1px border read as a "form panel" rather than a product tile next
-  to the rest of the site (real product/collection cards have none at all —
-  see snippets/card-product.liquid) — reported live as looking generic/bad.
-  Dropped in favour of the same selected-state ring .offer-card--selected
-  already used elsewhere, which doesn't depend on a resting border to work.
+  Duo cards and hero view should never carry a boxy border or selected ring.
+  On a dedicated product hero, there is only one fragrance — a selected-state
+  ring (.offer-card--selected) made it look like a rigid form box/coupon instead
+  of a luxury product page (reported live: "looks so bad that golden border").
 */
-.duo-card {
-  border: none;
+.duo-card,
+.duo-hero,
+.duo-hero.offer-card--selected,
+.duo-hero.offer-card--selected:hover {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .duo-card__subtitle {
@@ -169,14 +173,38 @@
   push preceding siblings out of the way on their own; the container has to
   reserve the room itself. Padding here is comfortably larger than either
   measured height so text reflow/safe-area-inset doesn't reopen the gap.
+
+  8rem/6rem, not 11rem/6rem: `.offer-builder` (section-offer-builder.css)
+  already reserves its own 2rem of bottom padding on every offer/duo page.
+  That 2rem stacks with whatever this rule adds, since `.duo-hero-view` is a
+  child of the `.offer-builder` element, not a replacement for it — the two
+  were double-reserving space, which left a visible blank gap between the
+  sticky bar and the footer once the bar scrolled past its sticky range
+  (reported as "add to cart not touching the footer"). Total reserved space
+  is 10rem/160px mobile once the shared 2rem is added back in — the bar itself
+  measures ~110px there, so this still clears it with room to spare; the
+  original 13rem/208px total (reported 2026-09-05 as "padding on mobile is a
+  little too big") was carrying roughly 60% more buffer than the bar needs.
 */
+.duo-pairs {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--header-height, 100px));
+  padding-bottom: 0 !important;
+}
+
 .duo-hero-view {
-  padding-bottom: 13rem;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2.4rem;
+  padding-bottom: 8rem;
 }
 
 @media screen and (min-width: 750px) {
   .duo-hero-view {
-    padding-bottom: 8rem;
+    padding-top: 3.2rem;
+    padding-bottom: 4rem;
   }
 }
 
@@ -206,13 +234,13 @@
 .duo-hero {
   display: grid;
   gap: 3.2rem;
-  align-items: start;
+  align-items: center;
 }
 
 @media screen and (min-width: 750px) {
   .duo-hero {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 5rem;
+    gap: 6rem;
   }
 }
 
@@ -222,7 +250,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: rgba(var(--offer-ink), 0.03);
+  background: transparent;
 }
 
 .duo-hero__image,
@@ -287,6 +315,26 @@
 
 .duo-hero__perks {
   margin-top: 1.6rem;
+}
+
+/*
+  section-offer-builder.css's own mobile rule gives `.offer-builder__bar-add`
+  `flex: 1` inside `.offer-builder__bar-cta` (justify-content: space-between)
+  — on a real offer page the button shares that row with only a short price,
+  so it settles at a reasonable width. On a duo hero it's competing with a
+  wider price block (a struck-through retail price *and* a "save ₹X" line —
+  see .offer-builder__bar-worth), so the button was left claiming most of the
+  row: a large solid-gold rectangle spanning the width of the screen right
+  above the footer gap fixed above, reported as "golden background looks
+  bad". Capped here (duo pages only, not the shared file every offer page
+  also uses) rather than resizing the shared button everywhere.
+*/
+@media screen and (max-width: 749px) {
+  .duo-pairs .offer-builder__bar-add {
+    flex: 0 1 auto;
+    min-width: 15rem;
+    padding: 1rem 2rem;
+  }
 }
 
 /* --------------------------------- Teaser ---------------------------------

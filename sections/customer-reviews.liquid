@@ -177,7 +177,13 @@
     <div class="customer-reviews__modal-content">
       <div class="customer-reviews__modal-product-head" data-modal-product>
         <a class="customer-reviews__modal-product-link" data-modal-product-link aria-label="" href="#">
-          <img src="" alt="" width="72" height="72" loading="lazy" class="customer-reviews__modal-product-image" data-modal-product-image>
+          {%- comment -%}
+            No `src` attribute at all until JS fills it in below. `src=""`
+            resolves to the current page URL, so every page load fired a
+            second request for the whole document and left a broken image in
+            the modal until a review was opened.
+          {%- endcomment -%}
+          <img alt="" width="72" height="72" loading="lazy" class="customer-reviews__modal-product-image" data-modal-product-image>
           <span class="customer-reviews__modal-product-info">
             <span class="customer-reviews__modal-product-title" data-modal-product-title></span>
             <span class="customer-reviews__modal-product-price" data-modal-product-price></span>
@@ -427,7 +433,13 @@
           link.href = card.dataset.productUrl || '#';
         });
         productLinks[0].setAttribute('aria-label', 'View ' + card.dataset.productTitle + ' details');
-        productImage.src = card.dataset.productImage || '';
+        // Same reason as the markup above: never assign an empty src, or the
+        // modal re-requests the page document and shows a broken image.
+        if (card.dataset.productImage) {
+          productImage.src = card.dataset.productImage;
+        } else {
+          productImage.removeAttribute('src');
+        }
         productImage.alt = card.dataset.productTitle || '';
         productTitle.textContent = card.dataset.productTitle || '';
         productPrice.textContent = card.dataset.productPrice || '';

@@ -229,7 +229,7 @@
         "collection": "duo",
         "link_to_duo_pages": true,
         "products_to_show": 8,
-        "discount_percent": 20,
+        "discount_percent": 10,
         "show_badge": true,
         "badge_text": "Online Exclusive",
         "show_description": true,

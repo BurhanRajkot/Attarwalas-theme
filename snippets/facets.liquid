@@ -190,6 +190,24 @@
                         >
                           {%- for value in sorted_values -%}
                             {% liquid
+                              # 10ML/35ML exist only to back the cart's free-gift picker and are
+                              # deliberately unsellable — hidden from the product page's Size picker
+                              # (snippets/product-variant-options.liquid), from the duo page
+                              # (sections/duo-pairs.liquid) and from bundle pages
+                              # (snippets/offer-group.liquid). The Size *filter* was the one place
+                              # still offering them, so "Size: 10ML" listed all six perfumes and
+                              # every one of them then had no 10ML to buy. No product in the
+                              # catalogue sells these sizes (roll-ons are 6ML/12ML, Customize
+                              # Perfume is 50/80/100ml), so skipping them here loses nothing. If
+                              # 10ml/35ml ever become real retail sizes, delete this block.
+                              assign filter_label_key = filter.label | downcase | strip
+                              assign facet_size_value = value.label | upcase | strip
+                              if filter_label_key == 'size'
+                                if facet_size_value == '10ML' or facet_size_value == '35ML'
+                                  continue
+                                endif
+                              endif
+
                               assign input_id = 'Filter-' | append: filter.param_name | escape | append: '-' | append: forloop.index
                               assign is_disabled = false
                               if value.count == 0 and value.active == false

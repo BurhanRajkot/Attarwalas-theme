@@ -28,6 +28,9 @@
   if exclude_offer_id != blank
     assign deals = deals | where: 'id', '!=', exclude_offer_id
   endif
+
+  # Sort deals so Offer for 2, 3, 5 render in natural ascending order
+  assign deals = deals | sort: 'title'
 -%}
 
 {%- if deals != blank and deals.size > 0 -%}
@@ -48,12 +51,35 @@
           assign tagline_text = mf.tagline.value
           assign pick_count = mf.pick_count.value | plus: 0
 
+          if pick_count == 0
+            if offer.handle contains '-2' or offer.title contains ' 2' or offer.title contains ' 2 '
+              assign pick_count = 2
+            elsif offer.handle contains '-3' or offer.title contains ' 3' or offer.title contains ' 3 '
+              assign pick_count = 3
+            elsif offer.handle contains '-5' or offer.title contains ' 5' or offer.title contains ' 5 '
+              assign pick_count = 5
+            endif
+          endif
+
           # ₹ reads better than the store's "Rs." money format on these cards
           assign price_text = offer.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
 
-          assign discount_type = mf.discount_type.value | downcase
+          assign discount_type = mf.discount_type.value | default: 'percent' | downcase
           assign discount_amount = mf.discount_amount.value | plus: 0
-          # whole-number discounts read as "18% OFF", not "18.0% OFF"
+
+          # Enforce correct discount values: Offer for 2 is 10%, Offer for 3 is 15%, Offer for 5 is 20%
+          if pick_count == 2 or offer.handle == 'offer-for-2'
+            assign discount_amount = 10
+            assign discount_type = 'percent'
+          elsif pick_count == 3 or offer.handle == 'offer-for-3'
+            assign discount_amount = 15
+            assign discount_type = 'percent'
+          elsif pick_count == 5 or offer.handle == 'offer-for-5'
+            assign discount_amount = 20
+            assign discount_type = 'percent'
+          endif
+
+          # whole-number discounts read as "10% OFF", not "10.0% OFF"
           assign discount_amount_display = discount_amount
           assign discount_amount_rounded = discount_amount | round
           if discount_amount_rounded == discount_amount
@@ -74,8 +100,13 @@
             endif
           endif
 
-          if tagline_text == blank
-            assign tagline_text = offer.title
+          # Tagline copy: Clean up any stale "and pay just ₹..." text
+          if tagline_text contains 'and pay just' or tagline_text contains 'and pay only' or tagline_text == blank
+            if pick_count > 0
+              assign tagline_text = 'Pick any ' | append: pick_count | append: ' perfumes from Men, Women or Unisex'
+            else
+              assign tagline_text = offer.title
+            endif
           endif
         -%}
         <li class="offer-deals__item">

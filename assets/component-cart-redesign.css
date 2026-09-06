@@ -237,6 +237,19 @@
 @media screen and (max-width: 749px) {
   .cart-item {
     gap: 1.2rem 1.6rem;
+    /* The base rule's 2.8rem padding-bottom + 2.8rem margin-bottom (5.6rem
+       total) only reads as one visual gap on desktop, where `.cart-item` is
+       `display: table-row` and margin is a no-op — padding-bottom is the
+       only one that actually shows. On mobile it becomes `display: grid`,
+       where margin *does* apply, so both rules stack for real: every row got
+       5.6rem/90px of dead space, well past Dawn's own stock 3.5rem/56px and
+       past what "cosmetic-only, spacing/type/border/color" (see this file's
+       header) was meant to add. Brought down to match .cart-drawer
+       .cart-item's already-tuned 2rem/2rem (4rem/64px total) below, so the
+       full cart page and the drawer read the same on mobile.
+    */
+    padding-bottom: 2rem;
+    margin-bottom: 2rem !important;
   }
 
   .cart-item__image {

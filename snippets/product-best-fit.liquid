@@ -1,8 +1,33 @@
 {% comment %}
   Renders the "Best Fit For" disclosure — a button that expands to reveal one
-  line of plain-text tags (gender/persona + occasion), configured on the block.
+  line of plain-text tags (gender/persona + a scent-vibe + occasion).
+
+  `best_fit` is one shared block on the single shared `product.json`
+  template, so a static block setting would show identical tags on every
+  product. Tags are looked up per product.handle below, written by hand from
+  each fragrance's actual notes (see each product's description) — this is
+  the only way to get real per-product variety, since nothing in the store's
+  data (tags, metafields) already carries a "who this suits" description.
+
+  Products not in the handle lookup (a newly added perfume, Globo dropdown
+  products, etc.) fall back to a collection-membership guess:
+  - attar-roll-ons → occasion reads "Daily Wear, Office, Travel-Friendly"
+  - signature-series → occasion reads "Evening, Date Night, Special Occasions"
+  - Gender falls back to whichever gender collection the product is
+    *exclusively* in — men/women/unisex for roll-ons, men-3/women-1/unisex-3
+    for bottles (see CLAUDE.md "Gotcha: which collection is which"). Most
+    products sit in all three at once, which reads as Unisex on purpose —
+    only a product exclusively in one collection gets called out by name.
+  - Anything matching no collection falls back to the block's own
+    gender_tags/occasion_tags settings.
+
+  Adding a new fragrance: add a `when '<handle>'` case below with its own
+  gender + vibe + occasion, written from its actual note pyramid. Until then
+  it silently uses the collection-based guess above, which is not wrong, just
+  generic.
 
   Accepts:
+  - product: {Object} the current product
   - block: {Object} Shopify block object with customizer settings
   - section_id: {String} Unique section identifier
 {% endcomment %}
@@ -15,15 +40,105 @@
     assign heading = 'Best Fit For'
   endif
 
-  assign gender_tags_raw = block.settings.gender_tags
-  if gender_tags_raw == blank
-    assign gender_tags_raw = 'Men, Masculine, Feminine, Unisex'
+  assign is_rollon = false
+  assign is_signature = false
+  assign is_men = false
+  assign is_women = false
+  assign is_unisex = false
+
+  for c in product.collections
+    if c.handle == 'attar-roll-ons'
+      assign is_rollon = true
+    endif
+    if c.handle == 'signature-series'
+      assign is_signature = true
+    endif
+    if c.handle == 'men' or c.handle == 'men-3'
+      assign is_men = true
+    endif
+    if c.handle == 'women' or c.handle == 'women-1'
+      assign is_women = true
+    endif
+    if c.handle == 'unisex' or c.handle == 'unisex-3'
+      assign is_unisex = true
+    endif
+  endfor
+
+  # men/women/unisex (and men-3/women-1/unisex-3) are NOT mutually exclusive —
+  # most products sit in all three at once (e.g. Oudh Eternal), so "in men-3"
+  # alone isn't a useful signal. Only call out a specific gender when the
+  # product is *exclusively* in one of the three; anything in more than one
+  # (the common case) reads as Unisex, same as if it matched none of them.
+  assign gender_match_count = 0
+  if is_men
+    assign gender_match_count = gender_match_count | plus: 1
+  endif
+  if is_women
+    assign gender_match_count = gender_match_count | plus: 1
+  endif
+  if is_unisex
+    assign gender_match_count = gender_match_count | plus: 1
   endif
 
-  assign occasion_tags_raw = block.settings.occasion_tags
+  if gender_match_count == 0
+    assign gender_tags_raw = block.settings.gender_tags
+  elsif gender_match_count > 1
+    assign gender_tags_raw = 'Unisex'
+  elsif is_men
+    assign gender_tags_raw = 'Men'
+  elsif is_women
+    assign gender_tags_raw = 'Women'
+  else
+    assign gender_tags_raw = 'Unisex'
+  endif
+  if gender_tags_raw == blank
+    assign gender_tags_raw = 'Unisex'
+  endif
+
+  if is_rollon
+    assign occasion_tags_raw = 'Daily Wear, Office, Travel-Friendly'
+  elsif is_signature
+    assign occasion_tags_raw = 'Evening, Date Night, Special Occasions'
+  else
+    assign occasion_tags_raw = block.settings.occasion_tags
+  endif
   if occasion_tags_raw == blank
     assign occasion_tags_raw = 'Day & Night'
   endif
+
+  # Per-fragrance overrides, written from each product's own note pyramid
+  # (see the fragrance's description for the notes behind each vibe word).
+  # These win over the collection-based guess above whenever the handle
+  # matches; anything not listed here keeps using that guess untouched.
+  case product.handle
+    when 'oudh-eternal', 'oudh-eternal-attar-roll-on'
+      assign occasion_tags_raw = 'Bold & Woody, Evening Wear'
+    when 'mystique-island-100ml', 'mystique-island-attar-roll-on'
+      assign occasion_tags_raw = 'Fresh & Fruity, Day to Night'
+    when 'florence-orchidia-100ml'
+      assign gender_tags_raw = 'Women'
+      assign occasion_tags_raw = 'Floral & Fruity, Evening Wear'
+    when 'florence-orchidia-attar-roll-on'
+      assign gender_tags_raw = 'Women'
+      assign occasion_tags_raw = 'Floral & Fruity, Daily Wear'
+    when 'fresh-woodscape-100ml'
+      assign occasion_tags_raw = 'Fresh & Woody, Daywear'
+    when 'fresh-woodscape-attar-roll-on'
+      assign occasion_tags_raw = 'Fresh & Woody, Office & Daily Wear'
+    when 'yameni-yakud-2', 'yameni-yakud-non-alcoholic-perfume-100ml'
+      assign occasion_tags_raw = 'Elegant & Balanced, Day to Night'
+    when 'ambre-intense-100ml', 'ambre-intense-attar-roll-on'
+      assign gender_tags_raw = 'Men'
+      assign occasion_tags_raw = 'Rich & Spicy, Evening Wear'
+    when 'persian-rose'
+      assign occasion_tags_raw = 'Romantic Floral, Daily Wear'
+    when 'arabian-jasmine'
+      assign occasion_tags_raw = 'Sensual Floral, Evening Wear'
+    when 'kashmiri-rose'
+      assign occasion_tags_raw = 'Luxurious Floral, Evening Wear'
+    when 'customize-perfume-1', 'customize-attar'
+      assign occasion_tags_raw = 'Custom Blend, Any Occasion'
+  endcase
 
   assign all_tags_raw = gender_tags_raw | append: ',' | append: occasion_tags_raw
   assign all_tags = all_tags_raw | split: ','

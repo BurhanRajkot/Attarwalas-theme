@@ -62,3 +62,26 @@ details[open] > .best-fit__button .best-fit__chevron {
 .best-fit__dot {
   color: rgb(var(--bf-gold));
 }
+
+@media screen and (max-width: 749px) {
+  .product__best-fit {
+    margin: 1.5rem 0;
+  }
+
+  .best-fit__button {
+    padding: 0.7rem 1.4rem;
+    gap: 0.8rem;
+    font-size: 1.15rem;
+  }
+
+  .best-fit__chevron {
+    width: 0.85rem;
+    height: 0.5rem;
+  }
+
+  .best-fit__line {
+    margin-top: 0.8rem;
+    font-size: 1.15rem;
+    gap: 0.5rem;
+  }
+}

@@ -13,7 +13,7 @@
     - subtitle {String} supporting line under the title
   endcomment
 
-  assign ticket_offers = collections['offer'].products
+  assign ticket_offers = collections['offer'].products | sort: 'title'
   assign ticket_eyebrow = eyebrow | default: 'Bundle offers'
   assign ticket_heading = heading | default: 'Buy more, pay less'
   assign ticket_subtitle = subtitle | default: 'Mix and match your favourite fragrances and pay one flat bundle price.'
@@ -67,7 +67,7 @@
       <div class="aw-offers__track" data-aw-offer-track>
         {%- if design_preview -%}
           {%- assign preview_counts = '2,3,5' | split: ',' -%}
-          {%- assign preview_prices = '₹1,999|₹2,799|₹3,999' | split: '|' -%}
+          {%- assign preview_discounts = '10% off|15% off|20% off' | split: '|' -%}
           {%- for n in preview_counts -%}
             <div class="aw-ticket">
               <span class="aw-ticket__body">
@@ -77,8 +77,7 @@
                   <span class="aw-ticket__count-num">{{ n }}</span>
                 </span>
                 <span class="aw-ticket__price">
-                  <span class="aw-ticket__price-word">for just</span>
-                  <span class="aw-ticket__price-value">{{ preview_prices[forloop.index0] }}</span>
+                  <span class="aw-ticket__price-value">{{ preview_discounts[forloop.index0] }}</span>
                 </span>
                 <span class="aw-ticket__tagline">Mix and match any {{ n }} perfumes from the collection.</span>
               </span>
@@ -97,12 +96,35 @@
               assign tagline_text = mf.tagline.value
               assign pick_count = mf.pick_count.value | plus: 0
 
+              if pick_count == 0
+                if offer.handle contains '-2' or offer.title contains ' 2' or offer.title contains ' 2 '
+                  assign pick_count = 2
+                elsif offer.handle contains '-3' or offer.title contains ' 3' or offer.title contains ' 3 '
+                  assign pick_count = 3
+                elsif offer.handle contains '-5' or offer.title contains ' 5' or offer.title contains ' 5 '
+                  assign pick_count = 5
+                endif
+              endif
+
               # ₹ reads better than the store's "Rs." money format on these cards
               assign price_text = offer.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
 
-              assign discount_type = mf.discount_type.value | downcase
+              assign discount_type = mf.discount_type.value | default: 'percent' | downcase
               assign discount_amount = mf.discount_amount.value | plus: 0
-              # whole-number discounts read as "18% off", not "18.0% off"
+
+              # Enforce correct discount values: Offer for 2 is 10%, Offer for 3 is 15%, Offer for 5 is 20%
+              if pick_count == 2 or offer.handle == 'offer-for-2'
+                assign discount_amount = 10
+                assign discount_type = 'percent'
+              elsif pick_count == 3 or offer.handle == 'offer-for-3'
+                assign discount_amount = 15
+                assign discount_type = 'percent'
+              elsif pick_count == 5 or offer.handle == 'offer-for-5'
+                assign discount_amount = 20
+                assign discount_type = 'percent'
+              endif
+
+              # whole-number discounts read as "10% off", not "10.0% off"
               assign discount_amount_display = discount_amount
               assign discount_amount_rounded = discount_amount | round
               if discount_amount_rounded == discount_amount
@@ -123,8 +145,12 @@
                 endif
               endif
 
-              if tagline_text == blank
-                assign tagline_text = offer.title
+              if tagline_text contains 'and pay just' or tagline_text contains 'and pay only' or tagline_text == blank
+                if pick_count > 0
+                  assign tagline_text = 'Mix and match any ' | append: pick_count | append: ' perfumes from the collection.'
+                else
+                  assign tagline_text = offer.title
+                endif
               endif
             -%}
 

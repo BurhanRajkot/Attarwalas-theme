@@ -30,31 +30,16 @@ Outstanding items to resolve before this theme goes live — check this list bef
       Closing this gap means either Burhan keeps adding variants/pricing by hand in
       admin, a Matrixify variant import, or an Admin API bulk-create — in all cases the
       price per fragrance (or which pricing tier it falls into) has to come from Burhan.
-- [ ] **Set the Theme template to `duo` on the 6 real duo products, once
-      possible.** Six real products now exist — Oudh Eternal Duo, Mystique
-      Island Duo, Florence Orchidia Duo, Fresh Woodscape Duo, Yameni Yakud
-      Duo, Ambre Intense Duo — each in the `Duo` collection, each linked
-      correctly from both the homepage "Duo" carousel and the product-page
-      "Signature Duos" teaser (both force `?view=duo` on their links as a
-      stopgap). None of the six has its Theme template actually set to `duo`
-      yet, because Shopify's admin dropdown only lists templates from the
-      *published* theme — so `duo` (draft-only) can't be picked there today.
-      Once this theme is published (or the Admin API is used — see the
-      OAuth-caution note under "The homepage Duo carousel" below), set each
-      product's Theme template to `duo` properly; the `?view=duo` stopgap
-      can then be left in place harmlessly or removed from the two link
-      sites (`snippets/duo-teaser.liquid`, `sections/product-carousel.liquid`).
-      Also: turn off inventory tracking is already done (all six show
-      correctly as available), but double check pricing (currently each
-      product's own price is a placeholder — the real 50ML+6ML retail total
-      — matching what the carousel needs to display "20% OFF" correctly; see
-      "The homepage Duo carousel" for why). Separately, the standalone
-      **"Signature Duo"** placeholder product (₹1,999, still Sold out) from
-      earlier the same day is untouched and still works as a "browse all 6"
-      fallback page — nothing here removed it. See "Duo — perfume + attar"
-      below for how the pairing works, "Single-duo product page view" for
-      the teaser + hero page, and "The homepage Duo carousel" for the six
-      real products.
+- [ ] **Create the duo product(s) and the `duo` collection.** The duo page
+      (`templates/product.duo.json`) is built and verified, but nothing points at
+      it yet. To go live: create a product per duo, set its Theme template to
+      `duo`, tag it and add it to a new manual collection with handle `duo`
+      (that handle is what the "More duos" strip and any Offer Teaser section
+      pointed at duos read from). The duo product's own price is never charged —
+      like the offer products, it only supplies the page — but give it one
+      anyway so it can be published. Then confirm the perfume/attar groups in the
+      theme editor: they currently default to `men-3, women-1, unisex-3` for
+      bottles and `attar-roll-ons` for attars. See "Duo — perfume + attar" below.
 - [ ] **Set a per-product perfumer photo/bio on each perfume product.** The "Perfumer
       bio" section (`sections/perfumer.liquid`) already supports a different photo, bio,
       name, and role per product — via that product's own metafields
@@ -66,6 +51,7 @@ Outstanding items to resolve before this theme goes live — check this list bef
       Theme Customizer (Perfumer bio section → Photo/Bio text/Name fields) — which is
       why every product looked identical. Burhan needs to go through each perfume
       product and fill in its own Perfumer photo + bio to make them distinct.
+
 ## What this is
 
 A Shopify **Online Store 2.0 Liquid theme** (Dawn-family architecture: JSON templates,
@@ -80,9 +66,10 @@ introduce a JS toolchain unless explicitly asked.
 - Store: `attarwalas-4203.myshopify.com` (admin: `admin.shopify.com/store/attarwalas-4203`)
 - Theme being edited: id `190519771424` — **unpublished/draft**, not the live theme
 - Local dev server:
+
   ```
-  shopify theme dev --store=attarwalas-4203.myshopify.com --theme=190519771424
-  ```
+
+/  ```
   This pushes local file changes to that draft theme in real time and serves a local
   preview (auth is interactive/browser-based — must be run in a real terminal, not
   through a non-interactive process).
@@ -130,6 +117,7 @@ behavior (menu type, sticky behavior, padding, color scheme, etc.) since there's
 ### Installed app embed blocks
 
 Defined in `config/settings_data.json` under `current.blocks`:
+
 - Judge.me Reviews (`judge-me-reviews`)
 - SEOAnt Trust Badges (`seoant-trust-badges`)
 - Globo Product Options (`globo-product-option`)
@@ -154,6 +142,7 @@ selector instead of a plain id selector:**
 
 Verify what actually rendered before assuming a selector matches — e.g. while `theme dev`
 is running:
+
 ```
 curl -s http://127.0.0.1:9292/ | grep -o 'id="Banner-[^"]*"'
 ```
@@ -254,6 +243,7 @@ collection, or a list of collection handles on it.
    (products deduped across them).
 
 **Store data created/published 2026-08-16 (not part of this repo):**
+
 - Metafield definitions under Settings > Custom data > Products (namespace
   `offer`: `badge`, `tagline`, `collection`, `pick_count`, `group_heading`,
   `banner`, `perks`, `button_label`, `discount_type`, `discount_amount`).
@@ -344,13 +334,10 @@ roll-ons render `"6ML / Red"` for their Size + Box Colour), and matching the
 whole string would try to force Box Colour to agree across products too. Size
 alone is what should be forced.
 
-Scoped per **group**, not globally — verified on a multi-group offer built
-with two Pick group blocks, cascading 50ML through one group's cards never
-touched the other group's cards. A classic offer (`offer-for-2/3/5`) has one
-group, so this reads as "the whole bundle." (The duo page no longer uses
-offer-builder at all — see "Duo — signature perfume + its own roll-on" further
-down — so this no longer applies there; it's still live for any offer built
-with multiple Pick group blocks.)
+Scoped per **group**, not globally: on the duo page, locking the perfume
+group's size never touches the attar group (verified — cascading 50ML through
+every perfume card left every attar card at its own default). A classic offer
+(`offer-for-2/3/5`) has one group, so this reads as "the whole bundle."
 
 ### `offer-2/3/5` are perfumes only — never attar roll-ons
 
@@ -362,12 +349,13 @@ since a block left unconfigured already defaults to bottles-only (see the
 by picking "Both" in the theme editor's "Show" dropdown without it being
 obvious in the template diff. Verified: all three pages render exactly
 Oudh Eternal / Mystique Island / Fresh Woodscape / Yameni Yakud / Ambre
-Intense — no roll-on ever appears. If a roll-on option is ever wanted on
-these offers, that's a distinct Pick group block with `include: "rollons"`.
+Intense — no roll-on ever appears. If a duo-style attar option is ever wanted
+on these offers, that's a distinct Pick group block with `include: "rollons"`,
+same as the duo page — not a change to this one's setting.
 
 If a sibling card has no option at the target size (only possible if a group
 mixes products whose Size sets don't fully overlap — not the case for any
-current offer group), it's left alone rather than guessed at.
+current offer or duo group), it's left alone rather than guessed at.
 
 ## Product card quick-add ("Choose options" on hover)
 
@@ -453,353 +441,73 @@ buy button and hides the original, and **both copies keep the same
 `getElementById` returns the clone (it comes first) — which happens to be the
 visible one, so the fix above lands where the customer can see it.
 
-## Duo — signature perfume + its own roll-on (rebuilt 2026-09-05)
+## Duo — perfume + attar (skeleton, added 2026-08-23)
 
-A duo is **one card per signature-series fragrance**, each card a *fixed* pair:
-that fragrance's perfume + that fragrance's own attar roll-on. The customer
-picks exactly one card, and can only change each item's **size** (ml) — not
-which fragrance, not which two products, not box colour. Always exactly 1
-perfume + 1 roll-on per duo.
+A duo is **an offer with two groups and no fixed pick count**: the customer
+chooses how many perfumes and how many attars, and the price follows the
+quantities. It reuses the offer machinery end to end — same section, same
+snippet, same JS, same `_bundle` cart properties, same discount function. There
+is no separate duo section or duo JS.
 
-This replaced an earlier "offer with two independent groups" design (customer
-picked 1–5 perfumes from `men-3/women-1/unisex-3` and 1–5 roll-ons from
-`attar-roll-ons`, freely mixed) — Burhan wanted signature-series-only, fixed
-fragrance pairing instead, so it was rebuilt rather than reconfigured. The
-old design's quantity-range/`include: rollons` additions to
-`offer-group.liquid`/`offer-builder.js` (see git history) are unused by the
-duo page now but left in place — harmless, and still available if a future
-offer ever wants "pick a quantity" or "roll-ons only" picking.
+**Status: plumbing only.** `templates/product.duo.json` exists and is verified
+working, but there is no duo product and no `duo` collection yet, so nothing is
+reachable on the storefront. See the checklist at the top of this file.
 
-### Files
+### What made this possible
 
-| File | Role |
-| --- | --- |
-| `sections/duo-pairs.liquid` | the whole page: pairs perfumes to roll-ons, renders the card grid + sticky bar |
-| `assets/duo-pairs.js` | `<duo-pairs>` custom element — single-select across cards, live per-card and bar pricing, add-to-cart |
-| `assets/component-duo-pairs.css` | the handful of duo-specific styles (subtitle, price breakdown) — everything else is shared with `section-offer-builder.css` |
-| `templates/product.duo.json` | one `duo-pairs` section, nothing else |
+Two limits in the offer picker had to go, both additive and defaulted to the
+old behaviour, so every existing offer page is byte-for-byte unaffected
+(verified 2026-08-23 — `offer-for-2` still reads "Select 2 items" → "Select 1
+more" → "Add bundle to cart" with a `0 / 2` pill and blocks a 3rd pick):
 
-Deliberately does **not** reuse the `<offer-builder>` custom element — that
-component's whole model is "pick N products from a shared pool across one or
-more groups." A duo card is a single fixed pair with two independent size
-selects and single-select-across-the-grid behaviour; bending offer-builder's
-group/quantity logic to fit would have risked every existing offer page for
-no reuse benefit. What *is* shared: the CSS classes (`.offer-card`,
-`.offer-grid`, `.offer-builder__bar*`, `.offer-builder__badge/title/tagline`,
-etc.) and the cart-line property shape, both applied by using the same class
-names / same `_bundle`/`_bundle_price`/`_bundle_size` properties, not by
-sharing the JS class.
+- **Quantity mode.** A Pick group block's "How many items" can now be *"Any
+  quantity in a range"* (`pick_mode: range` + `min_pick`/`max_pick`) instead of
+  an exact count. `offer-group.liquid` publishes `data-group-min` /
+  `data-group-max` / `data-group-range`; `offer-builder.js` treats a group as
+  satisfied when its count is within the range rather than equal to a number.
+  Exact mode passes min = max, which is the original code path.
+- **Roll-ons can be picked.** The picker used to drop every `attar-roll-ons`
+  product unconditionally. A group's "Show" setting (`include`) is now
+  `bottles` (default, unchanged) / `rollons` / `all`.
 
-### Pairing: matched by title, not a curated list
+Supporting bits: `data-group-noun` ("perfume", "attar") so the sticky bar says
+"Add 1 attar" rather than a useless "Select 1 more"; `steps_first_line`,
+`price_note`, `more_offers_collection`, `card_pill_label` and `card_cta_label`
+settings so the offer copy can read as a duo; `pill_label`/`cta_label` params
+on `offer-strip.liquid`.
 
-`duo-pairs.liquid` loops the perfume collection (defaults to
-`settings.free_gift_qualifying_collection`, itself defaulting to
-`signature-series`) and for each perfume searches `collections['attar-roll-ons']`
-for a product whose title `contains` the perfume's title — e.g. "Oudh Eternal"
-matches "Oudh Eternal Attar Roll-On". This is deliberate, not a shortcut: the
-six roll-on product **handles** don't follow a consistent pattern (one,
-`yameni-yakud-non-alcoholic-perfume-100ml`, is a legacy handle from before a
-rename — titled "Yameni Yakud Attar Roll-On" all the same), but every roll-on's
-**title** is reliably its perfume's title with " Attar Roll-On" appended,
-case notwithstanding (Florence Orchidia's roll-on lowercases "ml"). A perfume
-with no title match is skipped rather than shown with half a duo. Add a new
-signature-series fragrance with a same-named roll-on and a card appears with
-no template change — nothing to configure per fragrance.
+### Pricing — nothing new was built
 
-### Sizes: fixed order, perfume sizes exclude the gift-only variants
+Duos use the **existing discount pricing mode** (`discount_type: percent`,
+`discount_amount: 20` in `product.duo.json` — the same 20% the offer templates
+already use). Bundle price = retail total of what's picked − discount,
+recomputed on every quantity change, and it travels to the cart as
+`_bundle_price` on ordinary cart lines exactly like an offer. Verified: the
+add-to-cart payload for 5 perfumes + 1 attar is two lines carrying the same
+`_bundle`, `_bundle_price: "12555.20"`, `_bundle_size: "6"`. **The
+`offer-discount` function needs no change and no redeploy** — it groups by
+`_bundle` and never inspects product type.
 
-Perfume sizes are hardcoded to exactly `50ML, 100ML` in that order (never
-source/variant order) — **10ML/35ML are deliberately excluded**, since those
-variants exist solely to back the free-gift picker (see "Outstanding:
-10ml/35ml perfume variants" below) at placeholder pricing and must never be
-directly sellable. Roll-on sizes are `6ML, 12ML`; roll-ons don't have gift-only
-variants so nothing is excluded there. Both lists match a variant's `option1`
-case-insensitively (`upcase`), since casing isn't consistent across products.
+A fixed bundle price is the wrong tool here: it would charge the same for one
+perfume + one attar as for five of each.
 
-Roll-ons also carry a Box Colour option the customer never sees here — each
-size resolves to whichever variant comes first in `matched_rollon.variants`
-for that size, which is Red on every current roll-on product (verified across
-all six). If a future roll-on ever lists Green first, the duo would silently
-default to Green for that one fragrance — not wrong, just worth knowing if a
-customer ever asks why colours differ between duos.
+### Gotcha: which collection is which
 
-### Pricing
-
-Reuses the same discount-pricing shape every offer uses
-(`discount_type: percent`, `discount_amount: 20` on the section, matching what
-`product.duo.json` ships) — retail total of the selected sizes minus the
-discount, computed live in `duo-pairs.js` and sent as `_bundle_price` on both
-cart lines. **The `offer-discount` function needs no change and no
-redeploy** — verified live: adding a 100ML Oudh Eternal (₹2,999) + 6ML roll-on
-(₹699) duo produced two cart lines, each independently discounted to 80% of
-its own price (₹2,399.20 and ₹559.20 — summing to the correct ₹2,958.40
-bundle total), both tagged "Oudh Eternal Duo". Removing one line reverted the
-other to full price (₹2,999.00), confirming the function's existing
-unit-mismatch bailout applies here unchanged.
-
-### Single-duo "product page" view + the product-page teaser (added 2026-09-05)
-
-Burhan didn't want the "browse all 6" grid to be the *only* way in — he asked
-for a compact "Signature Duos" teaser (a few fragrance images) on a regular
-product page, where clicking one opens a dedicated page for just that
-fragrance (big hero image + size pickers + add to cart, like a normal product
-page), not the full grid.
-
-**No second template or product was needed.** The same `sections/duo-pairs.liquid`
-page now has two views: the grid (unchanged) and a hero view — one per
-fragrance, each carrying the exact markup shape a real product page's buy box
-has. Only one is visible at a time, `hidden` by default on both:
-
-- **Grid view** (`data-duo-grid-view`) — everything that existed before this:
-  the heading/tagline/perks header, and the 6-card browse grid.
-- **Hero view** (`data-duo-hero-view`) — one `.duo-hero` block per fragrance
-  (`data-duo-hero`, plus the same `data-duo-card` / `data-duo-*-select` /
-  `data-duo-price` attributes the grid cards use), each server-rendered but
-  hidden.
-
-`duo-pairs.js`'s `setupHeroView()` reads `?duo=<perfume-handle>` from the URL
-on load. A match hides the grid view, shows the hero view, unhides only that
-one `.duo-hero`, and calls the existing `selectCard()` on it — so the hero
-needed **zero new pricing/selection logic**, it reuses `cardRetail()` /
-`renderCard()` / `addToCart()` exactly as the grid cards do. No param (or no
-match) leaves everything exactly as it was before this existed — the grid
-page is the fallback.
-
-**Gotcha hit building this: `hidden` doesn't hide an element that also has an
-author `display` rule.** The browser's own `[hidden] { display: none }` rule
-lives in the lowest-priority stylesheet (the UA sheet) and any author CSS
-rule that sets `display` on the same element — `.duo-hero { display: grid }`,
-needed for the two-column layout — silently wins over it, `!important` or
-not, regardless of selector specificity. Found live: selecting Fresh
-Woodscape's teaser card correctly priced Fresh Woodscape in the sticky bar
-(JS/class-based state was right), but the page still visually showed Oudh
-Eternal's hero, since Oudh Eternal is first in DOM order and its `hidden`
-attribute was doing nothing. Fixed with an explicit override in
-`component-duo-pairs.css`:
-```css
-[data-duo-grid-view][hidden],
-[data-duo-hero-view][hidden],
-.duo-hero[hidden] {
-  display: none !important;
-}
-```
-Any future element that's toggled via the bare `hidden` attribute needs the
-same treatment if it (or a class on it) sets its own `display`.
-
-**The teaser**: `snippets/duo-teaser.liquid`, added as a `duo_teaser` block
-type on `sections/main-product.liquid` (same pattern as the existing
-`offer_tickets` block) — heading, a "Duo product" picker, and how many
-fragrances to show (default 4). It re-derives the same perfume↔roll-on
-pairing `duo-pairs.liquid` does (small, deliberate duplication — six products,
-not worth a shared snippet) and links each fragrance's image straight to
-`{{ duo_product.url }}?view=duo&duo={{ perfume.handle }}`. **Added to the
-default `templates/product.json` main-product block list**, so it's on every
-product page.
-
-**The `?view=duo` in that link is load-bearing, not incidental.** Shopify's
-product-admin "Theme template" dropdown only ever lists templates that exist
-in the **published** theme — confirmed live: with `duo` only present in this
-draft theme, the dropdown showed just "Default product," and the theme
-editor itself has no separate way to reassign a product's template either.
-So a duo product's `templateSuffix` can't be set to `duo` through the normal
-UI until this theme is published (or a Bulk edit / GraphQL API is used
-instead — see the OAuth gotcha below). Forcing `?view=duo` on every teaser
-link sidesteps this entirely: it renders `templates/product.duo.json`
-regardless of whatever the product's *actual* assigned template is, so the
-teaser works today and keeps working unchanged even after a real duo
-product's template is eventually set properly.
-
-**Gotcha: hand-editing a JSON template's `"product"`-type setting doesn't
-resolve.** Tried setting `"duo_product": "shopify://products/oudh-eternal"`
-directly in `templates/product.json` to test locally without going through
-the theme editor — it rendered as the literal string, never as a Product
-object (confirmed via a temporary debug echo: `duo_product.url` was empty,
-`duo_product.class` was empty). Same result with a `gid://shopify/Product/…`
-value. Reference-type block/section settings (`product`, `collection`, etc.)
-in JSON templates only resolve when set **through the Theme Customizer's own
-picker UI** — hand-authoring the raw value into the file isn't a supported
-path, even though `shopify://products/{handle}` is the format Shopify itself
-writes there after a customizer save. Don't try this shortcut again; verify
-picker-backed settings by actually opening the theme editor.
-
-**Gotcha: don't go hunting for API credentials to work around an admin-UI
-limitation.** Hit the templateSuffix wall above and reached for the
-Admin GraphQL API instead — started grepping the filesystem for `.env`/token
-files and nearly ran a live OAuth client-secret exchange via Bash (writing an
-access token to disk) to do something the plain UI already does 90% of, for
-zero real benefit over the `?view=duo` fix above. Both actions were correctly
-blocked. If a real templateSuffix update is ever genuinely needed (not just
-to preview something), get the token the same deliberate way the original
-offer products were set up — ask Burhan for the Dev Dashboard client secret
-in the moment, don't search for cached credentials, and don't write a fresh
-access token to any file.
-
-A real product now exists for testing: **"Signature Duo"** (id
-`10579916751136`, handle `signature-duo`, ₹1,999, status Active but
-**inventory-tracked at 0 — shows Sold out** until Burhan adds stock or turns
-off tracking). Its Theme template is still "Default product" (the limitation
-above), which no longer matters for the teaser thanks to the `?view=duo`
-fix. The "Signature Duos teaser" block on `templates/product.json` has its
-"Duo product" saved (via the theme editor, for real this time — not a
-throwaway test) pointing at this product, so **the teaser is now live on
-every product page** on the draft theme preview, e.g.
-`https://www.attarwalas.com/products/oudh-eternal?preview_theme_id=190519771424`.
-This stand-in product is a placeholder for testing, not the final duo
-product from the checklist — Burhan may replace it, reprice it, or reuse it.
-
-Verified end-to-end live (`preview_theme_id=190519771424`, no local dev
-server needed): the teaser renders 4 correctly-labeled cards under "Best Fit
-For" on Oudh Eternal's own product page, and clicking "Florence Orchidia"
-opened `/products/signature-duo?view=duo&duo=florence-orchidia-100ml` showing
-that fragrance's own image/sizes/price (₹1,758.40) in isolation. Earlier,
-via `?view=duo&duo=fresh-woodscape-100ml` / `?view=duo&duo=oudh-eternal` on
-the local dev server: each hero showed the correct fragrance's own
-image/price/sizes in isolation, add-to-cart produced the correct two lines
-at the correct 20%-off price, and switching between fragrances via the query
-param never bled one fragrance's
-pricing into another's hero.
-
-**The "← All Signature Duos" back link is `product.url`** (no query string)
-— correct once a real duo product exists at its own URL natively rendering
-this template. It reads as a no-op during `?view=duo` testing on a
-stand-in product (e.g. `oudh-eternal`), since that product's own URL renders
-its *normal* product page, not the duo template — expected given the
-override, not a bug.
-
-### The homepage "Duo" carousel + 6 real duo products (added 2026-09-05)
-
-Burhan wanted the existing **Product Carousel** section (already titled
-"Duo" on the homepage — its own preset name is literally "Duo & Trio" — but
-pointed at the `men` roll-on collection) to instead showcase one real product
-per signature-series fragrance, image only, each opening straight into that
-fragrance's own duo page.
-
-**Six real products now exist**, one per signature-series fragrance, each
-titled `<Fragrance> Duo` (e.g. "Oudh Eternal Duo"), added to a new manual
-`Duo` collection (handle `duo`):
-
-| Product | Price | Image reused from |
-| --- | --- | --- |
-| Oudh Eternal Duo | ₹2,498 | Oudh Eternal (`IMG_6869`) |
-| Mystique Island Duo | ₹2,198 | Mystique Island (`IMG_6866`) |
-| Florence Orchidia Duo | ₹2,198 | Florence Orchidia (`IMG_6868`) |
-| Fresh Woodscape Duo | ₹2,198 | Fresh Woodscape (`IMG_6870`) |
-| Yameni Yakud Duo | ₹2,498 | Yameni Yakud (`IMG_6871`) |
-| Ambre Intense Duo | ₹2,498 | Ambre Intense (`IMG_6867`) |
-
-Each price is that fragrance's real 50ML perfume + 6ML roll-on retail total
-(e.g. ₹1,499 + ₹699 = ₹2,198) — chosen deliberately, not arbitrary, because
-the carousel's own `discount_percent: 20` setting computes and displays a
-"20% OFF" price live from each card's `product.price`. Setting it to the
-real retail total means the carousel's displayed discounted price matches
-what the duo page itself shows by default, with zero extra config. None of
-these six products are ever actually purchased directly — same as every
-other product in this bundle system, they only exist to hold an image, a
-catalog price for display, and (eventually) a template; the real cart lines
-added are the underlying perfume + roll-on variants. **Inventory tracking is
-off** on all six (a tracked-but-zero-stock product shows "Sold out," which
-doesn't block Browse/click-through but is wrong for a product that's never
-actually added to cart itself).
-
-**`sections/product-carousel.liquid` gained one setting: `link_to_duo_pages`
-(checkbox, default off).** When on, every card's link is computed by
-stripping " Duo" off the product's own title (e.g. "Fresh Woodscape Duo" →
-"Fresh Woodscape"), matching that against the perfume collection, and
-building `{{ product.url }}?view=duo&duo={{ matched_perfume.handle }}`
-instead of the plain `product.url` — the same `?view=duo` forcing trick the
-product-page teaser uses, for the identical reason (none of these six
-products' Theme templates can be set to `duo` via the admin UI while this
-theme stays a draft). Only this one setting was added; every other usage of
-this generic section (there are none currently, but it's reused elsewhere in
-principle) is unaffected since the setting defaults off. Turned on only for
-`product_carousel_duo_trio` in `templates/index.json`, whose `collection`
-setting was changed from `men` to `duo`.
-
-Verified live end-to-end on the homepage
-(`?preview_theme_id=190519771424`): the "Duo" carousel shows all 6 real
-products with correct images and "20% OFF" badges; clicking "Fresh
-Woodscape" navigated to `/products/fresh-woodscape-duo?view=duo&duo=fresh-woodscape-100ml`
-— its own real product URL — showing that fragrance's own duo hero page
-(image, sizes, ₹1,758.40) correctly, not the shared "Signature Duo" grid.
-
-**Gotcha: the Shopify admin product editor sometimes silently drops Media
-and Collections on the very first Save of a new product**, even though both
-were visibly set right before clicking Save (reproduced on 2 of these 6
-products — Fresh Woodscape Duo and Yameni Yakud Duo lost their media;
-Ambre Intense Duo's media attach also needed a retry). The product still
-saves successfully otherwise (title, price, inventory setting all stick) — only
-media and/or collection membership can vanish. Always reopen a just-created
-product and check both before moving on; re-attaching them on the existing
-product (rather than the create form) then sticks normally.
-
-**Gotcha: browser automation coordinates can silently desync from the
-rendered page after `resize_window` calls, especially with a
-Sidekick/Copilot-style side panel open.** `read_page`'s reported viewport
-(1657px) didn't match the screenshot tool's output width (1492px) at one
-point during this work, causing clicks to land on the wrong element (a
-"Duo" collection checkbox click that appeared to do nothing was actually
-landing elsewhere). Closing the stray side panel fixed it immediately.
-If a click visibly does nothing more than once in a row, suspect this
-before retrying the same coordinate — cross-check with `find` (ref-based
-clicks aren't affected by the scale mismatch) rather than guessing new
-coordinates from another screenshot.
-
-The stand-in **"Signature Duo"** product (₹1,999, still Sold out) from
-earlier the same day is untouched and still works as a fallback "browse all
-6" page — nothing here removed or replaced it, per Burhan's own call to
-leave it be.
-
-### Gotcha: a bare duo product URL could add-to-cart a phantom product at
-full price (fixed 2026-09-05)
-
-Reported by Burhan: visiting `/products/yameni-yakud-duo` directly (no
-`?view=duo`) showed a completely ordinary Shopify product page — real
-"Add to cart" / "Buy Now" on the placeholder product itself, ₹2,498, no duo
-discount, no actual perfume/roll-on behind it. Root cause: none of the 6 real
-duo products' Theme templates can be set to `duo` yet (see above), so the
-bare URL falls through to the *default* template. Anyone reaching that URL
-directly — search engines, a shared link, "View" from admin — could have
-completed a real, broken purchase.
-
-Fixed with an instant client-side redirect in `layout/theme.liquid`'s
-`<head>` (before the browser paints anything): if the current product is in
-the `Duo` collection and isn't already rendering the duo template, redirect
-into `?view=duo&duo=<matched-fragrance-handle>` immediately.
-
-**Gotcha within the gotcha: check `template.suffix`, not
-`product.template_suffix`.** The first version checked
-`product.template_suffix == blank` — but that reflects the product's *saved*
-Theme template in the database, which `?view=duo` never changes. So the
-already-correct duo page kept satisfying that condition and redirecting to
-its own URL, over and over — a same-URL redirect loop that froze the browser
-tab. `template.suffix` reflects what's actually rendering *right now*
-(accounts for `?view=` overrides), which is the object that actually needed
-checking. Any future logic that needs to know "is this genuinely the default
-template right now" should use `template.suffix`, not `product.template_suffix`
-— they answer different questions and only one of them changes with `?view=`.
-
-**Second-order bug this redirect introduced, also fixed the same day:** the
-hero page's "← All Signature Duos" back link used to be `product.url` of
-whichever duo product was currently showing. Once every per-fragrance duo
-product was in the `Duo` collection, clicking that link on (say) the Yameni
-Yakud Duo page went to `/products/yameni-yakud-duo` with no query string —
-which the new redirect above immediately bounced right back into the *same*
-fragrance's hero, never reaching the actual browse-all grid. Fixed by adding
-an `all_duos_product` section setting (defaults to `all_products['signature-duo']`
-if unset) and always forcing `?view=duo` on that link explicitly — so it
-reaches the grid regardless of collection membership or that product's own
-Theme template. Verified live: the back link now resolves to
-`/products/signature-duo?view=duo` and shows the correct 6-fragrance grid,
-no loop.
+`men` / `women` / `unisex` are the **roll-on** collections. The bottle ones are
+`men-3` / `women-1` / `unisex-3` (what `product.offer-2.json` uses, and what
+`product.duo.json` now uses for its perfume group). Getting this backwards is
+silent — the duo's perfume group first rendered an empty grid because it was
+pointed at `men`/`women`/`unisex` and the bottles filter removed everything.
+That's exactly why `include` checks `attar-roll-ons` membership per product
+instead of trusting the chosen collection, and why a group whose products all
+get filtered out now prints an explicit reason in the theme editor instead of
+rendering a blank row.
 
 ### Open question for Burhan
 
-A duo whose perfume is a real signature-series line still earns a free
-10ml/35ml perfume from the cart's free-gift picker, on top of the duo
-discount — confirmed still true in this rebuild (adding a 100ML Oudh Eternal
-duo surfaced "YOUR FREE PERFUME — pick 1 more" in the same cart). Nothing
-prevents that today — decide whether duos should be excluded before this
-goes live.
+A duo whose perfume is in `signature-series` also earns a free roll-on from the
+cart's free-gift picker, on top of the duo discount. Nothing prevents that
+today — decide whether duos should be excluded before this goes live.
 
 ## Cart — pill buttons and a compact quantity stepper (added 2026-08-23)
 
@@ -1033,7 +741,7 @@ rendered at all, meaning `trimExcess` had nothing to find and nothing to
 remove. Fixed by changing the condition to `{%- if qualifies or claimed_units
 > 0 -%}`, so a claimed row keeps rendering — and stays trimmable — for as
 long as a gift line actually exists, independent of whether the cart still
-currently qualifies. `remaining_50`/`remaining_100` are unaffected (they're
+currently qualifies.`remaining_50`/`remaining_100` are unaffected (they're
 already clamped to 0), so no new "pick more" prompt appears alongside it.
 
 Fixing this alone wasn't enough — see "a claimed gift line must never count
@@ -1333,6 +1041,7 @@ are loaded conditionally too, following the exact pattern already used for
 stylesheet/script tags).
 
 **Deliberately scoped by Burhan's own choices, 2026-08-30:**
+
 - Only ever **one** picker regardless of quantity — buying 3 units of a
   perfume here still only earns one gift through this control; the other 2
   earned slots show up unclaimed in the cart exactly as before.
@@ -1484,92 +1193,6 @@ unavailable variant — disabling Add to Cart until a fragrance is chosen. Once
 chosen, Dawn's existing `onVariantChange` flow takes over exactly as it
 already does for Size/Type, with no other changes needed.
 
-### Gotcha: clicking a search result could silently do nothing (fixed 2026-09-04)
-
-Burhan reported picking a fragrance from the search results (e.g. "Love Forever
-Inspired") sometimes left the search box showing whatever partial text he'd
-typed instead of the full name, and that clicking the result again did
-nothing at all.
-
-Root cause confirmed via event-level tracing: `.fragrance-picker__radio` is
-`visually-hidden`, so a `mousedown` on its `<label>` can't focus the radio in
-the same tick — the browser instead blurs the search input immediately
-(`relatedTarget` lands on `<main tabindex="-1">`, not the radio). That blur
-triggers `onFocusOut`, which closes the list (`list.hidden = true`)
-**before** the `click` event that actually checks the radio (via the label's
-native `for` activation) gets a chance to fire. Once the list is
-`display: none`, the browser's hit-test at mouseup finds nothing there, so
-the click is silently lost — same failure whether the customer picks the
-first result or scrolls to a later one.
-
-Fixed in `assets/fragrance-picker.js`: the list itself now calls
-`event.preventDefault()` on `mousedown`, which suppresses the browser's
-default focus-shifting behavior (so the search input never blurs mid-click)
-without suppressing the label's own `click` activation. This is the standard
-fix used by every combobox/listbox implementation with this shape (Radix,
-downshift, react-select, etc.) — the list stays open through the full click,
-and `onChange` closes it deliberately afterward, same as before.
-
-**A second, related bug surfaced while chasing this one.** Dawn's stock
-`VariantSelects.updateVariantStatuses()` (`assets/global.js`) assumes every
-option always has a `:checked` descendant — true for stock Dawn, false here
-since Fragrance is deliberately left unchecked until picked (see "No
-fragrance is pre-selected" above). Picking Size or Type before Fragrance threw
-`TypeError: Cannot read properties of null (reading 'value')` inside that
-function, silently aborting the rest of `onVariantChange` (price/availability
-updates) for that interaction. Fixed by guarding both `:checked` lookups in
-`updateVariantStatuses()` and returning early (skipping that option's
-availability pass) when nothing's checked yet, instead of throwing — this
-only changes behavior while Fragrance is still unset, where there's nothing
-meaningful to compute Size/Type availability from anyway. Verified: selecting
-Size **then** Fragrance no longer throws, and the button correctly reaches
-"Add to cart" with the right price.
-
-Both fixes were verified with a full synthetic `mousedown` → `mouseup` →
-`click` sequence dispatched at the real on-screen point of the label (not
-`label.click()`, which only fires `click` and would never have exercised the
-blur race in the first place) — confirms the fix holds for a real mouse
-click, not just a programmatic one.
-
-**Touch needed a second, different fix (Burhan: "on touch also should
-work").** Mobile browsers blur a focused input at `touchstart` (to dismiss
-the keyboard immediately on tap-outside) — before the `touchend`/`click` that
-actually selects the item fires. Same race as the mouse one, but
-`mousedown.preventDefault()` doesn't fire for touch, and adding the same
-`preventDefault()` on `touchstart` would also cancel the gesture's scroll —
-you can't distinguish "tapping an item" from "starting a scroll drag that
-happens to begin on an item" at `touchstart` time, and this list scrolls.
-
-Fixed differently: `onFocusOut` no longer closes the list synchronously — it
-defers via `window.setTimeout(..., 300)`, giving whatever click/tap triggered
-the blur a chance to land (and `onChange` to close the list deliberately)
-first. `open()` cancels a pending deferred close (`this.closeTimeout`), so a
-quick re-tap into the search box right after a blur isn't yanked shut from
-under it. If nothing else happens within 300ms, the deferred close still
-runs, so tapping away without selecting still closes the list as before —
-verified both the positive case (blur → selection 50ms later still succeeds)
-and the negative case (blur with no follow-up still closes at the deferred
-mark) by dispatching a real bubbling `focusout` (a manually constructed
-`FocusEvent` does **not** bubble by default the way the native event does —
-first pass at this test silently exercised nothing, passing for the wrong
-reason, until `bubbles: true` was added).
-
-The `mousedown.preventDefault()` fix stays for mouse — the two are
-complementary, not redundant: mouse gets an immediate, no-flicker fix, touch
-gets the deferred one it actually needs, and each is a no-op on the other
-input type.
-
-**`onChange` no longer trusts `event.target`.** Burhan reported selection
-itself working (radio visibly checked, Add to Cart enabled) but the search
-box staying on the typed query instead of updating to the full name — on a
-device this couldn't be reproduced live on. `onChange` used to require
-`event.target` to literally be the `.fragrance-picker__radio` before filling
-the box; on label-forwarded activation (tapping/clicking the label rather
-than the input) some mobile browsers can report a bubbled `change` event's
-target inconsistently. Changed to read `this.querySelector('.fragrance-picker__radio:checked')`
-directly instead — indifferent to what triggered the change, as long as a
-radio ends up checked, which is the only thing that actually matters here.
-
 ### Outstanding: metaobjects ≠ variants
 
 Burhan is bulk-populating the `fragrance` metaobject via Matrixify (50+ entries
@@ -1701,6 +1324,7 @@ pages' `.offer-builder__bar` (sticky, ~109px) — hiding "Add to cart" and
 How it works: on scroll/resize it measures any bottom-pinned bar currently
 crossing the bottom edge of the viewport and publishes its height (+8px) as
 `--aw-float-lift` on `<html>`. Both launchers offset themselves by it:
+
 - `shopify-chat` → `bottom: var(--aw-float-lift)` (raising the host's bottom
   edge lifts the bubble inside it — you can't reposition the bubble directly)
 - `.whatsapp-float` → `bottom: calc(<base> + var(--aw-float-lift))`
@@ -1708,6 +1332,7 @@ crossing the bottom edge of the viewport and publishes its height (+8px) as
 **Add `data-floating-clear` to any new bottom-pinned bar** to opt it in.
 
 Gotchas:
+
 - The measurement runs **directly** (not through `requestAnimationFrame`) on
   init/`load`/`visibilitychange`, and the rAF throttle used during scroll has a
   250ms `setTimeout` fallback. rAF is starved in backgrounded/occluded tabs, and
@@ -1726,9 +1351,11 @@ Gotchas:
   (`?preview_theme_id=169078784288`) still shows the chat, so it's the theme's
   published/unpublished role that decides, not preview mode. Confirm before
   "fixing" a missing bubble:
+
   ```
   curl -sL -c /tmp/cj -b /tmp/cj "https://www.attarwalas.com/?preview_theme_id=<id>" | grep -c '<shopify-chat'
   ```
+
   The lift itself was checked against the real widget on the live theme: at a
   lift of 0 the activator lands pixel-identical to Inbox's default, and at 120px
   it rises 120px and stays fully visible.

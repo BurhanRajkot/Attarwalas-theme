@@ -27,7 +27,7 @@
         "perks": "Free shipping on this offer\nMix any sizes you like",
         "show_steps": false,
         "discount_type": "percent",
-        "discount_amount": 18,
+        "discount_amount": 15,
         "button_label": "Add bundle to cart",
         "add_label": "Add to bundle",
         "soldout_label": "Sold out",
