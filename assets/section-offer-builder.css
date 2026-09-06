@@ -235,7 +235,72 @@
   color: rgba(var(--offer-ink), 0.75);
 }
 
+/* ------------------------------- Choice tabs ------------------------------ */
+
+/* Choice mode (offer-2/3/5): "Perfumes" / "Attar Roll-Ons". The tabs swap
+   which pick group is on screen, and switching clears the other one's picks —
+   one category per bundle. Square edges and a gold active state, same
+   language as the group pills and the sticky bar. */
+.offer-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
+}
+
+.offer-choice__tab {
+  flex: 1 1 12rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 5.6rem;
+  padding: 1rem 2rem;
+  border: 1px solid var(--offer-line);
+  background: rgb(var(--color-background));
+  color: rgba(var(--offer-ink), 0.7);
+  font-family: var(--font-body-family);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.offer-choice__tab:hover {
+  border-color: rgba(var(--offer-gold), 0.6);
+  color: rgb(var(--offer-ink));
+}
+
+.offer-choice__tab--active {
+  border-color: rgb(var(--offer-gold));
+  background: rgba(var(--offer-gold), 0.08);
+  color: rgb(var(--offer-ink));
+}
+
+.offer-choice__tab-media {
+  display: block;
+  flex-shrink: 0;
+  width: 3.6rem;
+  height: 3.6rem;
+  overflow: hidden;
+}
+
+.offer-choice__tab-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* ---------------------------------- Groups -------------------------------- */
+
+/* The tab that isn't open. Spelled out rather than left to the UA default so
+   a future `display` rule on .offer-group can't un-hide it. */
+.offer-group[hidden] {
+  display: none;
+}
 
 .offer-group + .offer-group {
   margin-top: 1.6rem;
@@ -921,6 +986,20 @@
 
   .offer-builder__banner-media {
     padding: 0 1rem;
+  }
+
+  /* ---- choice tabs: two still sit side by side on a 360px screen ---- */
+  .offer-choice__tab {
+    min-height: 4.8rem;
+    padding: 0.8rem 1.2rem;
+    gap: 0.7rem;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+  }
+
+  .offer-choice__tab-media {
+    width: 3rem;
+    height: 3rem;
   }
 
   /* ---- groups ---- */

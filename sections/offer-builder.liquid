@@ -90,6 +90,19 @@
   endif
 
   comment
+    Choice mode turns the Pick group blocks into mutually exclusive tabs —
+    "Perfumes" or "Attar Roll-Ons" — instead of stacking them down the page.
+    One tab is on screen at a time and only that tab's picks make up the
+    bundle, so a customer can't end up half perfumes, half attars. Needs two
+    or more blocks to mean anything, and never applies to the metafield's
+    single group.
+  endcomment
+  assign is_choice_mode = false
+  if section.settings.group_mode == 'choice' and use_metafield_group == false and group_blocks.size > 1
+    assign is_choice_mode = true
+  endif
+
+  comment
     Total items the customer has to pick across every group. A quantity-mode
     group (the duo page) has no fixed count, so it contributes its minimum —
     the smallest bundle the customer can check out with.
@@ -98,6 +111,19 @@
   assign has_range_group = false
   if use_metafield_group
     assign total_pick_count = mf_pick_count
+  elsif is_choice_mode
+    comment
+      In choice mode the bundle is one tab's worth, never the sum of every
+      tab's, so only the tab that's open on load counts here. offer-builder.js
+      re-reads the count from whichever tab the customer switches to.
+    endcomment
+    assign first_block = group_blocks | first
+    if first_block.settings.pick_mode == 'range'
+      assign has_range_group = true
+      assign total_pick_count = first_block.settings.min_pick | plus: 0
+    else
+      assign total_pick_count = first_block.settings.pick_count | plus: 0
+    endif
   else
     for block in group_blocks
       if block.settings.pick_mode == 'range'
@@ -177,6 +203,7 @@
   data-total-pick-count="{{ total_pick_count }}"
   data-money-format="{{ shop.money_format | strip_html | escape }}"
   data-ready-label="{{ button_label | escape }}"
+  {% if is_choice_mode %}data-group-mode="choice"{% endif %}
   {% if use_discount %}
     data-discount-type="{{ discount_type }}"
     data-discount-amount="{{ discount_amount }}"
@@ -227,6 +254,12 @@
               {{ section.settings.price_note }}
             {%- elsif has_range_group -%}
               on whatever you pick below
+            {%- elsif is_choice_mode -%}
+              {%- comment -%}
+                Choice mode's tabs aren't necessarily all perfumes — offer-2/3/5
+                each carry an attar roll-on tab — so the auto note stays neutral.
+              {%- endcomment -%}
+              on any {{ total_pick_count }} items
             {%- else -%}
               on any {{ total_pick_count }} perfumes
             {%- endif -%}
@@ -294,6 +327,45 @@
       </ol>
     {%- endif -%}
 
+    {%- if is_choice_mode -%}
+      {%- comment -%}
+        One button per Pick group block. The panels themselves are the groups
+        rendered below; offer-builder.js swaps which one is visible and clears
+        the picks made on the tab being left.
+      {%- endcomment -%}
+      <div class="offer-choice" role="tablist" aria-label="{{ section.settings.choice_label | default: 'Choose what to bundle' | escape }}">
+        {%- for block in group_blocks -%}
+          {%- liquid
+            assign tab_label = block.settings.tab_label | default: block.settings.heading
+            if tab_label == blank
+              assign tab_label = 'Option ' | append: forloop.index
+            endif
+          -%}
+          <button
+            type="button"
+            class="offer-choice__tab{% if forloop.first %} offer-choice__tab--active{% endif %}"
+            id="OfferChoiceTab-{{ section.id }}-{{ forloop.index0 }}"
+            data-offer-choice-tab
+            data-group-index="{{ forloop.index0 }}"
+            role="tab"
+            aria-controls="OfferGroup-{{ section.id }}-{{ forloop.index0 }}"
+            aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+          >
+            {%- if block.settings.tab_image != blank -%}
+              <span class="offer-choice__tab-media">
+                {{
+                  block.settings.tab_image
+                  | image_url: width: 160
+                  | image_tag: loading: 'lazy', widths: '80, 120, 160', sizes: '4rem', alt: ''
+                }}
+              </span>
+            {%- endif -%}
+            <span class="offer-choice__tab-label">{{ tab_label }}</span>
+          </button>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
     <div class="offer-builder__groups">
       {%- if use_metafield_group -%}
         {%- render 'offer-group',
@@ -324,6 +396,20 @@
               assign block_min = block.settings.pick_count | plus: 0
               assign block_max = block_min
             endif
+
+            # Choice mode: every tab but the first renders hidden, and each
+            # group becomes its tab's panel. Blank outside choice mode, which
+            # leaves the group markup exactly as it was.
+            assign group_dom_id = blank
+            assign group_tab_id = blank
+            assign group_hidden = false
+            if is_choice_mode
+              assign group_dom_id = 'OfferGroup-' | append: section.id | append: '-' | append: forloop.index0
+              assign group_tab_id = 'OfferChoiceTab-' | append: section.id | append: '-' | append: forloop.index0
+              unless forloop.first
+                assign group_hidden = true
+              endunless
+            endif
           -%}
           {%- render 'offer-group',
             group_index: forloop.index0,
@@ -337,6 +423,9 @@
             group_include: block.settings.include,
             group_noun: block.settings.noun,
             group_open: block.settings.open_by_default,
+            group_id: group_dom_id,
+            group_labelled_by: group_tab_id,
+            group_hidden: group_hidden,
             offer_product: product,
             add_label: section.settings.add_label,
             soldout_label: section.settings.soldout_label,
@@ -433,6 +522,23 @@
       "default": "auto",
       "label": "Offer settings come from",
       "info": "\"Auto\" lets the offer.* product metafields drive this page wherever a Pick group block is left blank — use this on the shared product.offer template. \"Only this template\" ignores metafields completely, so everything below and the Pick group blocks are the only source — use this on a per-offer template (product.offer-2, -3, -5, etc.)."
+    },
+    {
+      "type": "select",
+      "id": "group_mode",
+      "options": [
+        { "value": "stack", "label": "Stacked — the customer picks from every group" },
+        { "value": "choice", "label": "Tabs — the customer picks one group, then fills it" }
+      ],
+      "default": "stack",
+      "label": "Pick groups are",
+      "info": "\"Stacked\" is the classic offer (and the duo page): every Pick group has to be filled. \"Tabs\" shows one group at a time behind a row of buttons — \"Perfumes\" / \"Attar Roll-Ons\" — and the bundle is made up of that one group only; switching tabs clears what was picked on the other. Needs two or more Pick group blocks."
+    },
+    {
+      "type": "text",
+      "id": "choice_label",
+      "label": "Tabs — accessible label",
+      "info": "Read out by screen readers before the tab buttons. Blank uses \"Choose what to bundle\"."
     },
     {
       "type": "image_picker",
@@ -606,6 +712,18 @@
           "label": "Heading",
           "info": "e.g. Choose 2 items from Modern Collection",
           "default": "Choose 2 items"
+        },
+        {
+          "type": "text",
+          "id": "tab_label",
+          "label": "Tab button text",
+          "info": "Only used when \"Pick groups are\" is set to Tabs, e.g. \"Perfumes\" or \"Attar Roll-Ons\". Blank falls back to the heading above."
+        },
+        {
+          "type": "image_picker",
+          "id": "tab_image",
+          "label": "Tab button image",
+          "info": "Optional thumbnail inside the tab button. Tabs read fine as plain text without one."
         },
         {
           "type": "product_list",

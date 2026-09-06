@@ -30,6 +30,14 @@ Outstanding items to resolve before this theme goes live — check this list bef
       Closing this gap means either Burhan keeps adding variants/pricing by hand in
       admin, a Matrixify variant import, or an Admin API bulk-create — in all cases the
       price per fragrance (or which pricing tier it falls into) has to come from Burhan.
+- [ ] **Normalise the attar roll-on Size option values in admin.** Five roll-ons
+      use `6ML`/`12ML` and four use `6ml`/`12ml` (Persian Rose, Florence
+      Orchidia, Arabian Jasmine, Pure Kashmiri Rose). The offer pages' group
+      size lock now compares case-insensitively so this doesn't break anything
+      today, but the two spellings also show up verbatim in the picker's size
+      dropdown and on the cart line, which looks like a mistake to a customer.
+      Only fixable in admin (Products → [product] → Variants → Size). See
+      "Gotcha: roll-on Size values aren't cased consistently in admin" below.
 - [ ] **Create the duo product(s) and the `duo` collection.** The duo page
       (`templates/product.duo.json`) is built and verified, but nothing points at
       it yet. To go live: create a product per duo, set its Theme template to
@@ -339,19 +347,65 @@ group's size never touches the attar group (verified — cascading 50ML through
 every perfume card left every attar card at its own default). A classic offer
 (`offer-for-2/3/5`) has one group, so this reads as "the whole bundle."
 
-### `offer-2/3/5` are perfumes only — never attar roll-ons
+### `offer-2/3/5` — perfumes **or** attar roll-ons, picked with a tab (added 2026-09-07)
 
-Confirmed with Burhan 2026-08-23. Each per-offer template's Pick group block
-now sets `"include": "bottles"` explicitly (`templates/product.offer-2/-3/-5.json`)
-rather than relying on `offer-group.liquid`'s default — belt-and-suspenders,
-since a block left unconfigured already defaults to bottles-only (see the
-`include_mode` gotcha below), but an explicit setting can't be silently changed
-by picking "Both" in the theme editor's "Show" dropdown without it being
-obvious in the template diff. Verified: all three pages render exactly
-Oudh Eternal / Mystique Island / Fresh Woodscape / Yameni Yakud / Ambre
-Intense — no roll-on ever appears. If a duo-style attar option is ever wanted
-on these offers, that's a distinct Pick group block with `include: "rollons"`,
-same as the duo page — not a change to this one's setting.
+Superseded the "perfumes only" rule below. Burhan asked for the offer pages to
+offer roll-ons as well as the signature perfumes: "when a person opens bundle
+for 2 he should see 2 options there 1 for roll on 1 for perfumes... the
+discounts and everything for this remains the same."
+
+Built as **choice mode**, a new `group_mode` setting on the Offer Builder
+section: the Pick group blocks stop stacking down the page and become
+mutually exclusive tabs, one on screen at a time. Each per-offer template now
+carries two Pick group blocks — `group-1` "Perfumes" (`include: bottles`,
+`men-3, women-1, unisex-3`) and `group-2` "Attar Roll-Ons"
+(`include: rollons`, `attar-roll-ons`) — with the same `pick_count` and the
+same discount as before (10% / 15% / 20%).
+
+**One category per bundle, confirmed with Burhan 2026-09-07.** Switching tabs
+*clears* what was picked on the tab being left (`setActiveGroup()` in
+`assets/offer-builder.js`), so a bundle is never half perfumes and half
+attars and `_bundle_size` always matches one group's count. If mixing is ever
+wanted instead, that's the opposite change — don't clear, and count every
+group — not a tweak to a setting.
+
+Three things had to follow the active tab rather than the page, and all three
+are easy to reintroduce as bugs:
+
+- `data-total-pick-count` is the **first tab's** count, not the sum of every
+  block's (`is_choice_mode` branch in `offer-builder.liquid`) — summing would
+  demand 4 items on "Offer for 2". `setActiveGroup()` re-reads it per tab.
+- `countingGroups()` returns just the open tab in choice mode. `ready`, the
+  progress fill and `promptLabel()` all go through it; using `this.groups`
+  directly would require the hidden tab to be filled too, leaving the add
+  button permanently disabled.
+- The revealed grid's arrows re-measure via `gridUpdaters` — while hidden its
+  `clientWidth` is 0, so `update()` early-returns and the arrows never learn
+  where they are.
+
+Nothing changed in the discount function, and it needs no redeploy: it groups
+by `_bundle` and never inspects product type. Verified live 2026-09-07 —
+2 roll-ons on offer-for-2 (₹699 × 2 = ₹1,398) checked out of `/cart/add.js`
+at ₹1,258.20 with an "Offer for 2" line discount on each line, and offer-5's
+roll-on tab prices 5 × ₹699 = ₹3,495 down to ₹2,796.
+
+The old rule still holds in one respect: a group's `include` setting is what
+keeps bottles and roll-ons apart, and `bottles` remains the default, so the
+shared `product.offer` template (one block, so choice mode can't engage) is
+unaffected.
+
+### Gotcha: roll-on Size values aren't cased consistently in admin
+
+Found 2026-09-07 while putting roll-ons into a pick group for the first time.
+Five roll-ons use `6ML`/`12ML` and four use `6ml`/`12ml` (Persian Rose,
+Florence Orchidia, Arabian Jasmine, Pure Kashmiri Rose). The group size lock
+matched `data-option1` exactly, so picking `12ML` on one card cascaded to the
+four other uppercase products and silently **skipped the lowercase ones** —
+exactly the mixed-size checkout that lock exists to prevent.
+
+`syncGroupSize()` now compares lowercased. Perfume bottles are uniformly
+uppercase so nothing changed for them. Normalising the option values in admin
+would be the real fix; until then don't restore the exact `===` compare.
 
 If a sibling card has no option at the target size (only possible if a group
 mixes products whose Size sets don't fully overlap — not the case for any

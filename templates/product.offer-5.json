@@ -7,18 +7,38 @@
           "type": "group",
           "settings": {
             "heading": "Choose any 5 perfumes",
-            "collections": ["men-3", "women-1", "unisex-3"],
+            "collections": [
+              "men-3",
+              "women-1",
+              "unisex-3"
+            ],
             "pick_count": 5,
             "include": "bottles",
+            "open_by_default": true,
+            "tab_label": "Perfumes"
+          }
+        },
+        "group-2": {
+          "type": "group",
+          "settings": {
+            "heading": "Choose any 5 attar roll-ons",
+            "tab_label": "Attar Roll-Ons",
+            "collections": [
+              "attar-roll-ons"
+            ],
+            "pick_count": 5,
+            "include": "rollons",
             "open_by_default": true
           }
         }
       },
       "block_order": [
-        "group-1"
+        "group-1",
+        "group-2"
       ],
       "settings": {
         "config_mode": "editor",
+        "group_mode": "choice",
         "banner_full_width": false,
         "eyebrow": "Limited time offer",
         "badge": "",
@@ -35,7 +55,8 @@
         "more_offers_heading": "More offers",
         "color_scheme": "scheme-1",
         "padding_top": 40,
-        "padding_bottom": 40
+        "padding_bottom": 40,
+        "price_note": "on any 5 perfumes or attar roll-ons"
       }
     }
   },

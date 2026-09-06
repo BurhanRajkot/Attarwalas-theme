@@ -26,6 +26,13 @@
   - group_noun {String} what one item in this group is called, e.g. 'perfume'
     or 'attar'. Used for the sticky bar's "Add 1 more attar" prompt.
   - group_open {Boolean} whether the accordion starts expanded
+  - group_id {String} DOM id for this group. Set in the section's choice
+    (tabs) mode so a tab button can point at it with aria-controls; blank
+    otherwise, which leaves the markup exactly as it was before tabs existed.
+  - group_labelled_by {String} id of the tab button that opens this group.
+    Set together with group_id — it's what makes the group a tabpanel.
+  - group_hidden {Boolean} choice mode only: this group belongs to a tab that
+    isn't the open one, so it renders hidden. offer-builder.js flips it.
   - offer_product {Product} the offer product itself (excluded from the grid)
   - block_attributes {String} block.shopify_attributes, when rendered from a block
 
@@ -132,6 +139,7 @@
 
 <div
   class="offer-group"
+  {% if group_id != blank %}id="{{ group_id }}"{% endif %}
   data-offer-group
   data-group-index="{{ group_index }}"
   data-group-pick-count="{{ pick_max }}"
@@ -140,6 +148,8 @@
   {% if is_range %}data-group-range="true"{% endif %}
   {% if group_noun != blank %}data-group-noun="{{ group_noun | escape }}"{% endif %}
   data-group-name="{{ heading | escape }}"
+  {% if group_labelled_by != blank %}role="tabpanel" aria-labelledby="{{ group_labelled_by }}"{% endif %}
+  {% if group_hidden %}hidden{% endif %}
   {{ block_attributes }}
 >
   <details class="offer-group__details" {% if group_open %}open{% endif %}>

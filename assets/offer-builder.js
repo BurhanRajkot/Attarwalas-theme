@@ -57,9 +57,17 @@ if (!customElements.get('offer-builder')) {
         this.useDiscount = this.discountType !== 'none' && this.discountAmount > 0;
 
         this.groups = Array.from(this.querySelectorAll('[data-offer-group]'));
+
+        // Choice mode (offer-2/3/5): the groups are mutually exclusive tabs —
+        // "Perfumes" or "Attar Roll-Ons" — and the bundle is made of the open
+        // tab only, so exactly one group counts at a time.
+        this.choiceMode = this.dataset.groupMode === 'choice';
+        this.tabs = Array.from(this.querySelectorAll('[data-offer-choice-tab]'));
+        this.activeGroupIndex = this.groups.length ? this.groups[0].dataset.groupIndex : null;
+
         // Quantity mode (the duo page): at least one group takes a range
         // rather than an exact count, so there's no fixed total to count to.
-        this.hasRange = this.groups.some((group) => group.dataset.groupRange);
+        this.hasRange = this.countingGroups().some((group) => group.dataset.groupRange);
         this.cards = Array.from(this.querySelectorAll('[data-offer-card]'));
         this.counter = this.querySelector('[data-offer-counter]');
         this.picksElement = this.querySelector('[data-offer-picks]');
@@ -86,6 +94,10 @@ if (!customElements.get('offer-builder')) {
             ?.addEventListener('change', (event) => this.onVariantChange(card, event.target));
         });
 
+        this.tabs.forEach((tab) =>
+          tab.addEventListener('click', () => this.setActiveGroup(tab.dataset.groupIndex))
+        );
+
         this.addButton.addEventListener('click', () => this.addToCart());
 
         if (!this.useDiscount && this.offerPrice <= 0) {
@@ -103,6 +115,52 @@ if (!customElements.get('offer-builder')) {
 
       groupIndexOf(card) {
         return card.dataset.groupIndex;
+      }
+
+      /*
+        The groups that actually make up the bundle: every group normally, and
+        in choice mode just the open tab — the other tabs are hidden and their
+        picks were cleared on the way out, so requiring them would leave the
+        add button permanently disabled.
+      */
+      countingGroups() {
+        if (!this.choiceMode) return this.groups;
+        return this.groups.filter((group) => group.dataset.groupIndex === this.activeGroupIndex);
+      }
+
+      /*
+        Switches which tab is on screen. One category per bundle is the whole
+        point of choice mode, so whatever was picked on the tab being left is
+        dropped rather than carried across — a bundle is never half perfumes
+        and half attars, and `_bundle_size` always matches one group's count.
+      */
+      setActiveGroup(groupIndex) {
+        if (!this.choiceMode || groupIndex === this.activeGroupIndex) return;
+
+        this.activeGroupIndex = groupIndex;
+        this.selections.clear();
+
+        this.groups.forEach((group) => {
+          group.hidden = group.dataset.groupIndex !== groupIndex;
+        });
+
+        this.tabs.forEach((tab) => {
+          const active = tab.dataset.groupIndex === groupIndex;
+          tab.classList.toggle('offer-choice__tab--active', active);
+          tab.setAttribute('aria-selected', String(active));
+        });
+
+        // Each tab carries its own pick count and mode, so the sticky bar's
+        // "0 / N" and the progress fill follow the tab rather than staying on
+        // whatever the first one rendered with.
+        this.totalPickCount = this.groupLimit(groupIndex) || this.totalPickCount;
+        this.hasRange = this.countingGroups().some((group) => group.dataset.groupRange);
+
+        // The newly shown grid was 0px wide while hidden, so its arrows never
+        // got to measure themselves — re-run that now that it has a size.
+        this.gridUpdaters.forEach((update) => update());
+
+        this.render();
       }
 
       countInGroup(groupIndex) {
@@ -254,6 +312,13 @@ if (!customElements.get('offer-builder')) {
         const targetSize = sourceOption && sourceOption.dataset.option1;
         if (!targetSize) return;
 
+        // Compared case-insensitively because the Size values aren't cased
+        // consistently in admin: five attar roll-ons are "6ML"/"12ML" and four
+        // are "6ml"/"12ml". An exact compare silently skipped the other half of
+        // the group, which is the exact mixed-size checkout this lock exists to
+        // prevent. Perfume bottles are uniformly uppercase, so nothing changes
+        // for them.
+        const wantedSize = targetSize.toLowerCase();
         const groupIndex = this.groupIndexOf(sourceCard);
 
         this.cards.forEach((card) => {
@@ -263,9 +328,10 @@ if (!customElements.get('offer-builder')) {
           if (!select) return;
 
           const options = Array.from(select.options);
+          const sizeOf = (option) => (option.dataset.option1 || '').toLowerCase();
           const match =
-            options.find((o) => o.dataset.option1 === targetSize && o.dataset.available === 'true') ||
-            options.find((o) => o.dataset.option1 === targetSize);
+            options.find((o) => sizeOf(o) === wantedSize && o.dataset.available === 'true') ||
+            options.find((o) => sizeOf(o) === wantedSize);
           if (!match || match.value === select.value) return;
 
           this.applyVariantOption(card, select, match);
@@ -325,7 +391,8 @@ if (!customElements.get('offer-builder')) {
         });
 
         const total = this.totalSelected();
-        const ready = this.groups.every((group) => this.groupSatisfied(group.dataset.groupIndex));
+        const counting = this.countingGroups();
+        const ready = counting.every((group) => this.groupSatisfied(group.dataset.groupIndex));
 
         if (this.counter) this.counter.textContent = this.hasRange ? String(total) : `${total} / ${this.totalPickCount}`;
         if (this.picksElement) this.picksElement.textContent = this.picksSummary();
@@ -335,8 +402,8 @@ if (!customElements.get('offer-builder')) {
           // In quantity mode the fill tracks how many groups are satisfied —
           // counting units would read 100% off five perfumes and no attar.
           const progress = this.hasRange
-            ? (this.groups.filter((group) => this.groupSatisfied(group.dataset.groupIndex)).length /
-                (this.groups.length || 1)) *
+            ? (counting.filter((group) => this.groupSatisfied(group.dataset.groupIndex)).length /
+                (counting.length || 1)) *
               100
             : this.totalPickCount > 0
               ? Math.min(100, (total / this.totalPickCount) * 100)
@@ -368,7 +435,7 @@ if (!customElements.get('offer-builder')) {
         that's still short by name instead.
       */
       promptLabel(total) {
-        const short = this.groups
+        const short = this.countingGroups()
           .map((group) => ({
             noun: group.dataset.groupNoun,
             need: this.groupMin(group.dataset.groupIndex) - this.countInGroup(group.dataset.groupIndex),
@@ -444,6 +511,9 @@ if (!customElements.get('offer-builder')) {
       // The pick grid is a horizontal snap row on phones; the arrows step it
       // one card at a time and disable themselves at either end.
       setupGridScroll() {
+        // Kept so a tab switch can re-measure the grid it just revealed.
+        this.gridUpdaters = [];
+
         this.querySelectorAll('[data-offer-grid]').forEach((grid) => {
           const prev = grid.parentElement.querySelector('[data-offer-grid-prev]');
           const next = grid.parentElement.querySelector('[data-offer-grid-next]');
@@ -475,6 +545,7 @@ if (!customElements.get('offer-builder')) {
           window.addEventListener('resize', update);
           // the accordion can start collapsed; re-check when it opens
           grid.closest('details')?.addEventListener('toggle', update);
+          this.gridUpdaters.push(update);
           update();
         });
       }
