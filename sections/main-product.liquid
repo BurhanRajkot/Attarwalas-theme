@@ -20,7 +20,14 @@
       {%- assign has_fragrance_option = true -%}
     {%- endif -%}
   {%- endfor -%}
-  {% if has_fragrance_option %}
+  {% comment %}
+    Also loaded for the Customize Perfume free-gift picker (see
+    snippets/product-gift-picker.liquid), which reuses <fragrance-picker>'s
+    search UI — redundant on this product today since it already sets
+    has_fragrance_option, but keeps the gift picker working if it's ever
+    reused on a product without its own Fragrance option.
+  {% endcomment %}
+  {% if has_fragrance_option or product.handle == 'customize-perfume-1' %}
     {{ 'component-fragrance-picker.css' | asset_url | stylesheet_tag }}
   {% endif %}
   {%- if product.quantity_price_breaks_configured? -%}
@@ -65,7 +72,7 @@
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
   <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
-  {% if has_fragrance_option %}
+  {% if has_fragrance_option or product.handle == 'customize-perfume-1' %}
     <script src="{{ 'fragrance-picker.js' | asset_url }}" defer="defer"></script>
   {% endif %}
   {% if settings.free_gift_enabled and product_gift_eligible %}

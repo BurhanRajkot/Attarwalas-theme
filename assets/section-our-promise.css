@@ -48,12 +48,12 @@
   padding: 0 1.5rem;
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1), transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity var(--aw-reveal-fade, 0.9s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1)), transform var(--aw-reveal-move, 1.2s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .our-promise__item--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -169,5 +169,187 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
+  }
+}
+
+/* Plain layout (default, "Show icons" off): no icon badges — each item is a
+   left-aligned title + line under a thin gold rule, so the row reads as a few
+   plain facts rather than the stock three-icons-in-circles feature grid. */
+.our-promise__grid--plain {
+  gap: 3.2rem 4.8rem;
+}
+
+.our-promise__grid--plain .our-promise__item {
+  align-items: flex-start;
+  text-align: left;
+  padding: 2rem 0 0;
+  border-top: 1px solid rgba(var(--color-button), 0.45);
+}
+
+.our-promise__grid--plain .our-promise__title {
+  margin-bottom: 0.8rem;
+}
+
+@media screen and (max-width: 749px) {
+  .our-promise__grid--plain {
+    gap: 2.4rem;
+  }
+
+  .our-promise__grid--plain .our-promise__item {
+    flex-direction: column;
+    gap: 0;
+    padding-top: 1.6rem;
+  }
+
+  .our-promise__grid--plain .our-promise__title {
+    font-size: 1.8rem;
+  }
+
+  /* only three short lines — no need to clamp them */
+  .our-promise__grid--plain .our-promise__text {
+    font-size: 1.4rem;
+    line-height: 1.55;
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+}
+
+/* ==========================================================================
+   Dark tone — deep brown band with gold accents. Redefines the scheme tokens
+   locally so every rule above (heading, text, hairlines) follows along.
+   ========================================================================== */
+
+.our-promise--dark {
+  --color-background: 43, 36, 24;
+  --color-foreground: 246, 240, 228;
+  --promise-gold: 212, 172, 90;
+  background: rgb(var(--color-background));
+  color: rgb(var(--color-foreground));
+}
+
+.our-promise--dark .our-promise__grid--plain .our-promise__item {
+  border-top-color: rgba(var(--promise-gold), 0.35);
+}
+
+.our-promise--dark .our-promise__text {
+  color: rgba(var(--color-foreground), 0.68);
+}
+
+/* ==========================================================================
+   With a photo — photo on one side, promises as editorial rows on the other.
+   ========================================================================== */
+
+.our-promise__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 8rem;
+  align-items: center;
+  max-width: 120rem;
+  margin: 0 auto;
+}
+
+.our-promise__media {
+  position: relative;
+  margin: 0;
+  /* clip, not hidden: a hidden frame becomes the photo's scroll container and
+     silently freezes its scroll-linked parallax (aw-motion.css) */
+  overflow: clip;
+  aspect-ratio: 4 / 5;
+  max-height: 60rem;
+}
+
+.our-promise__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% 50%;
+}
+
+.our-promise__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 4rem 2rem 1.6rem;
+  font-size: 1.3rem;
+  line-height: 1.4;
+  color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+}
+
+.our-promise--split .our-promise__header {
+  text-align: left;
+  margin-bottom: 3.2rem;
+}
+
+.our-promise--split .our-promise__grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+  max-width: none;
+}
+
+.our-promise--split .our-promise__grid--plain .our-promise__item {
+  gap: 0.8rem;
+  padding: 2.8rem 0;
+}
+
+.our-promise--split .our-promise__grid--plain .our-promise__item:last-child {
+  border-bottom: 1px solid rgba(var(--color-button), 0.45);
+}
+
+.our-promise--dark.our-promise--split .our-promise__grid--plain .our-promise__item:last-child {
+  border-bottom-color: rgba(var(--promise-gold), 0.35);
+}
+
+.our-promise--split .our-promise__title {
+  margin: 0;
+  font-size: clamp(2.4rem, 2.6vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+.our-promise--split .our-promise__text {
+  max-width: 46rem;
+  font-size: 1.5rem;
+  line-height: 1.6;
+}
+
+@media screen and (max-width: 989px) {
+  .our-promise__layout {
+    grid-template-columns: 1fr;
+    gap: 3.2rem;
+  }
+
+  .our-promise__media {
+    aspect-ratio: 4 / 3;
+  }
+
+  /* keep the perfumer (right of frame) in the wider, shorter crop */
+  .our-promise__image {
+    object-position: 78% 40%;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .our-promise--split .our-promise__grid--plain .our-promise__item {
+    gap: 0.4rem;
+    padding: 1.6rem 0;
+  }
+
+  .our-promise--split .our-promise__title {
+    font-size: 2.2rem;
+  }
+
+  .our-promise--split .our-promise__text {
+    font-size: 1.4rem;
+    line-height: 1.5;
+    max-width: none;
+  }
+
+  .our-promise__caption {
+    padding: 3rem 1.4rem 1.2rem;
+    font-size: 1.2rem;
   }
 }

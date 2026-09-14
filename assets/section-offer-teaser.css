@@ -2,8 +2,8 @@
    Offer deals — "Get any 2 / 3 / 5" coupon cards
    Used on product pages (main-product "Offers" block, below the buy button),
    at the bottom of an offer page, and anywhere the Offer Teaser section is
-   placed. Shares the visual language of component-offer-ticket.css: square
-   edges, gold hairlines, big serif count, dashed tear line above the CTA.
+   placed. Kept deliberately plain: square edges, one gold hairline border,
+   a big serif count, the discount in the serif, and a hairline above the CTA.
    ========================================================================== */
 
 .offer-deals {
@@ -91,7 +91,7 @@
 .offer-deal__pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  margin-bottom: 1.6rem;
   padding: 0.5rem 1.2rem;
   background: transparent;
   border: 1px solid rgb(var(--offer-gold));
@@ -102,25 +102,11 @@
   color: rgb(var(--offer-gold));
 }
 
-.offer-deal__pill svg {
-  width: 1.2rem;
-  height: 1.2rem;
-}
-
 .offer-deal__count {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 1.6rem;
   line-height: 1;
-}
-
-.offer-deal__count-word {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgba(var(--offer-ink), 0.55);
 }
 
 .offer-deal__count-num {
@@ -156,10 +142,12 @@
 }
 
 .offer-deal__price-value {
-  font-size: 2.2rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-heading-family);
+  font-size: 2.6rem;
+  font-weight: 500;
+  line-height: 1.1;
+  /* the heading serif defaults to old-style figures, which make "10%" read as "1o%" */
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .offer-deal__tagline {
@@ -180,26 +168,7 @@
   height: 0;
   /* bleed past the card's side padding so the tear line spans edge to edge */
   margin: auto -2rem 0;
-  border-top: 1px dashed rgba(var(--offer-gold), 0.45);
-}
-
-.offer-deal__perf::before,
-.offer-deal__perf::after {
-  content: '';
-  position: absolute;
-  top: -0.35rem;
-  width: 0.7rem;
-  height: 0.7rem;
-  background: rgb(var(--offer-gold));
-  transform: rotate(45deg);
-}
-
-.offer-deal__perf::before {
-  left: -0.35rem;
-}
-
-.offer-deal__perf::after {
-  right: -0.35rem;
+  border-top: 1px solid rgba(var(--offer-gold), 0.25);
 }
 
 /* ----------------------------------- CTA ---------------------------------- */
@@ -214,10 +183,8 @@
   margin: 0 -2rem;
   height: 5.2rem;
   overflow: hidden;
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 1.4rem;
+  font-weight: 500;
   color: rgb(var(--offer-gold));
   transition: color 0.3s ease;
 }
@@ -270,23 +237,12 @@
 }
 
 .offer-teaser__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.9rem;
   margin-bottom: 1rem;
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgb(var(--color-button));
-}
-
-.offer-teaser__eyebrow::before,
-.offer-teaser__eyebrow::after {
-  content: '';
-  width: 2.8rem;
-  height: 1px;
-  background: rgba(var(--color-button), 0.5);
 }
 
 .offer-teaser__title {

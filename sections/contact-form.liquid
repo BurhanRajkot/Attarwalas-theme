@@ -2,8 +2,8 @@
 
 {%- style -%}
   .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
   }
 
   @media screen and (min-width: 750px) {
@@ -16,12 +16,19 @@
 
 <div class="color-{{ section.settings.color_scheme }} gradient">
   <div class="contact page-width section-{{ section.id }}-padding">
-    <div class="contact__wrap">
+    {%- liquid
+      assign has_info = false
+      if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.description != blank
+        assign has_info = true
+      elsif section.settings.contact_phone != blank or section.settings.contact_email != blank or section.settings.contact_hours != blank
+        assign has_info = true
+      endif
+    -%}
+    <div class="contact__wrap{% unless has_info %} contact__wrap--form-only{% endunless %}">
+      {%- if has_info -%}
       <div class="contact__info{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
         {%- if section.settings.eyebrow != blank -%}
-          <p class="contact__eyebrow">
-            <span aria-hidden="true"></span>{{ section.settings.eyebrow }}
-          </p>
+          <p class="contact__eyebrow">{{ section.settings.eyebrow }}</p>
         {%- endif -%}
         {%- if section.settings.heading != blank -%}
           <h2 class="contact__heading {{ section.settings.heading_size }}">
@@ -33,64 +40,45 @@
             {{ section.settings.description }}
           </div>
         {%- endif -%}
+
+        {%- comment -%}
+          Plain label/value rows split by hairlines — no icon badges or tracked
+          capitals, which read as template decoration.
+        {%- endcomment -%}
         {%- if section.settings.contact_phone != blank
           or section.settings.contact_email != blank
-          or section.settings.contact_hours != blank -%}
-          <span class="contact__divider" aria-hidden="true"></span>
-          <ul class="contact__details">
-            {%- if section.settings.contact_phone != blank -%}
-              <li class="contact__detail">
-                <span class="contact__detail-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-                  </svg>
-                </span>
-                <span class="contact__detail-body">
-                  <span class="contact__detail-label">{{ 'templates.contact.form.phone' | t }}</span>
-                  <a class="contact__detail-value" href="tel:{{ section.settings.contact_phone | remove: ' ' }}">{{ section.settings.contact_phone }}</a>
-                </span>
-              </li>
-            {%- endif -%}
+          or section.settings.contact_hours != blank
+        -%}
+          <dl class="contact__details">
             {%- if section.settings.contact_email != blank -%}
-              <li class="contact__detail">
-                <span class="contact__detail-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/>
-                    <path d="m22 7-10 6L2 7"/>
-                  </svg>
-                </span>
-                <span class="contact__detail-body">
-                  <span class="contact__detail-label">Email</span>
-                  <a class="contact__detail-value" href="mailto:{{ section.settings.contact_email }}">{{ section.settings.contact_email }}</a>
-                </span>
-              </li>
+              <div class="contact__detail">
+                <dt>Email</dt>
+                <dd>
+                  <a href="mailto:{{ section.settings.contact_email }}">{{ section.settings.contact_email }}</a>
+                </dd>
+              </div>
+            {%- endif -%}
+            {%- if section.settings.contact_phone != blank -%}
+              <div class="contact__detail">
+                <dt>Phone</dt>
+                <dd>
+                  <a href="tel:{{ section.settings.contact_phone | remove: ' ' }}">{{ section.settings.contact_phone }}</a>
+                </dd>
+              </div>
             {%- endif -%}
             {%- if section.settings.contact_hours != blank -%}
-              <li class="contact__detail">
-                <span class="contact__detail-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                </span>
-                <span class="contact__detail-body">
-                  <span class="contact__detail-label">Working hours</span>
-                  <span class="contact__detail-value">{{ section.settings.contact_hours }}</span>
-                </span>
-              </li>
+              <div class="contact__detail">
+                <dt>Hours</dt>
+                <dd>{{ section.settings.contact_hours }}</dd>
+              </div>
             {%- endif -%}
-          </ul>
+          </dl>
         {%- endif -%}
       </div>
+      {%- endif -%}
 
-      <div class="contact__card color-scheme-1{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
-        {%- liquid
-          assign contact_form_class = 'contact__form isolate'
-          if settings.animations_reveal_on_scroll
-            assign contact_form_class = 'contact__form isolate scroll-trigger animate--slide-in'
-          endif
-        -%}
-        {%- form 'contact', id: 'ContactForm', class: contact_form_class -%}
+      <div class="contact__panel{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+        {%- form 'contact', id: 'ContactForm', class: 'contact__form isolate' -%}
           {%- if form.posted_successfully? -%}
             <div class="contact__status contact__status--success">
               {% render 'icon-success' %}
@@ -106,96 +94,86 @@
               </span>
             </div>
           {%- endif -%}
-          <div class="contact__fields">
-            <div class="field">
+
+          {%- comment -%}
+            Static labels above underline inputs rather than Dawn's floating
+            .field labels — deliberately not using .field / .field__input so
+            base.css's boxed border (.field::after) never applies here.
+          {%- endcomment -%}
+          <div class="contact__row">
+            <div class="contact__field">
+              <label class="contact__label" for="ContactForm-name">{{ 'templates.contact.form.name' | t }}</label>
               <input
-                class="field__input"
+                class="contact__input"
                 autocomplete="name"
                 type="text"
                 id="ContactForm-name"
                 name="contact[{{ 'templates.contact.form.name' | t }}]"
                 value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
-                placeholder="{{ 'templates.contact.form.name' | t }}"
               >
-              <label class="field__label" for="ContactForm-name">{{ 'templates.contact.form.name' | t }}</label>
             </div>
-            <div class="field field--with-error">
+            <div class="contact__field">
+              <label class="contact__label" for="ContactForm-email">
+                {{- 'templates.contact.form.email' | t -}}
+                <span class="contact__required" aria-hidden="true">*</span>
+              </label>
               <input
+                class="contact__input"
                 autocomplete="email"
                 type="email"
                 id="ContactForm-email"
-                class="field__input"
                 name="contact[email]"
                 spellcheck="false"
                 autocapitalize="off"
                 value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+                required
                 aria-required="true"
                 {% if form.errors contains 'email' %}
                   aria-invalid="true"
                   aria-describedby="ContactForm-email-error"
                 {% endif %}
-                placeholder="{{ 'templates.contact.form.email' | t }}"
-              >
-              <label class="field__label" for="ContactForm-email">
-                {{- 'templates.contact.form.email' | t }}
-                <span aria-hidden="true">*</span></label
               >
               {%- if form.errors contains 'email' -%}
                 <small class="contact__field-error" id="ContactForm-email-error">
                   <span class="visually-hidden">{{ 'accessibility.error' | t }}</span>
-                  <span class="form__message">
-                    {%- render 'icon-error' -%}
-                    {{- form.errors.translated_fields.email | capitalize }}
-                    {{ form.errors.messages.email -}}
-                  </span>
+                  {%- render 'icon-error' -%}
+                  {{- form.errors.translated_fields.email | capitalize }}
+                  {{ form.errors.messages.email -}}
                 </small>
               {%- endif -%}
             </div>
           </div>
-          <div class="contact__fields">
-            <div class="field">
-              <input
-                type="tel"
-                id="ContactForm-phone"
-                class="field__input"
-                autocomplete="tel"
-                name="contact[{{ 'templates.contact.form.phone' | t }}]"
-                pattern="[0-9\-]*"
-                value="{% if form.phone %}{{ form.phone }}{% elsif customer %}{{ customer.phone }}{% endif %}"
-                placeholder="{{ 'templates.contact.form.phone' | t }}"
-              >
-              <label class="field__label" for="ContactForm-phone">{{ 'templates.contact.form.phone' | t }}</label>
-            </div>
-            <div class="field">
-              <input
-                type="text"
-                id="ContactForm-subject"
-                class="field__input"
-                name="contact[{{ 'templates.contact.form.subject' | t }}]"
-                value="{{ form.subject }}"
-                placeholder="{{ 'templates.contact.form.subject' | t }}"
-              >
-              <label class="field__label" for="ContactForm-subject">{{ 'templates.contact.form.subject' | t }}</label>
-            </div>
+
+          <div class="contact__field">
+            <label class="contact__label" for="ContactForm-phone">
+              {{- 'templates.contact.form.phone' | t -}}
+              <span class="contact__optional">(optional)</span>
+            </label>
+            <input
+              class="contact__input"
+              type="tel"
+              id="ContactForm-phone"
+              autocomplete="tel"
+              name="contact[{{ 'templates.contact.form.phone' | t }}]"
+              value="{% if form.phone %}{{ form.phone }}{% elsif customer %}{{ customer.phone }}{% endif %}"
+            >
           </div>
-          <div class="field">
+
+          <div class="contact__field">
+            <label class="contact__label" for="ContactForm-body">{{ 'templates.contact.form.comment' | t }}</label>
             <textarea
-              rows="4"
+              class="contact__input contact__input--area"
+              rows="3"
               id="ContactForm-body"
-              class="text-area field__input"
               name="contact[{{ 'templates.contact.form.comment' | t }}]"
-              placeholder="{{ 'templates.contact.form.comment' | t }}"
             >
               {{- form.body -}}
             </textarea>
-            <label class="form__label field__label" for="ContactForm-body">
-              {{- 'templates.contact.form.comment' | t -}}
-            </label>
           </div>
-          <div class="contact__button">
+
+          <div class="contact__actions">
             <button type="submit" class="button contact__submit">
-              <span>{{ 'templates.contact.form.send' | t }}</span>
-              {% render 'icon-arrow' %}
+              {{ 'templates.contact.form.send' | t }}
             </button>
             <p class="contact__note">{{ 'templates.contact.form.response_note' | t }}</p>
           </div>

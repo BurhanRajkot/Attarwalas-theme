@@ -19,12 +19,12 @@
   margin-bottom: 1.2rem;
   opacity: 0;
   transform: translateY(14px);
-  transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1), transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity var(--aw-reveal-fade, 0.9s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1)), transform var(--aw-reveal-move, 1.2s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .product-carousel__title-row--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 .product-carousel__line {
@@ -134,15 +134,27 @@
   margin: 0;
   padding: 0 1.5rem;
   list-style: none;
-  overflow-x: auto;
+  /* The arrows are the only way to move the row. With overflow-x: auto a
+     swipe, trackpad gesture or shift+wheel over a card dragged the row
+     sideways on its own. `hidden` blocks that but still honours the arrows'
+     scrollBy() and fires the scroll event the counter/progress bar read.
+     `hidden` alone isn't enough on a touch screen though — iOS/Android can
+     still pan a horizontally-overflowing box by touch even with overflow-x:
+     hidden, because that's a gesture concession, not a scroll container
+     read. `touch-action: pan-y` tells the browser this element only accepts
+     vertical touch gestures, so a horizontal drag falls through to the page
+     instead of nudging the row — verified this is needed on a real phone,
+     not just automation (a synthetic wheel/scrollLeft test here still
+     reported the row locked even before this line, because that class of
+     touch panning can't be simulated that way). */
+  overflow-x: hidden;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   scroll-padding-left: 1.5rem;
-  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  /* Ensure overscroll bounce feels natural on iOS */
-  overscroll-behavior-x: contain;
 }
 
 @media screen and (min-width: 750px) {
@@ -164,12 +176,12 @@
   scroll-snap-align: start;
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.75s cubic-bezier(0.25, 1, 0.5, 1), transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity var(--aw-reveal-fade, 0.9s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1)), transform var(--aw-reveal-move, 1.2s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .product-carousel__slide--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -202,7 +214,9 @@
 
 @media screen and (min-width: 990px) {
   .product-carousel__slide {
-    width: clamp(24rem, 21vw, 32rem);
+    /* Exactly 4 cards across, no partial 5th: the list's content box minus
+       its 3 gaps (2.6rem each, set above), split four ways. */
+    width: calc((100% - 3 * 2.6rem) / 4);
   }
 }
 
@@ -218,7 +232,9 @@
   width: 100%;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  background-color: #f7f6f4;
+  /* Transparent so the duo PNGs (cut-out, transparent backgrounds) sit
+     straight on the section's own background instead of a grey box. */
+  background-color: transparent;
   margin-bottom: 1.6rem;
 }
 

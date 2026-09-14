@@ -104,6 +104,7 @@
     <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
     {%- if settings.animations_reveal_on_scroll -%}
       <script src="{{ 'animations.js' | asset_url }}" defer="defer"></script>
+      <script src="{{ 'aw-motion.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
 
     {{ content_for_header }}
@@ -324,6 +325,9 @@
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
     {{ 'typography-attarwalas.css' | asset_url | stylesheet_tag }}
+    {%- if settings.animations_reveal_on_scroll -%}
+      {{ 'aw-motion.css' | asset_url | stylesheet_tag }}
+    {%- endif -%}
     {%- comment -%}
       Loaded once here instead of inside snippets/loading-spinner.liquid, which is rendered
       repeatedly per page and was therefore emitting a duplicate render-blocking <link> each

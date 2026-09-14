@@ -22,12 +22,20 @@
 {% endcomment %}
 {%- liquid
   assign product_form_id = 'product-form-' | append: section.id
-  assign fragrances = shop.metaobjects.fragrance.values
   assign variants_available_arr = product.variants | map: 'available'
   assign variants_option1_arr = product.variants | map: 'option1'
   assign variants_option2_arr = product.variants | map: 'option2'
   assign variants_option3_arr = product.variants | map: 'option3'
 -%}
+{%- comment -%}
+  shop.metaobjects.<type>.values defaults to a 50-item page - with 100+
+  fragrance entries that silently dropped alias/reference-name data (and
+  eventually whole fragrances) for everything past the 50th. Wrapping in an
+  explicit paginate raises that to 250 in one pass (no multi-page loop
+  needed, 250 just becomes the effective cap instead of the default 50).
+{%- endcomment -%}
+{%- paginate shop.metaobjects.fragrance.values by 250 -%}
+{%- assign fragrances = shop.metaobjects.fragrance.values -%}
 
 <fieldset
   class="js product-form__input product-form__input--fragrance"
@@ -153,3 +161,4 @@
     </div>
   </fragrance-picker>
 </fieldset>
+{%- endpaginate -%}

@@ -1,0 +1,253 @@
+{
+  "sections": {
+    "hero": {
+      "type": "image-banner",
+      "blocks": {
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "Where Heritage Becomes Fragrance",
+            "heading_size": "h0"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "Non-alcoholic attars and perfumes, composed the old way — for those who wear scent as memory.",
+            "text_style": "subtitle"
+          }
+        }
+      },
+      "block_order": [
+        "heading",
+        "text"
+      ],
+      "settings": {
+        "image_overlay_opacity": 40,
+        "image_height": "large",
+        "desktop_content_position": "middle-center",
+        "show_text_box": false,
+        "desktop_content_alignment": "center",
+        "color_scheme": "scheme-4",
+        "image_behavior": "none",
+        "mobile_content_alignment": "center",
+        "stack_images_on_mobile": true,
+        "show_text_below": true
+      }
+    },
+    "story": {
+      "type": "image-with-text",
+      "blocks": {
+        "caption": {
+          "type": "caption",
+          "settings": {
+            "caption": "Our Origin",
+            "text_style": "caption-with-letter-spacing",
+            "text_size": "medium"
+          }
+        },
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "A Craft Passed Down, Not Manufactured",
+            "heading_size": "h1"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "<p>ATTARWALAS began not in a factory, but in the quiet ritual of distillation — flowers, woods, and resins slow-cooked into oil the way it has been done for generations. We carried that same restraint into every bottle we make today: no alcohol, no shortcuts, nothing rushed.</p>",
+            "text_style": "body"
+          }
+        }
+      },
+      "block_order": [
+        "caption",
+        "heading",
+        "text"
+      ],
+      "settings": {
+        "height": "medium",
+        "desktop_image_width": "medium",
+        "layout": "image_first",
+        "desktop_content_position": "middle",
+        "desktop_content_alignment": "left",
+        "content_layout": "no-overlap",
+        "section_color_scheme": "scheme-1",
+        "color_scheme": "scheme-1",
+        "image_behavior": "none",
+        "mobile_content_alignment": "left",
+        "padding_top": 72,
+        "padding_bottom": 40
+      }
+    },
+    "craft": {
+      "type": "image-with-text",
+      "blocks": {
+        "caption": {
+          "type": "caption",
+          "settings": {
+            "caption": "The Process",
+            "text_style": "caption-with-letter-spacing",
+            "text_size": "medium"
+          }
+        },
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "Composed Drop by Drop",
+            "heading_size": "h1"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Each attar is built in small batches, aged patiently, and tested by nose — not by formula. What leaves our hands is a fragrance meant to last the day, not just the moment you spray it.</p>",
+            "text_style": "body"
+          }
+        }
+      },
+      "block_order": [
+        "caption",
+        "heading",
+        "text"
+      ],
+      "settings": {
+        "height": "medium",
+        "desktop_image_width": "medium",
+        "layout": "text_first",
+        "desktop_content_position": "middle",
+        "desktop_content_alignment": "left",
+        "content_layout": "no-overlap",
+        "section_color_scheme": "scheme-2",
+        "color_scheme": "scheme-2",
+        "image_behavior": "none",
+        "mobile_content_alignment": "left",
+        "padding_top": 40,
+        "padding_bottom": 40
+      }
+    },
+    "values": {
+      "type": "our-promise",
+      "blocks": {
+        "purity": {
+          "type": "promise",
+          "settings": {
+            "icon": "purity",
+            "title": "Pure, Non-Alcoholic",
+            "text": "Every attar is oil-based and alcohol-free — kinder to skin, and closer to how fragrance was always meant to be worn."
+          }
+        },
+        "heritage": {
+          "type": "promise",
+          "settings": {
+            "icon": "crown",
+            "title": "Rooted in Heritage",
+            "text": "Recipes drawn from a tradition of Indian perfumery, reinterpreted for the way life is lived today."
+          }
+        },
+        "longevity": {
+          "type": "promise",
+          "settings": {
+            "icon": "long_lasting",
+            "title": "Made to Last",
+            "text": "Concentrated oils that hold their character for hours — not fading fast, not diluted for volume."
+          }
+        }
+      },
+      "block_order": [
+        "purity",
+        "heritage",
+        "longevity"
+      ],
+      "settings": {
+        "full_width": false,
+        "title": "What We Stand For",
+        "subheading": "",
+        "columns_desktop": 3,
+        "color_scheme": "scheme-1",
+        "padding_top": 72,
+        "padding_bottom": 72
+      }
+    },
+    "perfumer": {
+      "type": "perfumer",
+      "settings": {
+        "bio": "Every fragrance starts on paper, then disappears into months of blending until it feels less like a formula and more like a memory. That's the standard every ATTARWALAS bottle is held to before it ever reaches you.",
+        "name": "The ATTARWALAS Perfumer",
+        "role": "Master Perfumer",
+        "eyebrow": "The Nose Behind ATTARWALAS",
+        "image_position": "right",
+        "background_color": "#0a0a0a",
+        "text_color": "#f5f5f5",
+        "muted_text_color": "#a8a8a8"
+      }
+    },
+    "cta": {
+      "type": "rich-text",
+      "blocks": {
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "Wear the Story",
+            "heading_size": "h1"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Explore the full ATTARWALAS collection — perfumes and attars made the same considered way.</p>"
+          }
+        },
+        "button": {
+          "type": "button",
+          "settings": {
+            "button_label": "Shop the Collection",
+            "button_link": "/collections/all",
+            "button_style_secondary": false
+          }
+        }
+      },
+      "block_order": [
+        "heading",
+        "text",
+        "button"
+      ],
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "center",
+        "color_scheme": "scheme-1",
+        "full_width": true,
+        "padding_top": 72,
+        "padding_bottom": 96
+      }
+    },
+    "store_location": {
+      "type": "store-location",
+      "settings": {
+        "heading": "Visit us",
+        "intro": "<p>Come and try the collection on your skin before you choose.</p>",
+        "address": "<p>Jio World Drive, Bandra Kurla Complex, Bandra East, Mumbai, Maharashtra 400051</p>",
+        "map_query": "Jio World Drive, Bandra Kurla Complex, Mumbai",
+        "map_zoom": 16,
+        "hours": "<p>Mon – Sat: 10:00 AM – 8:00 PM</p>",
+        "phone": "",
+        "directions_label": "Get directions",
+        "map_position": "right",
+        "soften_map": true,
+        "color_scheme": "scheme-1",
+        "padding_top": 72,
+        "padding_bottom": 72
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "story",
+    "craft",
+    "values",
+    "perfumer",
+    "store_location",
+    "cta"
+  ]
+}

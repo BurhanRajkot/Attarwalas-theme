@@ -38,6 +38,18 @@
     if ratio == 0 or ratio == null
       assign ratio = 1
     endif
+    comment
+      Ambre Intense and Yameni Yakud's product photos were shot/exported on a
+      plain white backdrop, unlike the rest of the catalog which uses a warm
+      cream backdrop matching the site background. Recolor just these two via
+      mix-blend-mode so the card doesn't show a mismatched white square.
+      Remove this once the source photos are re-exported with a matching
+      cream backdrop.
+    endcomment
+    assign card_media_class = ''
+    if card_product.handle == 'ambre-intense-100ml' or card_product.handle == 'yameni-yakud-2'
+      assign card_media_class = ' card__media--recolor-backdrop'
+    endif
   -%}
   {%- capture card_quick_add -%}
         {% if quick_add == 'standard' %}
@@ -286,7 +298,7 @@
       >
         {%- if card_product.featured_media -%}
           <div class="card__media{% if image_shape and image_shape != 'default' %} shape--{{ image_shape }} color-{{ settings.card_color_scheme }} gradient{% endif %}">
-            <div class="media media--transparent media--hover-effect">
+            <div class="media media--transparent media--hover-effect{{ card_media_class }}">
               {% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
               <img
                 srcset="

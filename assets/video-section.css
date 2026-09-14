@@ -79,6 +79,34 @@
   border: 0;
 }
 
+/*
+  Hold the video back until it has a frame to show.
+
+  It sits on top of .video-section__hero-poster, and a <video> with nothing
+  decoded yet paints as opaque black — so the hero was a black rectangle for
+  as long as the 4.4MB 1080p MP4 took to buffer. On a phone on mobile data
+  that is the whole first impression of the site. Hidden until the section's
+  own script sees a frame land, so what shows meanwhile is the poster the
+  section already loads (responsive, fetchpriority=high) rather than black.
+
+  If that script never runs, the video stays hidden and the poster stands in —
+  a still hero, which is the right way for this to fail.
+*/
+.video-section__hero video {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.video-section__hero.is-video-ready video {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-section__hero video {
+    transition: none;
+  }
+}
+
 .video-section__hero::after {
   content: none;
 }

@@ -1,12 +1,3 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
   "sections": {
     "video_AeBGJd": {
@@ -158,9 +149,9 @@
     "offer_teaser": {
       "type": "offer-teaser",
       "settings": {
-        "eyebrow": "Limited time",
-        "title": "Today's offers",
-        "subtext": "Pick your perfumes and pay one bundle price.",
+        "eyebrow": "",
+        "title": "Bundle offers",
+        "subtext": "The more you pick, the more you save.",
         "color_scheme": "scheme-1",
         "padding_top": 64,
         "padding_bottom": 64
@@ -210,7 +201,7 @@
       ],
       "settings": {
         "title": "Shop by category",
-        "subheading": "<p>Express your personality by choosing emblematic pieces for the Maison's fragrance wardrobe.</p>",
+        "subheading": "",
         "header_alignment": "left",
         "full_width": true,
         "columns_desktop": 4,
@@ -230,7 +221,7 @@
         "link_to_duo_pages": true,
         "products_to_show": 8,
         "discount_percent": 10,
-        "show_badge": true,
+        "show_badge": false,
         "badge_text": "Online Exclusive",
         "show_description": true,
         "color_scheme": "scheme-1",
@@ -245,24 +236,24 @@
           "type": "promise",
           "settings": {
             "icon": "crown",
-            "title": "Legacy of Craftsmanship",
-            "text": "Rooted in heritage and driven by innovation, ATTARWALAS redefines fragrance creation with a harmonious blend of tradition and modernity."
+            "title": "Smell it before you buy",
+            "text": "Find us at pop-ups like Jio World Drive, BKC, and try the whole collection on your skin."
           }
         },
         "promise_2": {
           "type": "promise",
           "settings": {
             "icon": "care",
-            "title": "Exceptional Care, Always",
-            "text": "Your satisfaction is our priority. ATTARWALAS offers hassle-free returns and exceptional customer support, ensuring every interaction with us is a delight."
+            "title": "Easy returns",
+            "text": "Not the right scent for you? Sending it back is hassle-free."
           }
         },
         "promise_3": {
           "type": "promise",
           "settings": {
             "icon": "shipping",
-            "title": "Fast Shipping Across India",
-            "text": "Enjoy the beauty of ATTARWALAS no matter where you are in India. We offer fast shipping, ensuring your favorite scents arrive at your doorstep with care."
+            "title": "Delivered across India",
+            "text": "Order from anywhere in India and we ship it straight to your door."
           }
         }
       },
@@ -273,9 +264,12 @@
       ],
       "settings": {
         "full_width": false,
-        "title": "Our Promise to You",
+        "title": "",
         "subheading": "",
         "columns_desktop": 3,
+        "tone": "dark",
+        "image": "shopify://shop_images/jio_world_drive_1.jpg",
+        "image_caption": "Attarwalas at Jio World Drive, BKC, Mumbai",
         "color_scheme": "scheme-1",
         "padding_top": 60,
         "padding_bottom": 60
@@ -615,16 +609,16 @@
     "contact_form_tJcrJ4": {
       "type": "contact-form",
       "settings": {
-        "eyebrow": "Contact us",
-        "heading": "<strong>Get in Touch</strong>",
+        "eyebrow": "",
+        "heading": "Get in touch",
         "heading_size": "h2",
-        "description": "<p>Questions about our non-alcoholic perfumes, help with an order, or a bespoke scent consultation? We'd love to hear from you.</p>",
-        "contact_phone": "+92 300 1234567",
+        "description": "<p>Questions about our non-alcoholic perfumes, an order you've placed, or a bespoke scent consultation? Send us a message.</p>",
+        "contact_phone": "",
         "contact_email": "care@attarwalas.com",
         "contact_hours": "Mon – Sat: 10:00 AM – 8:00 PM",
         "color_scheme": "scheme-1",
-        "padding_top": 16,
-        "padding_bottom": 16
+        "padding_top": 64,
+        "padding_bottom": 64
       }
     }
   },

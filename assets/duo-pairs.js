@@ -75,7 +75,6 @@ if (!customElements.get('duo-pairs')) {
         });
 
         this.addButton.addEventListener('click', () => this.addToCart());
-        this.setupGridScroll();
         this.setupHeroView();
       }
 
@@ -214,40 +213,6 @@ if (!customElements.get('duo-pairs')) {
         this.addButton.disabled = !ready;
         this.addLabel.textContent = ready ? this.readyLabel : 'Select a duo';
         this.hideError();
-      }
-
-      /* ------------------------- mobile grid scrolling ------------------------- */
-
-      setupGridScroll() {
-        this.querySelectorAll('[data-offer-grid]').forEach((grid) => {
-          const prev = grid.parentElement.querySelector('[data-offer-grid-prev]');
-          const next = grid.parentElement.querySelector('[data-offer-grid-next]');
-          if (!prev || !next) return;
-
-          const step = () => {
-            const cards = grid.querySelectorAll('.offer-card');
-            if (cards.length < 2) return grid.clientWidth * 0.75 || 240;
-            const a = cards[0].getBoundingClientRect();
-            const b = cards[1].getBoundingClientRect();
-            return b.left - a.left;
-          };
-
-          const update = () => {
-            if (grid.clientWidth === 0) return;
-            const atStart = grid.scrollLeft <= 2;
-            const atEnd = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 2;
-            prev.disabled = atStart;
-            next.disabled = atEnd;
-          };
-
-          const scroll = (direction) => grid.scrollBy({ left: direction * step(), behavior: 'smooth' });
-
-          prev.addEventListener('click', () => scroll(-1));
-          next.addEventListener('click', () => scroll(1));
-          grid.addEventListener('scroll', update, { passive: true });
-          window.addEventListener('resize', update);
-          update();
-        });
       }
 
       /* ------------------------------- add to cart ----------------------------- */

@@ -106,8 +106,7 @@ if (!customElements.get('offer-builder')) {
           );
         }
 
-        this.observeBar();
-        this.setupGridScroll();
+        this.publishBarHeight();
         this.render();
       }
 
@@ -155,10 +154,6 @@ if (!customElements.get('offer-builder')) {
         // whatever the first one rendered with.
         this.totalPickCount = this.groupLimit(groupIndex) || this.totalPickCount;
         this.hasRange = this.countingGroups().some((group) => group.dataset.groupRange);
-
-        // The newly shown grid was 0px wide while hidden, so its arrows never
-        // got to measure themselves — re-run that now that it has a size.
-        this.gridUpdaters.forEach((update) => update());
 
         this.render();
       }
@@ -493,61 +488,35 @@ if (!customElements.get('offer-builder')) {
         return parts.join(', ');
       }
 
-      // Drop the sticky bar's shadow once the page is scrolled to the very bottom.
-      observeBar() {
-        if (!this.bar || !('IntersectionObserver' in window)) return;
+      /*
+        The bar is `position: fixed`, so it takes no space in the layout and
+        would otherwise cover the last rows of the footer. Publish its measured
+        height as `--offer-bar-h` and flag the page, and the stylesheet turns
+        that into matching bottom clearance on <body>.
 
-        const sentinel = document.createElement('div');
-        sentinel.setAttribute('aria-hidden', 'true');
-        this.appendChild(sentinel);
+        Measured rather than hardcoded because the height moves: one line or two
+        in the bar, `env(safe-area-inset-bottom)` on notched iPhones, and the
+        error message that appears under it when an add fails.
+      */
+      publishBarHeight() {
+        if (!this.bar) return;
 
-        new IntersectionObserver((entries) => {
-          this.bar.classList.toggle('offer-builder__bar--docked', entries[0].isIntersecting);
-        }).observe(sentinel);
-      }
+        document.body.classList.add('offer-page');
 
-      /* ------------------------- mobile grid scrolling ------------------------- */
+        const publish = () => {
+          const height = this.bar.getBoundingClientRect().height;
+          if (height > 0) {
+            document.documentElement.style.setProperty('--offer-bar-h', `${Math.ceil(height)}px`);
+          }
+        };
 
-      // The pick grid is a horizontal snap row on phones; the arrows step it
-      // one card at a time and disable themselves at either end.
-      setupGridScroll() {
-        // Kept so a tab switch can re-measure the grid it just revealed.
-        this.gridUpdaters = [];
+        if ('ResizeObserver' in window) {
+          new ResizeObserver(publish).observe(this.bar);
+        } else {
+          window.addEventListener('resize', publish);
+        }
 
-        this.querySelectorAll('[data-offer-grid]').forEach((grid) => {
-          const prev = grid.parentElement.querySelector('[data-offer-grid-prev]');
-          const next = grid.parentElement.querySelector('[data-offer-grid-next]');
-          if (!prev || !next) return;
-
-          // Distance between two consecutive cards (card + gap), measured live.
-          const step = () => {
-            const cards = grid.querySelectorAll('.offer-card');
-            if (cards.length < 2) return grid.clientWidth * 0.75 || 240;
-            const a = cards[0].getBoundingClientRect();
-            const b = cards[1].getBoundingClientRect();
-            return b.left - a.left;
-          };
-
-          const update = () => {
-            if (grid.clientWidth === 0) return;
-            const atStart = grid.scrollLeft <= 2;
-            const atEnd = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 2;
-            prev.disabled = atStart;
-            next.disabled = atEnd;
-          };
-
-          const scroll = (direction) =>
-            grid.scrollBy({ left: direction * step(), behavior: 'smooth' });
-
-          prev.addEventListener('click', () => scroll(-1));
-          next.addEventListener('click', () => scroll(1));
-          grid.addEventListener('scroll', update, { passive: true });
-          window.addEventListener('resize', update);
-          // the accordion can start collapsed; re-check when it opens
-          grid.closest('details')?.addEventListener('toggle', update);
-          this.gridUpdaters.push(update);
-          update();
-        });
+        publish();
       }
 
       /* ------------------------------- add to cart ----------------------------- */

@@ -3,70 +3,51 @@
     --aw-perfumer-bg: {{ section.settings.background_color }};
     --aw-perfumer-fg: {{ section.settings.text_color }};
     --aw-perfumer-muted: {{ section.settings.muted_text_color }};
+    --aw-perfumer-accent: rgb(var(--color-button));
     background: var(--aw-perfumer-bg);
     color: var(--aw-perfumer-fg);
-    overflow: hidden;
+    /* clip, not hidden — hidden would freeze the photo's scroll-linked
+       parallax in aw-motion.css (it becomes the photo's scroll container) */
+    overflow: clip;
   }
+
+  /* ---- With a photo: photo and quote side by side, photo bleeds to the edge ---- */
 
   .aw-perfumer-{{ section.id }} .aw-perfumer__grid {
     display: grid;
     grid-template-columns: 1fr;
-    min-height: 45vh;
   }
 
   @media screen and (min-width: 750px) {
     .aw-perfumer-{{ section.id }} .aw-perfumer__grid {
-      grid-template-columns: 1fr 1fr;
-      min-height: 52vh;
-      {%- if section.settings.image_position == 'left' -%}
-        direction: rtl;
-      {%- endif -%}
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      min-height: min(68vh, 72rem);
     }
 
-    .aw-perfumer-{{ section.id }} .aw-perfumer__grid > * {
-      direction: ltr;
-    }
   }
 
-  .aw-perfumer-{{ section.id }} .aw-perfumer__text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 3rem 2rem;
+  /* photo first on phones (a face before the quote); desktop follows the
+     Image position setting above */
+  .aw-perfumer-{{ section.id }} .aw-perfumer__media {
+    order: -1;
+    position: relative;
+    overflow: clip;
+    aspect-ratio: 4 / 5;
+    background: rgba(255, 255, 255, 0.04);
   }
 
   @media screen and (min-width: 750px) {
-    .aw-perfumer-{{ section.id }} .aw-perfumer__text {
-      padding: 2rem 5rem;
+    .aw-perfumer-{{ section.id }} .aw-perfumer__media {
+      aspect-ratio: auto;
+      {%- if section.settings.image_position == 'right' %}
+      order: 1;
+      {%- endif %}
     }
   }
 
-  .aw-perfumer-{{ section.id }} .aw-perfumer__eyebrow {
-    display: block;
-    font-size: 1.2rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--aw-perfumer-muted);
-    margin-bottom: 2rem;
-  }
-
-  .aw-perfumer-{{ section.id }} .aw-perfumer__bio {
-    font-family: var(--font-body-family);
-    font-size: 1.8rem;
-    line-height: 1.75;
-    max-width: 50rem;
-    color: var(--aw-perfumer-fg);
-    margin: 0;
-  }
-
-  .aw-perfumer-{{ section.id }} .aw-perfumer__media {
-    position: relative;
-    min-height: 45vh;
-  }
-
   .aw-perfumer-{{ section.id }} .aw-perfumer__media img,
-  .aw-perfumer-{{ section.id }} .aw-perfumer__media svg,
-  .aw-perfumer-{{ section.id }} .aw-perfumer__media .aw-perfumer__placeholder {
+  .aw-perfumer-{{ section.id }} .aw-perfumer__media .aw-perfumer__placeholder,
+  .aw-perfumer-{{ section.id }} .aw-perfumer__media .aw-perfumer__placeholder svg {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -74,34 +55,96 @@
     object-fit: cover;
   }
 
-  .aw-perfumer-{{ section.id }} .aw-perfumer__credit {
-    position: absolute;
-    left: 2rem;
-    bottom: 3rem;
-    right: 2rem;
+  .aw-perfumer-{{ section.id }} .aw-perfumer__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3.6rem 2rem 4rem;
   }
 
   @media screen and (min-width: 750px) {
-    .aw-perfumer-{{ section.id }} .aw-perfumer__credit {
-      left: 5rem;
-      bottom: 5rem;
-      right: 5rem;
+    .aw-perfumer-{{ section.id }} .aw-perfumer__text {
+      padding: 5.6rem clamp(3.2rem, 5vw, 8rem);
     }
   }
 
-  .aw-perfumer-{{ section.id }} .aw-perfumer__name {
+  /* ---- Type ---- */
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__eyebrow {
+    display: block;
+    margin: 0 0 1.4rem;
+    font-size: 1.4rem;
+    color: var(--aw-perfumer-accent);
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__bio {
+    margin: 0;
+    max-width: 56rem;
     font-family: var(--font-heading-family);
-    font-size: 2.2rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin: 0 0 0.8rem;
+    font-weight: 400;
+    font-size: clamp(2.6rem, 3.1vw, 4.4rem);
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+    color: var(--aw-perfumer-fg);
+    text-wrap: pretty;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__credit {
+    margin-top: 2.4rem;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__credit::before {
+    content: '';
+    display: block;
+    width: 4.8rem;
+    height: 1px;
+    margin-bottom: 1.6rem;
+    background: var(--aw-perfumer-accent);
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__name {
+    margin: 0;
+    font-family: var(--font-body-family);
+    font-size: 1.6rem;
+    letter-spacing: 0.02em;
     color: var(--aw-perfumer-fg);
   }
 
   .aw-perfumer-{{ section.id }} .aw-perfumer__role {
+    margin: 0.4rem 0 0;
     font-size: 1.4rem;
     color: var(--aw-perfumer-muted);
-    margin: 0;
+  }
+
+  /* ---- No photo yet: one large centred quote, so the section still reads as
+     a deliberate feature rather than a strip with a missing image. Adding a
+     photo (section setting or the product's perfumer_photo metafield)
+     switches to the split layout above automatically. ---- */
+
+  .aw-perfumer-{{ section.id }}.aw-perfumer--no-photo .aw-perfumer__grid {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .aw-perfumer-{{ section.id }}.aw-perfumer--no-photo .aw-perfumer__text {
+    align-items: center;
+    text-align: center;
+    padding: 5.2rem 2rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .aw-perfumer-{{ section.id }}.aw-perfumer--no-photo .aw-perfumer__text {
+      padding: 8rem 5rem;
+    }
+  }
+
+  .aw-perfumer-{{ section.id }}.aw-perfumer--no-photo .aw-perfumer__bio {
+    max-width: 92rem;
+    font-size: clamp(2.6rem, 3.6vw, 4.8rem);
+  }
+
+  .aw-perfumer-{{ section.id }}.aw-perfumer--no-photo .aw-perfumer__credit::before {
+    margin-inline: auto;
   }
 
   .aw-perfumer-{{ section.id }} .aw-perfumer__placeholder-note {
@@ -116,18 +159,51 @@
   assign pf_role = product.metafields.custom.perfumer_role.value | default: section.settings.role
   assign pf_bio = product.metafields.custom.perfumer_bio.value | default: section.settings.bio
 
-  assign pf_photo = product.metafields.custom.perfumer_photo.value
+  # Photo precedence: a "Perfumer photo" block that lists this product >
+  # the product's own custom.perfumer_photo metafield > the section's
+  # fallback Photo. First matching block wins.
+  assign pf_photo = blank
+  assign pf_photo_block = blank
+  if product != blank
+    for block in section.blocks
+      if block.settings.image == blank
+        continue
+      endif
+      for listed in block.settings.products
+        if listed.id == product.id
+          assign pf_photo = block.settings.image
+          assign pf_photo_block = block
+          break
+        endif
+      endfor
+      if pf_photo != blank
+        break
+      endif
+    endfor
+  endif
+  if pf_photo == blank
+    assign pf_photo = product.metafields.custom.perfumer_photo.value
+  endif
   if pf_photo == blank
     assign pf_photo = section.settings.image
   endif
 
-  if pf_role == blank
-    assign pf_role = 'Perfumer'
+  # The stock placeholder illustration is a theme-editor affordance, not
+  # storefront content: on the storefront a missing photo gets the centred
+  # quote layout instead (aw-perfumer--no-photo).
+  assign show_placeholder = false
+  if pf_photo == blank and request.design_mode
+    assign show_placeholder = true
+  endif
+
+  assign has_media = false
+  if pf_photo != blank or show_placeholder
+    assign has_media = true
   endif
 -%}
 
 {%- if pf_bio != blank or pf_name != blank -%}
-  <div class="aw-perfumer-{{ section.id }}">
+  <div class="aw-perfumer-{{ section.id }}{% unless has_media %} aw-perfumer--no-photo{% endunless %}">
     <div class="aw-perfumer__grid">
       <div class="aw-perfumer__text">
         {%- if section.settings.eyebrow != blank -%}
@@ -136,26 +212,34 @@
         {%- if pf_bio != blank -%}
           <p class="aw-perfumer__bio">{{ pf_bio }}</p>
         {%- endif -%}
-      </div>
-      <div class="aw-perfumer__media">
-        {%- if pf_photo != blank -%}
-          {{
-            pf_photo
-            | image_url: width: 1200
-            | image_tag: loading: 'lazy', widths: '600, 900, 1200, 1600', alt: pf_name
-          }}
-        {%- else -%}
-          <div class="aw-perfumer__placeholder">
-            {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
-          </div>
-        {%- endif -%}
         {%- if pf_name != blank -%}
           <div class="aw-perfumer__credit">
             <p class="aw-perfumer__name">{{ pf_name }}</p>
-            <p class="aw-perfumer__role">{{ pf_role }}</p>
+            {%- if pf_role != blank -%}
+              <p class="aw-perfumer__role">{{ pf_role }}</p>
+            {%- endif -%}
           </div>
         {%- endif -%}
       </div>
+      {%- if has_media -%}
+        <div class="aw-perfumer__media"{% if pf_photo_block != blank %} {{ pf_photo_block.shopify_attributes }}{% endif %}>
+          {%- if pf_photo != blank -%}
+            {{
+              pf_photo
+              | image_url: width: 1600
+              | image_tag:
+                loading: 'lazy',
+                widths: '600, 900, 1200, 1600',
+                sizes: '(min-width: 750px) 50vw, 100vw',
+                alt: pf_name
+            }}
+          {%- else -%}
+            <div class="aw-perfumer__placeholder">
+              {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
     </div>
   </div>
 {%- elsif request.design_mode -%}
@@ -181,7 +265,8 @@
     {
       "type": "image_picker",
       "id": "image",
-      "label": "Photo"
+      "label": "Fallback photo",
+      "info": "Shown on products that aren't listed in any Perfumer photo block below."
     },
     {
       "type": "textarea",
@@ -197,7 +282,7 @@
       "type": "text",
       "id": "role",
       "label": "Role",
-      "default": "Perfumer"
+      "info": "Optional line under the name. Leave blank to show the name alone."
     },
     {
       "type": "paragraph",
@@ -207,7 +292,7 @@
       "type": "text",
       "id": "eyebrow",
       "label": "Eyebrow text",
-      "info": "Optional small label above the bio text, e.g. \"The nose behind it\""
+      "info": "Optional small label above the bio, e.g. \"The nose behind it\""
     },
     {
       "type": "select",
@@ -223,19 +308,44 @@
       "type": "color",
       "id": "background_color",
       "label": "Background color",
-      "default": "#0a0a0a"
+      "default": "#2b2418"
     },
     {
       "type": "color",
       "id": "text_color",
       "label": "Text color",
-      "default": "#f5f5f5"
+      "default": "#f6f0e4"
     },
     {
       "type": "color",
       "id": "muted_text_color",
       "label": "Muted text color (eyebrow, role)",
-      "default": "#a8a8a8"
+      "default": "#b3a68c"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "photo",
+      "name": "Perfumer photo",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Label",
+          "info": "Only shown here in the editor, to tell photos apart."
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Photo"
+        },
+        {
+          "type": "product_list",
+          "id": "products",
+          "label": "Show on these products",
+          "limit": 50
+        }
+      ]
     }
   ],
   "presets": [

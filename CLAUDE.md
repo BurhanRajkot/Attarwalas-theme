@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+# shopify theme dev --store=attarwalas-4203.myshopify.com --theme=190519771424
+
 Guidance for working in this repo. Read this before making changes.
 
 ## Before submitting / launching this site
@@ -48,6 +50,14 @@ Outstanding items to resolve before this theme goes live — check this list bef
       anyway so it can be published. Then confirm the perfume/attar groups in the
       theme editor: they currently default to `men-3, women-1, unisex-3` for
       bottles and `attar-roll-ons` for attars. See "Duo — perfume + attar" below.
+- [ ] **Set the store's currency format to `₹{{amount_no_decimals}}`.** Admin →
+      Settings → Store details → Currency formatting, both HTML fields. Today
+      the storefront reads two ways: `Rs. 2,999.00` from the `money` filter and
+      `₹2,999` on the offer pages, which force it with a `replace:`. This is the
+      only place the two can be reconciled — the theme can't override
+      `money_format`, and patching its 126 `| money` calls would still leave
+      checkout and order emails disagreeing. See "Not fixed: prices read two
+      different ways" below.
 - [ ] **Set a per-product perfumer photo/bio on each perfume product.** The "Perfumer
       bio" section (`sections/perfumer.liquid`) already supports a different photo, bio,
       name, and role per product — via that product's own metafields
@@ -410,6 +420,58 @@ would be the real fix; until then don't restore the exact `===` compare.
 If a sibling card has no option at the target size (only possible if a group
 mixes products whose Size sets don't fully overlap — not the case for any
 current offer or duo group), it's left alone rather than guessed at.
+
+### Mobile picker: one grid, one scroll axis (changed 2026-09-07)
+
+`.offer-grid` is a plain CSS grid at **every** width now — 2 up on phones, 3 at
+≥750px, 4 at ≥990px. It used to be a horizontal snap row on phones (`display:
+flex`, `scroll-snap-type: x mandatory`, cards at `flex: 0 0 72%`) with prev/next
+arrows above it, driven by a `setupGridScroll()` method in both
+`offer-builder.js` and `duo-pairs.js`.
+
+Why it changed: Burhan reported the offer pages felt fiddly on a phone. At
+390px that row showed **1.6 cards**, so picking 3 items out of 15 meant swiping
+sideways inside a page that also scrolls vertically, and the arrows sat *above*
+the row where they read as decoration. 2 up puts ~4 products on screen.
+
+Removed along with it: `.offer-grid__nav` / `.offer-grid__arrow*` CSS, the arrow
+markup in `snippets/offer-group.liquid` **and** `sections/duo-pairs.liquid`, and
+`setupGridScroll()` from both JS files (plus the `gridUpdaters` re-measure that
+`setActiveGroup()` used to run after a tab switch — nothing needs measuring in a
+grid). `sections/duo-pairs.liquid` loads `section-offer-builder.css` and shares
+`.offer-grid` / `.offer-card` verbatim, so it moved in lockstep — if you restore
+the carousel, restore it in both places or the duo page renders dead arrows.
+
+Not to be confused with `.duo-teaser__grid` (`component-duo-pairs.css`), which
+is still a horizontal peek strip on purpose — those are small square thumbnails,
+not a picker.
+
+### The sticky bar is `position: fixed`, not `sticky` (changed 2026-09-07)
+
+Two bugs, one cause. `.offer-builder__bar` was `position: sticky; bottom: 0`
+inside `<offer-builder>`:
+
+1. **It parked ~32px above the footer.** A sticky element can never sit lower
+   than its flow position, and `.offer-builder` carried `padding-bottom: 2rem`
+   (plus Dawn's `.footer { margin-top: 12px }`), so it came to rest with white
+   showing underneath. This is what Burhan pointed at.
+2. **It scrolled away past the end of the picker** — the "More offers" strip
+   plus the footer is ~1800px on a phone with no add-to-cart anywhere, so
+   finishing a bundle meant scrolling back *up*.
+
+Now fixed to the viewport bottom at every width. Because a fixed bar takes no
+space in layout, `offer-builder.js` `publishBarHeight()` measures it (via
+`ResizeObserver` — the height moves with one line vs two, the error message, and
+`env(safe-area-inset-bottom)`), publishes `--offer-bar-h` on `<html>`, and adds
+`offer-page` to `<body>`; the stylesheet turns that into `body.offer-page {
+padding-bottom: var(--offer-bar-h) }`. The strip of body that uncovers below the
+footer sits exactly behind the opaque bar, so it's never visible.
+
+`observeBar()` and `.offer-builder__bar--docked` are gone — "docked" had no
+meaning once the bar stopped being part of the flow.
+
+`snippets/floating-stack.liquid` needed no change: its `pinnedToBottom` test now
+simply always passes for this bar, which is the correct answer for a fixed one.
 
 ## Product card quick-add ("Choose options" on hover)
 
@@ -1358,10 +1420,52 @@ that class), which is broader than what was asked. `.announcement-bar__item,
 .announcement-bar__item *` covers both the plain-text and linked-message
 cases in one rule.
 
-The separator between messages was also upgraded from a plain grey dot to a
-small gold diamond (`background: rgb(var(--color-button))`, `transform:
-rotate(45deg)`) — same brand-gold variable every CTA site-wide already uses,
-not a hardcoded color, so it can't drift from the color scheme.
+The separator between messages was briefly a small gold diamond; on
+2026-09-13 it went back to a small muted dot (`rgba(var(--color-foreground),
+0.35)`), and the ✨ emoji came out of the message text, as part of a pass
+removing decoration that read as AI/template styling. The same pass stripped
+the offer deal cards (`snippets/offer-strip.liquid`) down to number, discount,
+tagline and CTA, and made Our Promise icon-free by default (`show_icons`).
+
+## Scroll motion — `aw-motion.css` / `aw-motion.js` (added 2026-09-14)
+
+Burhan: the site felt rigid while scrolling; asked for motion that feels like
+an experience without overdoing it. One shared motion language, loaded from
+`layout/theme.liquid` only when Theme settings → "Reveal sections on scroll"
+is on, and fully disabled under `prefers-reduced-motion: reduce`.
+
+| Effect | Where | How |
+| --- | --- | --- |
+| Content reveal (heading → text → items, 90ms stagger) | Signature collection, Bundle offers, deal cards, Shop by category header, Perfumer quote, Store location | `aw-motion.js` tags elements listed in `GROUPS` with `data-aw-reveal`; CSS fades/rises them |
+| Photo unveil (clip from the bottom edge) | Our promise photo, Perfumer photo | `MEDIA` list → `data-aw-media` |
+| Image settle (scale 1.08 → 1) | Duo carousel, Shop by category, Dawn product cards | CSS only, keyed off each section's existing "visible" class |
+| Parallax drift | Our promise photo, Perfumer photo, Dawn image-with-text photos | CSS scroll-driven (`animation-timeline: view()`), skipped where unsupported (Firefox) |
+| Hero drift + button fade | Homepage video hero | named view timeline `--aw-hero` |
+
+The sections that already had their own reveal (Duo carousel, Our promise
+items, Shop by category cards, Customer reviews, Dawn `.scroll-trigger`) keep
+it, but now share the same curve (`--aw-ease`), durations, and trigger point
+(`threshold: 0, rootMargin: '0px 0px -6% 0px'`). The old `-40/-60px` +
+`threshold: 0.15` made whole sections sit blank before animating. The
+Customer reviews blur-in was removed.
+
+Rules that are easy to break:
+
+- **A reveal must end at the element's natural state** — `transform: none`,
+  never `translateY(0)`. Any lingering transform makes a containing block,
+  which closes native `<select>` dropdowns in Chrome (see the scroll-reveal
+  gotcha below) and re-anchors `position: fixed` children. `aw-motion.js`
+  removes its attributes once the transition ends for the same reason.
+- **Frames around a parallax image must be `overflow: clip`, not `hidden`.**
+  `hidden` makes that ancestor the image's scroll container, so its
+  `view()` timeline never moves — silently. This bit `.our-promise__media`
+  and the perfumer section wrapper; both now use `clip` at the source.
+- Content is only hidden by JS, and only if it starts below the fold — no-JS
+  visitors and already-visible content never blink.
+- Verifying in an automation tab: when the tab isn't visible
+  (`document.visibilityState === 'hidden'`) the browser stops rendering, so
+  IntersectionObserver callbacks and scroll timelines report stale values
+  (`currentTime: null`). Take a screenshot to force a frame before reading them.
 
 ## Floating launchers (WhatsApp + Shopify Inbox) — keep them off the CTAs
 
@@ -1472,6 +1576,100 @@ adding `scroll-trigger--settled` and checking computed styles; the JS side
 and should be spot-checked in a normal, focused browser: open Customize
 Perfume (or any product with `animations_reveal_on_scroll` on), wait a
 second, click the free-gift select, and confirm the option list stays open.
+
+## Mobile pass (2026-09-07)
+
+Burhan reviewed the site on a phone and asked for a general sizing/behaviour
+pass. Audited at a real 390×844 viewport (see "Auditing at a phone viewport"
+below). The offer-page items are documented up in the offer section; the rest:
+
+### The homepage hero was a black rectangle until the video buffered
+
+`sections/video.liquid` hero mode stacks a `<video>` on top of an `<img
+class="video-section__hero-poster">`, both `position: absolute`, no z-index.
+A `<video>` that hasn't decoded a frame yet **paints as opaque black**, so it
+covered the poster for as long as the source took to download — and the source
+is a 4.4MB 1080p / 7.2Mbps MP4, chosen deliberately (see the comment in that
+section about serving eagerly from the CDN). Measured live: `readyState` still
+0 after 10s on a desktop connection. On mobile data the entire first impression
+of the site was a black screen.
+
+Fixed by holding the video at `opacity: 0` (`video-section.css`) and having the
+section's own inline script add `is-video-ready` to `.video-section__hero` on
+`loadeddata` / `playing`, with a `readyState >= 2` check up front for the cached
+case. The poster — which the section already loads responsively with
+`fetchpriority="high"` — is what shows meanwhile.
+
+The video source strategy was left alone on purpose. If the hero ever needs to
+be quicker on mobile, the lever is a smaller MP4 in admin, not the theme.
+
+**Failure mode is deliberate:** if that script never runs the video stays hidden
+and the poster stands in, i.e. a still hero. Don't "fix" this by defaulting the
+video to `opacity: 1` — that restores the black rectangle.
+
+### Perfumer section no longer shows a stock placeholder
+
+`sections/perfumer.liquid` filled its 45vh media slot with Shopify's
+`lifestyle-1` line-art placeholder whenever no perfumer photo was set — which is
+every product today (see the launch checklist). On a phone that's ~380px of
+generic illustration reading as a broken image.
+
+The placeholder now renders **only in the theme editor** (`request.design_mode`),
+where it marks the slot. On the storefront a photo-less block gets
+`aw-perfumer--no-photo`, which drops both `min-height`s and un-absolutes the
+credit, so the section collapses to bio + name (597px → 315px on mobile).
+
+This makes the launch-checklist item ("set a per-product perfumer photo") a
+polish task rather than a visible defect — it's still worth doing.
+
+### Cart drawer line total wrapped
+
+`.cart-drawer .cart-item` was `grid-template: repeat(2, auto) / repeat(4, 1fr)`.
+Four equal tracks gave the total ~83px, narrower than a four-figure rupee line
+total: "Rs. 5,998.00" broke after "Rs." and ran into the drawer's right padding.
+Now `8rem minmax(0, 1fr) max-content` — thumbnail, details (takes the slack),
+total sized to its own content. `__details` moved from `grid-column: 2 / 4` to
+`2`, `__totals` is explicitly `3`, `__quantity` `2 / 4`.
+
+### Product buy column tightened on mobile
+
+`.product__info-container > * + *` went 2rem → 1.2rem, and the section's bottom
+padding 9rem → 4rem. Also hidden: the wrapper around Shopify's installment
+banner, which renders a form of nothing but hidden inputs when the shop isn't
+eligible for Shop Pay Installments but still claimed a 2rem slot. Scoped with
+`:has(> form.installment):not(:has(shopify-payment-terms))`, so the banner comes
+back on its own if installments are ever enabled.
+
+### Not fixed: prices read two different ways
+
+The product page, cards, and cart say `Rs. 2,999.00`; offer pages and deal cards
+say `₹2,999` (they pipe through `money_without_trailing_zeros | replace: 'Rs.',
+'₹'`). Burhan asked for `₹2,999` everywhere.
+
+**This is not a theme fix.** `money` / `money_with_currency` render the store's
+`money_format`, which only exists in **admin → Settings → Store details →
+Currency formatting**. There are 126 `| money` calls across 23 theme files, and
+patching them would still leave checkout, order emails, and apps saying
+`Rs. 2,999.00` — a *worse* inconsistency than today's. Set both HTML fields to
+`₹{{amount_no_decimals}}` in admin and every surface agrees at once; then the
+`replace:` hacks in the offer snippets become no-ops and can be dropped.
+
+## Auditing at a phone viewport
+
+`resize_window` is ignored by the tiling WM on this machine, and Shopify sends
+`frame-ancestors`, so the storefront can't be put in a plain `<iframe>` either.
+What works: fetch the page HTML, inject a `<base href>`, and hand it to a
+**`srcdoc` iframe** sized 390×844. `srcdoc` inherits the parent's origin, so
+`frame-ancestors` never applies, assets resolve, scripts run, and media queries
+evaluate against the iframe's own width. `contentDocument` stays reachable for
+measuring.
+
+Caveats found the hard way: the hero `<video>` won't load in that context (so
+a black hero there proves nothing — that one had to be confirmed on the real
+page), theme CSS comes from `cdn.shopify.com` so `sheet.cssRules` throws
+`SecurityError` and rule enumeration is impossible (grep the local files
+instead), and a screenshot taken mid-drawer-animation will look clipped —
+re-measure before believing it.
 
 ## Useful Shopify CLI commands
 

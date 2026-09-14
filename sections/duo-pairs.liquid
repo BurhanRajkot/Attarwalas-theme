@@ -124,15 +124,6 @@
     </header>
 
     <div class="offer-grid-wrap">
-      <div class="offer-grid__nav" role="group" aria-label="Browse duos">
-        <button type="button" class="offer-grid__arrow offer-grid__arrow--prev" data-offer-grid-prev aria-label="Scroll left">
-          {% render 'icon-arrow' %}
-        </button>
-        <button type="button" class="offer-grid__arrow offer-grid__arrow--next" data-offer-grid-next aria-label="Scroll right">
-          {% render 'icon-arrow' %}
-        </button>
-      </div>
-
       <div class="offer-grid" data-offer-grid>
         {%- assign rendered_count = 0 -%}
         {%- for perfume in perfume_collection.products -%}

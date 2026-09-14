@@ -1,0 +1,151 @@
+/* Store location — address details beside a keyless Google Maps embed.
+   Same editorial language as the contact section: serif heading, label/value
+   rows split by hairlines, no icons. */
+
+.store-location__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3.2rem;
+}
+
+@media screen and (min-width: 990px) {
+  .store-location__grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 8rem;
+    align-items: center;
+  }
+
+  .store-location__grid--map-left .store-location__map {
+    order: -1;
+  }
+}
+
+.store-location__heading {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(3rem, 4vw, 4.8rem);
+  line-height: 1.08;
+}
+
+.store-location__intro {
+  margin-top: 1.4rem;
+  max-width: 44rem;
+  font-size: 1.6rem;
+  line-height: 1.6;
+  color: rgba(var(--color-foreground), 0.72);
+}
+
+.store-location__intro p {
+  margin: 0;
+}
+
+.store-location__details {
+  margin: 3.2rem 0 0;
+  max-width: 46rem;
+  border-bottom: 1px solid rgba(var(--color-foreground), 0.12);
+}
+
+.store-location__row {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: 1.6rem;
+  align-items: baseline;
+  padding: 1.4rem 0;
+  border-top: 1px solid rgba(var(--color-foreground), 0.12);
+}
+
+.store-location__row dt {
+  font-size: 1.3rem;
+  color: rgba(var(--color-foreground), 0.55);
+}
+
+.store-location__row dd {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.5;
+  color: rgb(var(--color-foreground));
+  font-variant-numeric: lining-nums;
+}
+
+.store-location__row dd p {
+  margin: 0;
+}
+
+.store-location__row a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.store-location__row a:hover {
+  color: rgb(var(--color-button));
+}
+
+.store-location__directions {
+  margin-top: 2.8rem;
+  min-width: 18rem;
+}
+
+.store-location__map {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: rgba(var(--color-foreground), 0.06);
+}
+
+.store-location__map iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.store-location__map--soft iframe {
+  filter: grayscale(0.35) sepia(0.12) contrast(0.95);
+}
+
+.store-location__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+  color: rgba(var(--color-foreground), 0.6);
+}
+
+@media screen and (max-width: 749px) {
+  .store-location__heading {
+    font-size: 2.8rem;
+  }
+
+  .store-location__intro {
+    font-size: 1.4rem;
+  }
+
+  .store-location__details {
+    margin-top: 2rem;
+  }
+
+  .store-location__row {
+    grid-template-columns: 6.4rem minmax(0, 1fr);
+    gap: 1.2rem;
+    padding: 1rem 0;
+  }
+
+  .store-location__row dd {
+    font-size: 1.4rem;
+  }
+
+  .store-location__directions {
+    width: 100%;
+    margin-top: 2rem;
+  }
+
+  /* taller than 4:3 on a narrow screen so the streets around the pin read */
+  .store-location__map {
+    aspect-ratio: 1 / 1;
+  }
+}

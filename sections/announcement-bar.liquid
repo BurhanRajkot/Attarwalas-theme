@@ -83,20 +83,19 @@
       padding: 1.4rem 2.4rem;
     }
 
-    /* A small gold diamond between every item, including the last of each
+    /* A small muted dot between every item, including the last of each
        set — that's what makes the set-1-to-set-2 join in the loop read as
-       one continuous sequence instead of a visible seam. Gold (the same
-       --color-button brand accent used on every CTA site-wide) rather than
-       a plain grey dot, so the ticker doesn't read as flat text-on-white. */
+       one continuous sequence instead of a visible seam. Was a gold diamond;
+       toned down 2026-09-13 because the ornament read as template decoration. */
     .announcement-bar__item:after {
       content: '';
       display: inline-block;
-      width: 0.6rem;
-      height: 0.6rem;
+      width: 0.4rem;
+      height: 0.4rem;
       margin-left: 2.4rem;
       flex-shrink: 0;
-      background: rgb(var(--color-button));
-      transform: rotate(45deg);
+      border-radius: 50%;
+      background: rgba(var(--color-foreground), 0.35);
     }
 
     .announcement-bar__link {

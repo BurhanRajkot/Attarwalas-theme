@@ -1,204 +1,187 @@
-/* Section Contact Form - light split layout */
+/* Section Contact Form — editorial split layout.
+   Left: heading, one line of copy, label/value rows split by hairlines.
+   Right: the form sitting directly on the section background (no card,
+   no shadow), static labels above single-underline inputs. */
 
 .contact__wrap {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 4rem;
-  align-items: center;
+  gap: 4.8rem;
 }
 
 @media screen and (min-width: 990px) {
   .contact__wrap {
-    grid-template-columns: 5fr 6fr;
-    gap: 6rem;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 9.6rem;
+    align-items: start;
   }
 }
 
 /* ---------- Info column ---------- */
 
-.contact__info {
-  max-width: 46rem;
-}
-
-@media screen and (min-width: 990px) {
-  .contact__info {
-    justify-self: end;
-  }
-}
-
 .contact__eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  margin: 0 0 1.6rem;
-  font-size: 1.1rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
+  margin: 0 0 1.2rem;
+  font-size: 1.4rem;
   color: rgb(var(--color-button));
 }
 
-.contact__eyebrow span {
-  display: block;
-  width: 3.2rem;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.7;
+.contact__heading {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(3.2rem, 4.2vw, 4.8rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: rgb(var(--color-foreground));
 }
 
-.contact__heading {
-  margin: 0 0 1.8rem;
-  color: rgb(var(--color-foreground));
-  line-height: 1.16;
-  letter-spacing: 0.01em;
+/* the heading setting is rich text; a stray <strong> shouldn't make it heavy */
+.contact__heading strong {
+  font-weight: inherit;
 }
 
 .contact__description {
-  margin: 0;
-  font-size: 1.5rem;
-  line-height: 1.7;
-  color: rgba(var(--color-foreground), 0.7);
+  margin: 1.6rem 0 0;
+  max-width: 42rem;
+  font-size: 1.6rem;
+  line-height: 1.65;
+  color: rgba(var(--color-foreground), 0.72);
 }
 
 .contact__description p {
   margin: 0;
 }
 
-.contact__divider {
-  display: block;
-  height: 1px;
-  margin: 2.8rem 0;
-  background: rgba(var(--color-foreground), 0.14);
-}
-
 .contact__details {
-  display: grid;
-  gap: 2.2rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  margin: 4rem 0 0;
+  max-width: 46rem;
+  border-bottom: 1px solid rgba(var(--color-foreground), 0.12);
 }
 
 .contact__detail {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: 8.8rem minmax(0, 1fr);
+  gap: 1.6rem;
+  align-items: baseline;
+  padding: 1.6rem 0;
+  border-top: 1px solid rgba(var(--color-foreground), 0.12);
 }
 
-.contact__detail-icon {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4.2rem;
-  height: 4.2rem;
-  border: 1px solid rgba(var(--color-button), 0.45);
-  border-radius: 50%;
-  color: rgb(var(--color-button));
-}
-
-.contact__detail-icon svg {
-  width: 1.8rem;
-  height: 1.8rem;
-}
-
-.contact__detail-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.contact__detail-label {
-  font-size: 1rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.contact__detail dt {
+  font-size: 1.3rem;
   color: rgba(var(--color-foreground), 0.55);
 }
 
-.contact__detail-value {
-  display: block;
-  font-size: 1.5rem;
+.contact__detail dd {
+  margin: 0;
+  font-size: 1.6rem;
   color: rgb(var(--color-foreground));
-  text-decoration: none;
-  word-break: break-word;
-  transition: color 0.3s ease;
+  overflow-wrap: anywhere;
+  font-variant-numeric: lining-nums;
 }
 
-a.contact__detail-value:hover {
+.contact__detail a {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(rgb(var(--color-button)), rgb(var(--color-button)));
+  background-size: 0 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s ease, color 0.3s ease;
+}
+
+.contact__detail a:hover,
+.contact__detail a:focus-visible {
+  color: rgb(var(--color-button));
+  background-size: 100% 1px;
+}
+
+/* ---------- Form ---------- */
+
+.contact__form {
+  display: grid;
+  gap: 2.8rem;
+}
+
+@media screen and (min-width: 990px) {
+  /* line the first field up with the heading's cap height, not its box */
+  .contact__panel {
+    padding-top: 0.8rem;
+  }
+}
+
+.contact__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.8rem;
+}
+
+@media screen and (min-width: 750px) {
+  .contact__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3.2rem;
+  }
+}
+
+.contact__field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.contact__label {
+  margin-bottom: 0.4rem;
+  font-size: 1.3rem;
+  color: rgba(var(--color-foreground), 0.65);
+}
+
+.contact__required {
+  margin-left: 0.2rem;
   color: rgb(var(--color-button));
 }
 
-/* ---------- Form card ---------- */
-
-.contact__card {
-  background: #ffffff;
-  border: 1px solid rgba(var(--color-foreground), 0.1);
-  box-shadow: 0 2.4rem 5rem -2.6rem rgba(var(--color-foreground), 0.35);
-  padding: 3.6rem 2.6rem;
+.contact__optional {
+  margin-left: 0.4rem;
+  color: rgba(var(--color-foreground), 0.45);
 }
 
-@media screen and (min-width: 750px) {
-  .contact__card {
-    padding: 4.5rem 5rem;
-  }
-}
-
-.contact__form {
-  display: block;
-}
-
-.contact__fields {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.6rem;
-}
-
-@media screen and (min-width: 750px) {
-  .contact__fields {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-  }
-}
-
-.contact__fields + .contact__fields {
-  margin-top: 1.6rem;
-}
-
-.contact .field {
-  margin-bottom: 0;
-}
-
-.contact .text-area {
-  margin-top: 1.6rem;
-  min-height: 9rem;
-}
-
-/* Underline inputs - keep base.css paddings so text never shifts */
-
-.contact .field__input {
+.contact__input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  margin: 0;
+  padding: 0.9rem 0;
   border: 0;
-  border-bottom: 1px solid rgba(var(--color-foreground), 0.3);
+  border-bottom: 1px solid rgba(var(--color-foreground), 0.25);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  font-family: var(--font-body-family);
+  font-size: 1.6rem;
+  line-height: 1.5;
+  color: rgb(var(--color-foreground));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.contact .field__input:hover {
-  border-bottom-color: rgba(var(--color-foreground), 0.5);
+.contact__input:hover {
+  border-bottom-color: rgba(var(--color-foreground), 0.45);
 }
 
-.contact .field__input:focus,
-.contact .field__input:focus-visible {
-  border-color: rgb(var(--color-button));
+/* base.css gives every focused control a boxed ring; replace it with a
+   thicker gold underline so focus stays clearly visible */
+.contact__input:focus,
+.contact__input:focus-visible {
+  outline: 0;
+  border-bottom-color: rgb(var(--color-button));
   box-shadow: 0 1px 0 0 rgb(var(--color-button));
 }
 
-.contact .field__input:not(:placeholder-shown) {
-  box-shadow: none;
+.contact__input[aria-invalid='true'] {
+  border-bottom-color: rgb(var(--color-error, 235 0 27));
 }
 
-.contact .field__label {
-  color: rgba(var(--color-foreground), 0.6);
+.contact__input--area {
+  min-height: 11rem;
+  resize: vertical;
 }
 
 /* ---------- Status ---------- */
@@ -207,7 +190,6 @@ a.contact__detail-value:hover {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  margin-bottom: 2.6rem;
   padding: 1.4rem 1.6rem;
   font-size: 1.4rem;
   line-height: 1.5;
@@ -218,7 +200,7 @@ a.contact__detail-value:hover {
   flex: 0 0 auto;
   width: 1.8rem;
   height: 1.8rem;
-  margin: 0.1rem 0 0;
+  margin-top: 0.1rem;
 }
 
 .contact__status--success {
@@ -230,6 +212,9 @@ a.contact__detail-value:hover {
 }
 
 .contact__field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   margin-top: 0.6rem;
   font-size: 1.2rem;
   line-height: 1.5;
@@ -238,40 +223,110 @@ a.contact__detail-value:hover {
 .contact__field-error .icon-error {
   width: 1.4rem;
   height: 1.4rem;
-  margin-right: 0.4rem;
 }
 
 /* ---------- Submit ---------- */
 
-.contact__button {
-  margin-top: 3rem;
+.contact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.2rem 2.4rem;
+  margin-top: 0.8rem;
 }
 
 .contact__submit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.2rem;
-  width: 100%;
+  min-width: 18rem;
   min-height: 4.8rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.contact__submit .icon-arrow {
-  width: 1.6rem;
-  height: auto;
-  transition: transform 0.3s ease;
-}
-
-.contact__submit:hover .icon-arrow {
-  transform: translateX(0.4rem);
+  padding: 0 3.2rem;
 }
 
 .contact__note {
-  margin: 1.2rem 0 0;
-  font-size: 1.2rem;
+  margin: 0;
+  font-size: 1.3rem;
   line-height: 1.5;
-  text-align: center;
   color: rgba(var(--color-foreground), 0.55);
+}
+
+/* ---------- Mobile: keep the whole section to about one screen ---------- */
+
+@media screen and (max-width: 749px) {
+  .contact__wrap {
+    gap: 3.2rem;
+  }
+
+  .contact__heading {
+    font-size: 2.8rem;
+  }
+
+  .contact__description {
+    margin-top: 0.8rem;
+    font-size: 1.4rem;
+    line-height: 1.55;
+  }
+
+  .contact__details {
+    margin-top: 2rem;
+  }
+
+  .contact__detail {
+    grid-template-columns: 6.4rem minmax(0, 1fr);
+    gap: 1.2rem;
+    padding: 1rem 0;
+  }
+
+  .contact__detail dt {
+    font-size: 1.2rem;
+  }
+
+  .contact__detail dd {
+    font-size: 1.4rem;
+  }
+
+  .contact__form {
+    gap: 1.6rem;
+  }
+
+  /* name + email side by side even on phones — both are short */
+  .contact__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.6rem;
+  }
+
+  .contact__label {
+    margin-bottom: 0.2rem;
+    font-size: 1.2rem;
+  }
+
+  .contact__input {
+    padding: 0.6rem 0;
+    font-size: 1.6rem; /* stays 16px so iOS doesn't zoom on focus */
+  }
+
+  .contact__input--area {
+    min-height: 7.2rem;
+  }
+
+  .contact__actions {
+    gap: 0.8rem;
+    margin-top: 0.4rem;
+  }
+
+  .contact__submit {
+    width: 100%;
+    min-height: 4.4rem;
+  }
+
+  .contact__note {
+    width: 100%;
+    font-size: 1.2rem;
+    text-align: center;
+  }
+}
+
+/* Contact page: the section is used with no heading or details, so the form
+   stands alone, centred at a comfortable reading width. */
+.contact__wrap--form-only {
+  grid-template-columns: minmax(0, 64rem);
+  justify-content: center;
 }

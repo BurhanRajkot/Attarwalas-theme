@@ -14,8 +14,36 @@
   }
 {%- endstyle -%}
 
-<div class="color-{{ section.settings.color_scheme }} gradient our-promise-wrapper">
+{%- liquid
+  # a photo switches the section to the photo + stacked rows layout
+  assign has_image = false
+  if section.settings.image != blank
+    assign has_image = true
+    assign image_alt = section.settings.image.alt | default: section.settings.image_caption | escape
+  endif
+-%}
+
+<div class="color-{{ section.settings.color_scheme }} gradient our-promise-wrapper{% if section.settings.tone == 'dark' %} our-promise--dark{% endif %}{% if has_image %} our-promise--split{% endif %}">
   <div class="{% if section.settings.full_width %}our-promise--full-width{% else %}page-width{% endif %} isolate section-{{ section.id }}-padding">
+    {%- if has_image -%}
+    <div class="our-promise__layout">
+      <figure class="our-promise__media">
+        {{
+          section.settings.image
+          | image_url: width: 1400
+          | image_tag:
+            loading: 'lazy',
+            widths: '400, 600, 800, 1000, 1400',
+            sizes: '(min-width: 990px) 42vw, 100vw',
+            alt: image_alt,
+            class: 'our-promise__image'
+        }}
+        {%- if section.settings.image_caption != blank -%}
+          <figcaption class="our-promise__caption">{{ section.settings.image_caption }}</figcaption>
+        {%- endif -%}
+      </figure>
+      <div class="our-promise__body">
+    {%- endif -%}
     {%- if section.settings.title != blank or section.settings.subheading != blank -%}
       <div class="our-promise__header">
         {%- if section.settings.title != blank -%}
@@ -32,7 +60,7 @@
     {%- endif -%}
 
     <div
-      class="our-promise__grid"
+      class="our-promise__grid{% unless section.settings.show_icons %} our-promise__grid--plain{% endunless %}"
       style="--desktop-columns: {{ section.settings.columns_desktop }};"
     >
       {%- for block in section.blocks -%}
@@ -41,6 +69,7 @@
           data-index="{{ forloop.index0 }}"
           {{ block.shopify_attributes }}
         >
+          {%- if section.settings.show_icons -%}
           <div class="our-promise__icon-wrapper">
             {%- if block.settings.custom_icon != blank -%}
               {{
@@ -85,6 +114,7 @@
               {%- endcase -%}
             {%- endif -%}
           </div>
+          {%- endif -%}
 
           <div class="our-promise__content">
             {%- if block.settings.title != blank -%}
@@ -102,6 +132,11 @@
         </div>
       {%- endfor -%}
     </div>
+
+    {%- if has_image -%}
+      </div>
+    </div>
+    {%- endif -%}
 
     <script>
       (function () {
@@ -125,12 +160,12 @@
             entries.forEach(function (entry) {
               if (!entry.isIntersecting) return;
               var index = parseInt(entry.target.dataset.index, 10) || 0;
-              entry.target.style.transitionDelay = (index % 3) * 120 + 'ms';
+              entry.target.style.transitionDelay = (index % 3) * 90 + 'ms';
               entry.target.classList.add('our-promise__item--visible');
               observer.unobserve(entry.target);
             });
           },
-          { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+          { threshold: 0, rootMargin: '0px 0px -6% 0px' }
         );
 
         items.forEach(function (item) {
@@ -175,6 +210,34 @@
       "step": 1,
       "default": 3,
       "label": "Desktop Columns"
+    },
+    {
+      "type": "select",
+      "id": "tone",
+      "label": "Background",
+      "options": [
+        { "value": "light", "label": "Section color scheme" },
+        { "value": "dark", "label": "Deep brown with gold" }
+      ],
+      "default": "light"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Photo",
+      "info": "Adding a photo puts it beside the promises, which then stack as rows."
+    },
+    {
+      "type": "text",
+      "id": "image_caption",
+      "label": "Photo caption"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icons",
+      "default": false,
+      "label": "Show icons",
+      "info": "Off by default: the section reads as a plain row of facts, without icon badges."
     },
     {
       "type": "color_scheme",

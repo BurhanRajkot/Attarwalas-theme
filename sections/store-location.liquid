@@ -1,0 +1,210 @@
+{{ 'section-store-location.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{%- comment -%}
+  Google Maps without an API key: the keyless `maps.google.com/maps?q=…&output=embed`
+  iframe (the same map "Share → Embed a map" produces) is free and needs no
+  billing account. "Get directions" uses the documented, keyless Maps URL
+  (https://developers.google.com/maps/documentation/urls/get-started).
+  The map query is the address text unless an exact search / coordinates
+  override is given.
+{%- endcomment -%}
+{%- liquid
+  assign map_query = section.settings.map_query | strip
+  if map_query == blank
+    assign map_query = section.settings.address | strip_html | strip_newlines | strip
+  endif
+  assign map_query_encoded = map_query | url_encode
+  assign map_zoom = section.settings.map_zoom
+-%}
+
+<div class="store-location color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    <div class="store-location__grid{% if section.settings.map_position == 'left' %} store-location__grid--map-left{% endif %}">
+      <div class="store-location__info">
+        {%- if section.settings.heading != blank -%}
+          <h2 class="store-location__heading">{{ section.settings.heading }}</h2>
+        {%- endif -%}
+        {%- if section.settings.intro != blank -%}
+          <div class="store-location__intro rte">{{ section.settings.intro }}</div>
+        {%- endif -%}
+
+        <dl class="store-location__details">
+          {%- if section.settings.address != blank -%}
+            <div class="store-location__row">
+              <dt>Address</dt>
+              <dd class="rte">{{ section.settings.address }}</dd>
+            </div>
+          {%- endif -%}
+          {%- if section.settings.hours != blank -%}
+            <div class="store-location__row">
+              <dt>Hours</dt>
+              <dd class="rte">{{ section.settings.hours }}</dd>
+            </div>
+          {%- endif -%}
+          {%- if section.settings.phone != blank -%}
+            <div class="store-location__row">
+              <dt>Phone</dt>
+              <dd><a href="tel:{{ section.settings.phone | remove: ' ' }}">{{ section.settings.phone }}</a></dd>
+            </div>
+          {%- endif -%}
+        </dl>
+
+        {%- if map_query != blank -%}
+          <a
+            class="button store-location__directions"
+            href="https://www.google.com/maps/dir/?api=1&destination={{ map_query_encoded }}"
+            target="_blank"
+            rel="noopener"
+          >
+            {{ section.settings.directions_label | default: 'Get directions' }}
+          </a>
+        {%- endif -%}
+      </div>
+
+      <div class="store-location__map{% if section.settings.soften_map %} store-location__map--soft{% endif %}">
+        {%- if map_query != blank -%}
+          <iframe
+            src="https://maps.google.com/maps?q={{ map_query_encoded }}&z={{ map_zoom }}&output=embed"
+            title="Map showing {{ map_query | escape }}"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+        {%- elsif request.design_mode -%}
+          <p class="store-location__empty">Add an address in this section's settings to show the map.</p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Store location",
+  "tag": "section",
+  "class": "section section-store-location",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Visit us"
+    },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro text"
+    },
+    {
+      "type": "header",
+      "content": "Location"
+    },
+    {
+      "type": "richtext",
+      "id": "address",
+      "label": "Address",
+      "info": "Shown on the page, and used to place the map pin unless the field below is filled in."
+    },
+    {
+      "type": "text",
+      "id": "map_query",
+      "label": "Exact map search (optional)",
+      "info": "If the pin lands in the wrong spot, paste the shop's name as it appears on Google Maps (e.g. \"Attarwalas, Mumbai\") or its coordinates (e.g. \"19.0636,72.8626\")."
+    },
+    {
+      "type": "range",
+      "id": "map_zoom",
+      "label": "Map zoom",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "default": 16
+    },
+    {
+      "type": "richtext",
+      "id": "hours",
+      "label": "Opening hours"
+    },
+    {
+      "type": "text",
+      "id": "phone",
+      "label": "Phone"
+    },
+    {
+      "type": "text",
+      "id": "directions_label",
+      "label": "Directions button text",
+      "default": "Get directions"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "select",
+      "id": "map_position",
+      "label": "Map position (desktop)",
+      "options": [
+        { "value": "right", "label": "Right" },
+        { "value": "left", "label": "Left" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "checkbox",
+      "id": "soften_map",
+      "label": "Soften map colours",
+      "info": "Slightly desaturates Google's map so it sits better with the page.",
+      "default": true
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 72
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 72
+    }
+  ],
+  "presets": [
+    {
+      "name": "Store location"
+    }
+  ]
+}
+{% endschema %}

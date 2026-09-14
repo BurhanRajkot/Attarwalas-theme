@@ -13,8 +13,10 @@
   --offer-line: rgba(var(--offer-ink), 0.12);
   display: block;
   position: relative;
-  /* room so nothing ends up hidden behind the sticky bar */
-  padding-bottom: 2rem;
+  /* No padding here on purpose. The bar is `position: fixed`, so the clearance
+     that keeps the *last* thing on the page (the footer) out from under it goes
+     on `body.offer-page` instead — see the sticky bar section. Padding here used
+     to park the bar 2rem above the footer back when it was `position: sticky`. */
   /* the offer page renders on its own clean white ground — no cream/peach
      tint leaking in from the scheme's gradient background */
   --color-background: 255, 255, 255;
@@ -435,77 +437,27 @@
   position: relative;
 }
 
-/* Mobile: a horizontal swipe row — one card plus a peek of the next — with
-   prev/next arrows instead of the two-column stack. Desktop keeps the plain
-   grid. */
+/*
+  One grid at every width — 2 up on phones, 3 then 4 on larger screens.
+
+  This used to be a horizontal snap row on phones, one card plus a peek of the
+  next, driven by prev/next arrows. Picking 3 items out of 15 through a
+  one-card-wide window meant swiping sideways inside a page that also scrolls
+  vertically, and the arrows sat *above* the row where they read as decoration.
+  A plain 2-up grid puts ~4 products on screen at once and keeps the whole page
+  on a single scroll axis.
+*/
 .offer-grid {
-  display: flex;
-  align-items: stretch;
-  gap: 1.2rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem 1.2rem;
   padding-top: 2.4rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-
-.offer-grid::-webkit-scrollbar {
-  display: none;
-}
-
-.offer-grid__nav {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.8rem;
-  padding-top: 2.4rem;
-}
-
-.offer-grid__arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.6rem;
-  height: 3.6rem;
-  border: 1px solid rgba(var(--offer-ink), 0.3);
-  border-radius: 0;
-  background: rgb(var(--color-background));
-  color: rgb(var(--offer-ink));
-  font-family: inherit;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.offer-grid__arrow:hover:not(:disabled) {
-  background: rgb(var(--offer-gold));
-  border-color: rgb(var(--offer-gold));
-  color: rgb(var(--color-button-text));
-}
-
-.offer-grid__arrow:disabled {
-  border-color: rgba(var(--offer-ink), 0.15);
-  color: rgba(var(--offer-ink), 0.3);
-  cursor: default;
-}
-
-.offer-grid__arrow svg {
-  width: 1.5rem;
-  height: 1.1rem;
-}
-
-.offer-grid__arrow--prev svg {
-  transform: rotate(180deg);
 }
 
 @media screen and (min-width: 750px) {
   .offer-grid {
-    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 2.8rem 2rem;
-    overflow: visible;
-  }
-
-  .offer-grid__nav {
-    display: none;
   }
 }
 
@@ -766,18 +718,33 @@
 
 /* ------------------------------- Sticky bar ------------------------------- */
 
+/*
+  Fixed, not sticky. A sticky bar is only pinned while its own section is on
+  screen: past the end of the picker — the "More offers" strip and the footer,
+  ~1800px of page on a phone — it scrolled away and the customer had to scroll
+  back up to find add-to-cart. Fixed keeps the CTA reachable from anywhere.
+
+  offer-builder.js measures this bar and publishes its height as
+  `--offer-bar-h`, which `body.offer-page` turns into bottom clearance so the
+  end of the footer is never trapped underneath it.
+*/
 .offer-builder__bar {
-  position: sticky;
+  position: fixed;
+  left: 0;
+  right: 0;
   bottom: 0;
-  z-index: 3;
+  /* over the footer and the page, under the cart drawer (100) and the
+     menu drawer, so opening either still covers the bar */
+  z-index: 4;
   background: rgb(var(--offer-ink));
   color: rgb(var(--color-background));
   box-shadow: 0 -0.6rem 2.4rem rgba(var(--offer-ink), 0.22);
-  transition: box-shadow 0.2s ease;
 }
 
-.offer-builder__bar--docked {
-  box-shadow: none;
+/* Set by offer-builder.js on the offer page only. The strip of body this
+   uncovers below the footer sits exactly behind the opaque bar. */
+body.offer-page {
+  padding-bottom: var(--offer-bar-h, 11rem);
 }
 
 /* progress line — width comes from --offer-progress, set by offer-builder.js */
@@ -1019,29 +986,40 @@
     padding-inline: 1.2rem;
   }
 
-  /* ---- cards: horizontal snap row on phones ---- */
+  /* ---- cards: two per row, so everything inside gets tighter ---- */
   .offer-card {
-    flex: 0 0 72%;
     min-width: 0;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
     padding: 0.8rem 0.8rem 1rem;
   }
 
   .offer-card__body {
-    gap: 0.6rem;
-    margin-top: 1rem;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
   }
 
   .offer-card__title {
+    font-size: 1.3rem;
+    /* two names of very different lengths sit next to each other in a row —
+       clamping keeps their Add buttons on the same line */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 3.4rem;
+  }
+
+  .offer-card__price {
     font-size: 1.5rem;
   }
 
   .offer-card__add {
-    font-size: 1rem;
-    letter-spacing: 0.1em;
+    padding: 1rem 0.6rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
   }
 
+  /* The "Size:" label is redundant next to a select that reads "100ML" and
+     costs a whole line in a half-width card. */
   .offer-card__variant-row {
     flex-direction: column;
     align-items: stretch;
@@ -1049,13 +1027,18 @@
   }
 
   .offer-card__variant-label {
-    text-align: left;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .offer-card__variant {
     /* 16px avoids iOS Safari zooming the page when the select is tapped */
     font-size: 1.6rem;
-    padding: 0.8rem;
+    padding: 0.7rem 2.2rem 0.7rem 0.8rem;
   }
 
   /* ---- sticky bar ---- */

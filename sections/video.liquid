@@ -187,13 +187,29 @@
           window.addEventListener('resize', setHeroOffset);
           window.addEventListener('load', setHeroOffset);
 
+          /* The video is stacked over the poster image and paints opaque black
+             until it has decoded a frame, so it's held at opacity 0 (see
+             video-section.css) and revealed once there's something to see.
+             HAVE_CURRENT_DATA (2) is the point a frame exists; check it up
+             front too, in case the file came from cache and the event already
+             fired before this ran. */
+          var revealVideo = function () {
+            hero.classList.add('is-video-ready');
+          };
+
+          if (video.readyState >= 2) {
+            revealVideo();
+          } else {
+            video.addEventListener('loadeddata', revealVideo, { once: true });
+            /* Safari can start painting without ever firing loadeddata here. */
+            video.addEventListener('playing', revealVideo, { once: true });
+          }
+
           /* No lazy-loading, connection checks, or scroll observers here — the video
              is served from a fast CDN, so it simply starts playing immediately at
              its highest-quality source. */
-          if (video) {
-            var attempt = video.play();
-            if (attempt && attempt.catch) attempt.catch(function () {});
-          }
+          var attempt = video.play();
+          if (attempt && attempt.catch) attempt.catch(function () {});
         })();
       </script>
     {%- else -%}

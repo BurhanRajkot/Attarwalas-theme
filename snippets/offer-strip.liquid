@@ -9,7 +9,7 @@
   - strip_id {String} unique id for this instance
   - exclude_offer_id {Number} optional product id to skip (e.g. the offer page
     the strip is shown on, so it never links to itself)
-  - pill_label {String} the little corner tag on each card, default "Offer".
+  - pill_label {String} optional small tag on each card, none by default.
     Duos pass "Duo" so the same card works for both.
   - cta_label {String} the card's link text, default "Shop the offer"
   - block_attributes {String} block.shopify_attributes, when rendered from a block
@@ -94,16 +94,17 @@
           if use_discount
             if discount_type == 'fixed'
               assign discount_money = discount_amount | times: 100 | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
-              assign discount_text = 'Flat ' | append: discount_money | append: ' OFF'
+              assign discount_text = 'Flat ' | append: discount_money | append: ' off'
             else
-              assign discount_text = discount_amount_display | append: '% OFF'
+              assign discount_text = discount_amount_display | append: '% off'
             endif
           endif
 
           # Tagline copy: Clean up any stale "and pay just ₹..." text
           if tagline_text contains 'and pay just' or tagline_text contains 'and pay only' or tagline_text == blank
             if pick_count > 0
-              assign tagline_text = 'Pick any ' | append: pick_count | append: ' perfumes from Men, Women or Unisex'
+              # offer-2/3/5 pages pick perfumes or attar roll-ons (choice mode)
+              assign tagline_text = 'Any ' | append: pick_count | append: ' perfumes or attar roll-ons'
             else
               assign tagline_text = offer.title
             endif
@@ -112,14 +113,16 @@
         <li class="offer-deals__item">
           <a class="offer-deal" href="{{ offer.url }}">
             <span class="offer-deal__inner">
-              <span class="offer-deal__pill">
-                {% render 'icon-discount' %}
-                <span>{{ pill_label | default: 'Offer' }}</span>
-              </span>
+              {%- comment -%}
+                The tag only shows when a caller asks for one (duos pass "Duo").
+                Plain offer cards skip it — the number already says what it is.
+              {%- endcomment -%}
+              {%- if pill_label != blank -%}
+                <span class="offer-deal__pill">{{ pill_label }}</span>
+              {%- endif -%}
 
               {%- if pick_count > 0 -%}
                 <span class="offer-deal__count">
-                  <span class="offer-deal__count-word">Get any</span>
                   <span class="offer-deal__count-num">{{ pick_count }}</span>
                 </span>
               {%- elsif badge_text != blank -%}

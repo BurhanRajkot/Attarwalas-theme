@@ -18,12 +18,12 @@
   padding: 0 1.5rem;
   opacity: 0;
   transform: translateY(14px);
-  transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1), transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity var(--aw-reveal-fade, 0.9s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1)), transform var(--aw-reveal-move, 1.2s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .customer-reviews__title-row--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 .customer-reviews__line {
@@ -183,11 +183,9 @@
     0 0.8rem 1.6rem rgba(0, 0, 0, 0.12);
   opacity: 0;
   transform: translateY(24px);
-  filter: blur(6px);
-  transition:
-    opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1),
-    transform 0.8s cubic-bezier(0.25, 1, 0.5, 1),
-    filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  /* same fade-up as every other reveal; the old blur-in left filter: blur(0)
+     on every card, which keeps a GPU layer per card and can soften video */
+  transition: opacity var(--aw-reveal-fade, 0.9s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1)), transform var(--aw-reveal-move, 1.2s) var(--aw-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 /* Cards are clickable buttons that open the review popup */
@@ -223,8 +221,7 @@ button.customer-reviews__card:active {
 
 .customer-reviews__card--visible {
   opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

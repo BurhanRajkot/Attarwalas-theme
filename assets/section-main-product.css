@@ -2094,11 +2094,13 @@ a.product__text {
 @media screen and (max-width: 749px) {
   /* The section's own padding is emitted as an inline <style> that loads
      after this file, so this needs the extra type-selector specificity.
-     Top padding goes so the gallery sits flush at the top of the page;
-     the bottom clearance keeps the last content clear of the sticky bar. */
+     Top padding goes so the gallery sits flush at the top of the page.
+     The bottom clearance only has to stop the free-gift picker from sitting
+     *under* the sticky bar at rest — the page carries on into the next
+     section below it, so the 9rem this used to reserve just read as a hole. */
   section[id^="MainProduct-"] {
     padding-top: 0;
-    padding-bottom: 9rem;
+    padding-bottom: 4rem;
   }
 
   /* ---- gallery: frameless, edge-to-edge ---- */
@@ -2180,11 +2182,29 @@ a.product__text {
   /* ---- buy column: airier, rounded ---- */
 
   [id^="MainProduct-"] .product__info-wrapper {
-    padding-top: 3.2rem;
+    padding-top: 2.4rem;
   }
 
+  /*
+    2rem between every block pushed Add to cart ~50px below the fold on a
+    390×844 phone, so the first screen showed the bottle and nothing to do with
+    it. 1.2rem still separates the blocks clearly and brings the button up
+    into view without touching the desktop layout.
+  */
   [id^="MainProduct-"] .product__info-container > * + * {
-    margin: 2rem 0;
+    margin: 1.2rem 0;
+  }
+
+  /*
+    Shop Pay's installment banner is rendered by `{{ form | payment_terms }}`,
+    which emits <shopify-payment-terms> only when the shop is eligible. This
+    shop isn't, so what lands in the DOM is a form of nothing but hidden
+    inputs — zero height, but still claiming a slot (and its margins) in the
+    stack above. Hidden only while it's genuinely empty, so the banner still
+    appears if installments are ever switched on.
+  */
+  [id^="MainProduct-"] .product__info-container > div:has(> form.installment):not(:has(shopify-payment-terms)) {
+    display: none;
   }
 
   [id^="MainProduct-"] .product__title h1 {

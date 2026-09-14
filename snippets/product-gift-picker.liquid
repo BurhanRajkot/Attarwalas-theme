@@ -58,14 +58,59 @@
   if product.handle == 'customize-perfume-1'
     assign in_qualifying_collection = true
   endif
+
+  # Customize Perfume's own free gift is picked from a dedicated product
+  # (Burhan, 2026-09-14: "that dropdown should have the customize perfume
+  # dropdown... 141 odd option to select the free 10ml or 35ml bottle") —
+  # "Customize Complimentary" (handle customize-complimentary), which carries
+  # a real 10ml (₹299) and 35ml (₹999) variant for every fragrance already
+  # wired up on Customize Perfume itself, rather than the generic 6-product
+  # gift_collection every other qualifying product uses. Reading it via
+  # all_products means this list grows on its own as more fragrances get
+  # 10ml/35ml variants added in admin — no theme change needed.
+  #
+  # all_products returns nil for an unpublished product, so this quietly
+  # falls back to nothing rendering (not an error) until Customize
+  # Complimentary is published to the Online Store channel.
+  assign use_fragrance_search = false
+  if product.handle == 'customize-perfume-1'
+    assign gift_search_product = all_products['customize-complimentary']
+    if gift_search_product != empty and gift_search_product.variants.size > 0
+      assign use_fragrance_search = true
+    endif
+  endif
+
+  assign has_gift_source = false
+  if use_fragrance_search
+    assign has_gift_source = true
+  elsif gift_collection.products_count > 0
+    assign has_gift_source = true
+  endif
+  # Which of a variant's option1/option2/option3 is actually "Size" varies by
+  # product: the signature-series bottles have Size as their only option
+  # (option1), but Customize Perfume has Fragrance first, then Size, then
+  # Type (option2). Hardcoding option1 silently read Customize Perfume's
+  # fragrance name as if it were the Size, so the bucket check below always
+  # fell through to "100" (35ml) no matter which bottle size was actually
+  # chosen. Resolving the right key here and passing it to
+  # product-gift-picker.js keeps sizeToBucket() correct for both shapes.
+  assign size_option_key = 'option1'
+  for opt in product.options_with_values
+    if opt.name == 'Size'
+      assign size_option_key = 'option' | append: forloop.index
+      break
+    endif
+  endfor
+  assign initial_variant = product.selected_or_first_available_variant
+  assign initial_size_value = initial_variant[size_option_key]
 -%}
-{%- if settings.free_gift_enabled and in_qualifying_collection and gift_collection.products_count > 0 -%}
-  {%- assign initial_variant = product.selected_or_first_available_variant -%}
+{%- if settings.free_gift_enabled and in_qualifying_collection and has_gift_source -%}
   <product-gift-picker
     class="product-gift-picker"
     data-section="{{ section_id }}"
     data-initial-variant-id="{{ initial_variant.id }}"
-    data-initial-size="{{ initial_variant.option1 }}"
+    data-initial-size="{{ initial_size_value }}"
+    data-size-option-key="{{ size_option_key }}"
     data-gift-label="{{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
   >
     <p class="product-gift-picker__heading">
@@ -75,43 +120,116 @@
       Pick a free perfume with this order — optional, you can also choose one later in your cart.
     </p>
     <div class="product-gift-picker__select-wrap">
-      <select class="product-gift-picker__select" data-gift-select aria-label="Choose your free perfume">
-        <option value="" selected>Skip for now</option>
-        {%- liquid
-          assign gift_slot = 0
-        -%}
-        {%- for gift in gift_collection.products -%}
+      {%- if use_fragrance_search -%}
+        <fragrance-picker class="fragrance-picker" data-gift-fragrance-picker>
+          <div class="fragrance-picker__search">
+            <svg class="icon icon-search fragrance-picker__search-icon" aria-hidden="true" focusable="false">
+              <use href="#icon-search">
+            </svg>
+            <input
+              type="search"
+              class="fragrance-picker__search-input"
+              placeholder="Search by fragrance name…"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              aria-label="Search fragrances for your free perfume"
+              data-fragrance-search
+            >
+            <button type="button" class="fragrance-picker__search-clear" data-fragrance-clear hidden>
+              <svg class="icon icon-close" aria-hidden="true" focusable="false">
+                <use xlink:href="#icon-reset">
+              </svg>
+              <span class="visually-hidden">Clear search</span>
+            </button>
+          </div>
+          <div class="fragrance-picker__list" data-fragrance-list role="listbox" tabindex="0" hidden>
+            <div class="fragrance-picker__item" data-fragrance-item data-search="">
+              <input type="radio" id="GiftSkip-{{ section_id }}" name="GiftFragrance-{{ section_id }}" value="" class="fragrance-picker__radio visually-hidden" checked>
+              <label for="GiftSkip-{{ section_id }}" class="fragrance-picker__label">
+                <span class="fragrance-picker__name">Skip for now</span>
+                <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
+              </label>
+            </div>
+            {%- for value in gift_search_product.options_with_values[0].values -%}
+              {%- liquid
+                assign gift_variant_small = blank
+                assign gift_variant_large = blank
+                for v in gift_search_product.variants
+                  if v.option1 != value
+                    continue
+                  endif
+                  assign gift_size_lower = v.option2 | downcase
+                  if gift_size_lower == '10ml'
+                    assign gift_variant_small = v
+                  elsif gift_size_lower == '35ml'
+                    assign gift_variant_large = v
+                  endif
+                endfor
+                if gift_variant_small == blank and gift_variant_large == blank
+                  continue
+                endif
+              -%}
+              {%- capture gift_input_id -%}GiftFragrance-{{ section_id }}-{{ forloop.index0 }}{%- endcapture -%}
+              <div class="fragrance-picker__item" data-fragrance-item data-search="{{ value | downcase | escape }}">
+                <input
+                  type="radio"
+                  id="{{ gift_input_id }}"
+                  name="GiftFragrance-{{ section_id }}"
+                  value="{{ value | escape }}"
+                  class="fragrance-picker__radio visually-hidden"
+                  data-gift-variant-small="{{ gift_variant_small.id }}"
+                  data-gift-variant-large="{{ gift_variant_large.id }}"
+                >
+                <label for="{{ gift_input_id }}" class="fragrance-picker__label">
+                  <span class="fragrance-picker__name">{{ value | remove_first: 'ATTARWALAS ' }}</span>
+                  <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
+                </label>
+              </div>
+            {%- endfor -%}
+            <p class="fragrance-picker__empty" data-fragrance-empty hidden>No fragrances match your search.</p>
+          </div>
+        </fragrance-picker>
+      {%- else -%}
+        <select class="product-gift-picker__select" data-gift-select aria-label="Choose your free perfume">
+          <option value="" selected>Skip for now</option>
           {%- liquid
-            assign gift_title_lower = gift.title | downcase
-            if gift_title_lower contains 'customize'
-              continue
-            endif
+            assign gift_slot = 0
           -%}
-          {%- assign gift_variant_50 = blank -%}
-          {%- assign gift_variant_100 = blank -%}
-          {%- for v in gift.variants -%}
-            {%- if v.option1 == '10ML' -%}
-              {%- assign gift_variant_50 = v -%}
-            {%- elsif v.option1 == '35ML' -%}
-              {%- assign gift_variant_100 = v -%}
+          {%- for gift in gift_collection.products -%}
+            {%- liquid
+              assign gift_title_lower = gift.title | downcase
+              if gift_title_lower contains 'customize'
+                continue
+              endif
+            -%}
+            {%- assign gift_variant_50 = blank -%}
+            {%- assign gift_variant_100 = blank -%}
+            {%- for v in gift.variants -%}
+              {%- if v.option1 == '10ML' -%}
+                {%- assign gift_variant_50 = v -%}
+              {%- elsif v.option1 == '35ML' -%}
+                {%- assign gift_variant_100 = v -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if gift_variant_50 == blank and gift_variant_100 == blank -%}
+              {%- continue -%}
             {%- endif -%}
+            {%- assign gift_slot = gift_slot | plus: 1 -%}
+            {%- if gift_slot > 12 -%}
+              {%- break -%}
+            {%- endif -%}
+            <option
+              value="{{ gift.id }}"
+              data-gift-variant-small="{{ gift_variant_50.id }}"
+              data-gift-variant-large="{{ gift_variant_100.id }}"
+            >
+              {{- gift.title | escape -}}
+            </option>
           {%- endfor -%}
-          {%- if gift_variant_50 == blank and gift_variant_100 == blank -%}
-            {%- continue -%}
-          {%- endif -%}
-          {%- assign gift_slot = gift_slot | plus: 1 -%}
-          {%- if gift_slot > 12 -%}
-            {%- break -%}
-          {%- endif -%}
-          <option
-            value="{{ gift.id }}"
-            data-gift-variant-small="{{ gift_variant_50.id }}"
-            data-gift-variant-large="{{ gift_variant_100.id }}"
-          >
-            {{- gift.title | escape -}}
-          </option>
-        {%- endfor -%}
-      </select>
+        </select>
+      {%- endif -%}
     </div>
     <p class="product-gift-picker__confirm" data-gift-confirm hidden></p>
   </product-gift-picker>

@@ -113,6 +113,30 @@
   margin: var(--image-padding);
 }
 
+/* No card box: the card and its image ratio box paint the same fixed
+   gradient as the section behind them (see .gradient in base.css), which is
+   redundant and can show as a faint seam at each card's edges. Dropping it
+   here lets the card sit directly on the page background with nothing
+   framing it, per Burhan's request that the grid "blend like one thing"
+   with no borders/boxes. */
+.card.gradient,
+.card__inner.gradient {
+  background: transparent;
+  background-attachment: initial;
+}
+
+/* Recolors a plain white product-photo backdrop to match the card's own
+   background, for products whose source photo wasn't shot on the site's
+   cream backdrop like the rest of the catalog. See card-product.liquid. */
+.card__media--recolor-backdrop {
+  background-color: rgb(var(--color-background));
+  isolation: isolate;
+}
+
+.card__media--recolor-backdrop img {
+  mix-blend-mode: multiply;
+}
+
 .card__inner {
   width: 100%;
 }
