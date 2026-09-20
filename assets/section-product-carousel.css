@@ -134,22 +134,16 @@
   margin: 0;
   padding: 0 1.5rem;
   list-style: none;
-  /* The arrows are the only way to move the row. With overflow-x: auto a
-     swipe, trackpad gesture or shift+wheel over a card dragged the row
-     sideways on its own. `hidden` blocks that but still honours the arrows'
-     scrollBy() and fires the scroll event the counter/progress bar read.
-     `hidden` alone isn't enough on a touch screen though — iOS/Android can
-     still pan a horizontally-overflowing box by touch even with overflow-x:
-     hidden, because that's a gesture concession, not a scroll container
-     read. `touch-action: pan-y` tells the browser this element only accepts
-     vertical touch gestures, so a horizontal drag falls through to the page
-     instead of nudging the row — verified this is needed on a real phone,
-     not just automation (a synthetic wheel/scrollLeft test here still
-     reported the row locked even before this line, because that class of
-     touch panning can't be simulated that way). */
-  overflow-x: hidden;
-  touch-action: pan-y;
-  overscroll-behavior-x: none;
+  /* Burhan asked for normal finger-swipe scrolling on mobile instead of
+     being limited to the arrow buttons (2026-09-20) — so this is a real
+     scroll container (`overflow-x: auto`, `touch-action: pan-x pan-y`) and
+     the arrows are just a convenience on top of it. The JS already listens
+     to the track's own `scroll` event for the counter/progress bar, so a
+     manual swipe updates them exactly like an arrow-triggered scrollBy()
+     does — nothing else needed. */
+  overflow-x: auto;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   scroll-padding-left: 1.5rem;
