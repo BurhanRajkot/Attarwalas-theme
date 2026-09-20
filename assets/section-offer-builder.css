@@ -2,9 +2,19 @@
    Offer Builder — "pick any N for a fixed price" bundle page
 
    Design language (shared with component-offer-ticket.css /
-   section-offer-teaser.css): square edges — the theme's corner radius is 0
-   everywhere — gold hairlines, uppercase micro-labels in the body font, and
-   Cormorant for the display numbers.
+   section-offer-teaser.css): gold hairlines, uppercase micro-labels in the
+   body font, and Cormorant for the display numbers.
+
+   NOTE (2026-09-20): this comment used to read "square edges — the theme's
+   corner radius is 0 everywhere", and every control below was built to that
+   rule. **That premise is no longer true.** The product page, cart, quantity
+   steppers, free-gift pickers and fragrance picker all moved to 999px pill
+   controls (see the "ATTARWALAS — pill controls" blocks in
+   section-main-product.css, and component-cart-redesign.css). The offer and
+   duo pages were the only square-cornered surfaces left, which is what made
+   them read as a different site. Controls are overridden to pills at the end
+   of this file — don't "restore" `border-radius: 0` on a control here on the
+   strength of the old rule.
    ========================================================================== */
 
 .offer-builder {
@@ -1111,5 +1121,417 @@ body.offer-page {
 
   .offer-group__pill--full {
     animation: none;
+  }
+}
+
+
+/* ==========================================================================
+   Match the rest of the site — pill controls (2026-09-20)
+   ==========================================================================
+   Burhan: the duo page "looks different from the rest of the website".
+   Confirmed by measuring the same controls on both surfaces at 1366px:
+
+     size chip   duo/offer 0px radius, 3.8rem tall   vs  product 999px, 4.6rem
+     primary CTA duo/offer 0px radius               vs  product 999px
+
+   Cause is documented at the top of this file: these pages were built to a
+   "corner radius is 0 everywhere" rule that the rest of the theme has since
+   moved away from. Everything below simply re-points the offer/duo controls
+   at the product page's own values, so the two surfaces agree.
+
+   Scope: this file is shared by the offer pages (Buy 2/3/5) and the duo page,
+   and Burhan confirmed both should change together — fixing only the duo page
+   would have left the offer pages as the odd ones out.
+
+   Only radius / size / type scale here. No colour, layout or markup changes:
+   the gold hairline + uppercase micro-label language is unchanged, and the
+   deliberately square *surfaces* (the sticky bar itself, banners, cards) stay
+   square — it is the interactive controls that were inconsistent, not the page.
+   ========================================================================== */
+
+/* Size <select> on an offer card — product page equivalent is
+   `[id^="MainProduct-"] .gpo-app .gpo-select select` at 999px. Extra left
+   padding because a pill needs its text off the curve. */
+.offer-card__variant {
+  border-radius: 999px;
+  padding: 0.7rem 2.6rem 0.7rem 1.6rem;
+}
+
+/* "Select this duo" / "Add to bundle" — product page equivalent is
+   `.product-form__buttons .button` at 999px. 4.4rem -> 4.6rem to match the
+   product page's control height; still well above the 44px touch floor. */
+.offer-card__add {
+  border-radius: 999px;
+  min-height: 4.6rem;
+}
+
+/* Quantity stepper. The cart's own stepper is already a pill
+   (component-cart-redesign.css `.cart-item .quantity`). `overflow: hidden`
+   matters: without it the +/- buttons paint their square hover background
+   over the rounded corners. */
+.offer-card__qty {
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+/* The perfume / attar tabs in choice mode. */
+.offer-choice__tab {
+  border-radius: 999px;
+}
+
+/* The "0 / 2" progress counter — named `__pill` but was square. */
+.offer-group__pill {
+  border-radius: 999px;
+}
+
+/* Sticky bar CTA. The bar itself stays a square full-width bar; only the
+   button inside it becomes a pill, matching the product page's sticky bar
+   button (`.product__sticky-bar__button`, already 999px). */
+.offer-builder__bar-add {
+  border-radius: 999px;
+}
+
+
+/* ==========================================================================
+   Bundle experience (2026-09-20)
+   ==========================================================================
+   Burhan: "the offer for 2 3 and 5 … i want something cool, this should feel
+   like an experience not a chore."
+
+   What made it a chore: every card was a small order form (image, a "SIZE:"
+   dropdown, a price, a button — two clicks each), and nothing accumulated.
+   The bar read "0 / 2" and a comma-joined list of names, so there was no
+   sense of a bundle taking shape or a saving growing.
+
+   Three changes, in order of how much they matter:
+     1. a tray of slots that fills as you pick (the missing feedback loop)
+     2. one tap to add, with the card itself showing the selected state
+     3. size chips instead of a dropdown, so picking a size is one tap too
+
+   Scoping note: this stylesheet is shared with the duo page. The tray only
+   styles an element that exists in offer-builder.liquid, and the card rules
+   below are shared on purpose — the duo page uses the same `.offer-card` and
+   benefits identically. Nothing here changes layout structure or colour
+   tokens; it is state, scale and motion only.
+   ========================================================================== */
+
+/* ------------------------------ bundle tray ------------------------------- */
+
+.offer-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.offer-tray[hidden] {
+  display: none;
+}
+
+.offer-tray__slot {
+  margin: 0;
+}
+
+.offer-tray__button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.6rem;
+  height: 4.6rem;
+  padding: 0;
+  border: 1px dashed rgba(var(--offer-gold), 0.55);
+  border-radius: 999px;
+  background: rgba(var(--offer-gold), 0.06);
+  cursor: default;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+/* The empty-slot "+" is drawn rather than typed so it can't inherit a font
+   that renders it off-centre. */
+.offer-tray__mark,
+.offer-tray__mark::before {
+  position: absolute;
+  background: rgba(var(--offer-gold), 0.75);
+}
+
+.offer-tray__mark {
+  width: 1.2rem;
+  height: 1px;
+}
+
+.offer-tray__mark::before {
+  content: '';
+  left: 50%;
+  top: -0.6rem;
+  width: 1px;
+  height: 1.3rem;
+  transform: translateX(-50%);
+}
+
+.offer-tray__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.offer-tray__slot--filled .offer-tray__button {
+  border-style: solid;
+  border-color: rgb(var(--offer-gold));
+  background: rgb(var(--color-background));
+  cursor: pointer;
+  /* The pop that says "that went in". Short and small — this fires on every
+     pick, so anything longer becomes tiring rather than pleasing. */
+  animation: offer-slot-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.offer-tray__slot--filled .offer-tray__img {
+  opacity: 1;
+}
+
+.offer-tray__slot--filled .offer-tray__mark {
+  opacity: 0;
+}
+
+/* Remove affordance: the filled slot reveals a ✕ on hover/focus. */
+.offer-tray__slot--filled .offer-tray__button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(rgba(var(--offer-ink), 0.55), rgba(var(--offer-ink), 0.55)),
+    none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.offer-tray__slot--filled .offer-tray__button:hover::after,
+.offer-tray__slot--filled .offer-tray__button:focus-visible::after {
+  opacity: 1;
+}
+
+.offer-tray__slot--filled .offer-tray__button:hover,
+.offer-tray__slot--filled .offer-tray__button:focus-visible {
+  transform: translateY(-0.2rem);
+}
+
+@keyframes offer-slot-pop {
+  0% {
+    transform: scale(0.72);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ------------------------------- size chips ------------------------------- */
+
+/* JS replaces the "SIZE:" label + dropdown with these; the <select> stays in
+   the DOM as the source of truth (see buildSizeChips in offer-builder.js). */
+.offer-card__variant-row--chips .offer-card__variant-label,
+.offer-card__variant-row--chips .offer-card__variant-select {
+  display: none;
+}
+
+.offer-size-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.offer-size-chip {
+  min-height: 3.2rem;
+  padding: 0 1.2rem;
+  border: 1px solid rgba(var(--offer-ink), 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(var(--offer-ink), 0.72);
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.offer-size-chip:hover:not(:disabled) {
+  border-color: rgb(var(--offer-gold));
+  color: rgb(var(--offer-gold));
+}
+
+.offer-size-chip--active {
+  border-color: rgb(var(--offer-gold));
+  background: rgb(var(--offer-gold));
+  color: rgb(var(--color-button-text));
+}
+
+.offer-size-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* --------------------------- card, as a target ---------------------------- */
+
+/* The whole card is clickable now, so it has to look it. */
+.offer-card {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.offer-card--soldout {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .offer-card:not(.offer-card--soldout):not(.offer-card--selected):hover {
+    transform: translateY(-0.3rem);
+    border-color: rgba(var(--offer-gold), 0.5);
+    box-shadow: 0 1.2rem 2.4rem rgba(var(--offer-ink), 0.08);
+  }
+}
+
+/* Selected reads from across the grid: gold ring, lifted, image brightened. */
+.offer-card--selected {
+  border-color: rgb(var(--offer-gold));
+  box-shadow: 0 0 0 1px rgb(var(--offer-gold)), 0 1.2rem 2.4rem rgba(var(--offer-ink), 0.1);
+}
+
+.offer-card--dimmed {
+  opacity: 0.45;
+  transition: opacity 0.2s ease;
+}
+
+/* ---------------------------- completion moment --------------------------- */
+
+/* One sweep across the bar the moment the last slot fills. Guarded to the
+   transition into ready (see render() in offer-builder.js) so it can't
+   re-fire on unrelated re-renders. */
+.offer-builder__bar--just-ready .offer-builder__bar-add {
+  animation: offer-cta-shine 0.9s ease-out;
+}
+
+@keyframes offer-cta-shine {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--offer-gold), 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 1.4rem rgba(var(--offer-gold), 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offer-tray__slot--filled .offer-tray__button,
+  .offer-builder__bar--just-ready .offer-builder__bar-add {
+    animation: none;
+  }
+
+  .offer-card,
+  .offer-tray__button {
+    transition: none;
+  }
+
+  .offer-card:not(.offer-card--soldout):hover {
+    transform: none;
+  }
+}
+
+/* ---------------------------- bar stays compact --------------------------- */
+
+/*
+  The tray sits on the same row as the count rather than under it. Dropped in
+  as its own row the bar went 83px -> 141px, which on a 844px phone is 17% of
+  the screen permanently occupied by a toolbar.
+
+  The tray also makes `.offer-builder__bar-picks` redundant: a comma-joined
+  list of names next to thumbnails of those same items is noise. It stays in
+  the markup and still shows when the tray isn't rendering — no JS, or the
+  duo page's quantity mode, where there's no fixed slot count to draw.
+*/
+.offer-builder__bar-summary {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.offer-tray {
+  margin: 0;
+  flex-wrap: nowrap;
+}
+
+.offer-builder__bar-summary:has(.offer-tray:not([hidden])) .offer-builder__bar-picks {
+  display: none;
+}
+
+@media screen and (max-width: 749px) {
+  .offer-builder__bar-summary {
+    justify-content: flex-start;
+    gap: 1.2rem;
+  }
+
+  /* Smaller slots on a phone: five of them at 4.6rem plus the count would
+     overflow the bar at 360px. */
+  .offer-tray__button {
+    width: 3.8rem;
+    height: 3.8rem;
+  }
+
+  .offer-tray {
+    gap: 0.6rem;
+  }
+}
+
+/*
+  Narrow phones: the "Buy 5" tray is the tight case. Five slots at 3.8rem
+  plus their gaps is 214px, and "5 / 5 SELECTED" is about another 100px —
+  against roughly 330px of usable width at 360px. That is a ~4px margin,
+  which is not a margin.
+
+  Two defences, because one of them being enough is not something to find
+  out in production:
+
+  1. Drop the word "selected" once the tray is showing. The row already
+     reads "5 / 5" next to five thumbnails; the label was carrying no
+     information the tray doesn't. Worth ~60px.
+  2. Let the tray scroll rather than push. `min-width: 0` lets the flex item
+     shrink below its content (the default `auto` is what makes flex children
+     refuse to shrink and blow out their parent), and overflow-x keeps any
+     remainder inside the bar instead of widening the page.
+*/
+@media screen and (max-width: 749px) {
+  .offer-builder__bar-summary:has(.offer-tray:not([hidden])) .offer-builder__bar-label {
+    display: none;
+  }
+
+  .offer-tray {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .offer-tray::-webkit-scrollbar {
+    display: none;
+  }
+
+  .offer-tray__slot {
+    flex: 0 0 auto;
+  }
+}
+
+@media screen and (max-width: 399px) {
+  .offer-tray__button {
+    width: 3.4rem;
+    height: 3.4rem;
   }
 }

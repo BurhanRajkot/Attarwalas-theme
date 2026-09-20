@@ -82,21 +82,28 @@ introduce a JS toolchain unless explicitly asked.
 ## Store connection
 
 - Store: `attarwalas-4203.myshopify.com` (admin: `admin.shopify.com/store/attarwalas-4203`)
-- Theme being edited: id `190519771424` — **unpublished/draft**, not the live theme
+- Theme being edited: id `190519771424` ("Burhan theme") — **this is now the live/published
+  theme** (`shopify theme list` confirmed `[live]` on 2026-09-17). It was still an
+  unpublished draft when most of the notes below were written — Burhan published it at some
+  point without this being logged here. Don't assume "draft" from older wording elsewhere in
+  this file; changes pushed to this theme id are changes to the real storefront.
 - Local dev server:
 
   ```
 
 /  ```
-  This pushes local file changes to that draft theme in real time and serves a local
+  This pushes local file changes straight to the live theme in real time and serves a local
   preview (auth is interactive/browser-based — must be run in a real terminal, not
   through a non-interactive process).
 
 ### Guardrails
 
-- **Never publish this theme or touch the live theme.** Don't run `shopify theme publish`
-  and don't add `--allow-live`/`-a` to any command. The whole point of the current setup is
-  that this theme stays a draft until the user says otherwise.
+- **Pushing to this theme now means pushing to the live storefront.** `shopify theme push`
+  targeting `190519771424` requires `--allow-live` in a non-interactive shell (the CLI
+  refuses otherwise) — that flag is no longer a red flag by itself, but confirm with Burhan
+  before pushing anything non-trivial or hard to eyeball-verify, the same as any other
+  live-site change. Don't run `shopify theme publish` against a *different* theme id (that
+  would swap which theme is live) without being asked.
 - `shopify theme dev` auto-initialized a local git repo (no remote) purely for its own
   change history/backup. Don't push it anywhere or treat it as the project's real VCS setup
   unless the user asks to add a remote.
@@ -170,8 +177,30 @@ curl -s http://127.0.0.1:9292/ | grep -o 'id="Banner-[^"]*"'
 These were deliberately changed from the out-of-the-box values — don't "fix" them back
 without checking with the user first:
 
-- **Logo size**: `config/settings_data.json` → `current.logo_width` = `210` (default 100,
-  was maxed at 300 before we sized it down)
+- **Logo is text, not the image** (2026-09-14): `sections/header.liquid` renders
+  `<span class="header__logo-text">{{ shop.name }}</span>` in place of `settings.logo`
+  (remo.png). Styled in `assets/section-header-attarwalas.css` as Cormorant Garamond
+  600, tracked 0.18em — measured against the image at equal cap height, so it reads
+  identical. Changing the logo in Theme settings does nothing now; `logo_width` is unused.
+- **Naseem-style header** (2026-09-14, modelled on naseemperfume.in):
+  `header-group.json` → `menu_type_desktop: dropdown` (menu row on desktop, drawer
+  only below 990px) and `sticky_header_type: always` (Burhan wants the header pinned while scrolling; the announcement bar scrolls away). On the homepage the header
+  is transparent over the hero video (white text + soft dark shade) and turns solid on
+  hover, focus, an open menu/search, or once scrolled. The hero sits under it via
+  `margin-bottom: calc(-1 * var(--header-height))` on `.section-header`; an inline
+  script right after `</sticky-header>` publishes `--header-height` before first paint
+  so the hero doesn't jump. If the homepage's first section stops being the hero,
+  that negative margin will pull the next section under the header instead.
+  Transparent ↔ solid is one cross-fade: a `::after` background panel's opacity, the
+  text/icon colours and the shade all share `--aw-header-dur`/`--aw-header-ease`
+  (0.4s). Keep them on the same timing — a first version wiped the panel down while
+  colours faded separately, which read as glitchy half-states. Going back to
+  transparent has a 0.12s delay so sweeping the mouse across the header doesn't
+  flicker. "Solid" triggers on `:has(:focus-visible)`, not `:focus-within`, or a
+  click leaves the header stuck solid. Desktop dropdowns open on hover (inline script
+  in `header.liquid`), and close on scroll if the pointer has left them. If sticky is
+  ever switched back to on-scroll-up, the transform-based hide rules are still there. The header
+  is full width (`max-width: none`), not capped at `--page-width`.
 - **Header padding**: `sections/header-group.json` → `header.settings.padding_top` /
   `padding_bottom` = `8` / `8` (range is step-of-4, 0–36; default was 20/20)
 - **Homepage hero banner height**: `assets/section-image-banner.css` has a custom rule at
@@ -1466,6 +1495,399 @@ Rules that are easy to break:
   (`document.visibilityState === 'hidden'`) the browser stops rendering, so
   IntersectionObserver callbacks and scroll timelines report stale values
   (`currentTime: null`). Take a screenshot to force a frame before reading them.
+
+## Footer density pass (2026-09-20)
+
+Burhan: the footer reads too tall, on mobile especially. Measured at three
+widths against the real live footer markup + live CSS (see "Measuring a change
+without a dev server" below):
+
+| width | before | after |
+| --- | --- | --- |
+| 390px (phone) | 1215px | **915px** (−25%) |
+| 768px (tablet) | 823px | 759px (−8%) |
+| 1280px (desktop) | 503px | 459px (−9%) |
+
+All of it lives in one appended block at the end of
+`assets/section-footer.css`, plus `padding_top`/`padding_bottom`/`margin_top`
+in `sections/footer-group.json` (32/24/16 → 24/16/12; the range is step-of-4,
+so keep new values on a multiple of 4 or Shopify drops them).
+
+**The section padding was never the problem** — it was already modest. On
+mobile the height was in two rules that stack *per block*:
+`.footer-block.grid__item { margin: 4rem 0 }` and
+`.footer-block__details-content { margin-bottom: 4rem }`, so each of the three
+blocks carried ~80px of its own trailing space.
+
+**The big win is layout, not padding.** Dawn stacks all three blocks full
+width on mobile (`.footer .grid { display: block }`), so brand text + Shop +
+Customer Care cost 119 + 298 + 198 = 615px in sequence. The two link lists now
+sit side by side, costing `max(298, 198)` instead of the sum — that one change
+is 190px of the 300px saved.
+
+**Don't try to reclaim the footer link padding.** Each Shop link is 45px on
+mobile (10px padding + 25px line-height), which is the touch target sitting
+right on the 44px WCAG 2.5.8 floor. Verified no link wraps to a second line in
+the narrower column at 375px, so the two-column layout buys the height back
+without shrinking any tap area.
+
+**Desktop is near its structural floor at 459px.** The three blocks' natural
+heights are 96 / 233 / 198, and the grid stretches all three to the tallest.
+So shrinking the Shop menu can't take the row below Customer Care's 198px —
+a two-column Shop menu was tried and rejected: it saves only 35px and wraps
+"Signature Series" and "About ATTARWALAS" onto two lines at 124px.
+
+Two things deliberately left alone:
+
+- `.footer__content-bottom { padding-bottom }` on mobile was only trimmed
+  9rem → 7rem, not removed. It is **not** dead space — it keeps the policy
+  links clear of the WhatsApp + Inbox launchers, which are fixed bottom-right
+  with no bar down there for `floating-stack.liquid` to lift them against.
+- The country/language selectors are enabled but render at **0px** (one locale
+  only), so they cost nothing and were left as-is.
+
+The block sits at the end of the file on purpose: every rule it overrides is
+equal specificity, so it wins on source order, which is why each override
+repeats the original selector verbatim instead of inventing a stronger one.
+The mobile two-column rule is guarded by
+`:has(> .footer-block:nth-child(3))` so it can't fire with only two blocks
+(the first spans full width, so a lone second block would sit at half width);
+where `:has()` is unsupported the rule simply doesn't apply and the stacked
+layout stands.
+
+## Footer UI pass (2026-09-20)
+
+Follow-on from the density pass: Burhan asked for the footer to be better
+"UI and space wise" on both mobile and desktop. Appended as a second marked
+block at the end of `assets/section-footer.css`.
+
+### The bug underneath it: a dead descendant combinator
+
+The ATTARWALAS block in the middle of that file styles the text blocks with
+`.footer-block__details-content .rte a` and friends — **a descendant
+combinator, where the markup is one element carrying both classes**:
+
+```html
+<div class="footer-block__details-content rte">
+```
+
+So `.footer-block__details-content .rte` wants a `.rte` *inside* a
+`.footer-block__details-content` and matches nothing. Verified in the
+browser: that selector matches **0** elements, `.footer-block__details-content.rte`
+(no space) matches **2**. Everything written under it was dead — the
+line-height, the `text-decoration: none`, the link padding, and the gold
+hover underline (its `::before` `content` computed to `none`, so the
+pseudo-element was never generated at all).
+
+**That is why the two link columns never matched.** "Shop" is a `link_list`
+block, so its `<a>`s genuinely are descendants and picked up the intended
+styling; "Customer Care" is a `text` block whose links fell through to
+browser/base defaults — sentence case, underlined, dimmer, no hover effect.
+
+The original rules are left in place but flagged `⚠ DEAD CODE` with a
+pointer to the replacements, so nobody edits them and wonders why nothing
+happens. They are safe to delete wholesale.
+
+**Correction to the density-pass notes above:** that pass also included a
+`line-height: 1.65` rule using this same broken selector, described at the
+time as the biggest desktop saving. It was dead and contributed nothing —
+the measured desktop saving came entirely from the padding and gap changes.
+The rule has been removed; leading is now set once, in the UI pass, with the
+working selector.
+
+### What changed
+
+- **One link language.** A `<p>` whose entire content is a single link is a
+  menu row, not prose — that's how the Customer Care block is authored. Those
+  now get the same case, tracking, colour (`0.75`, matching
+  `.list-menu__item--link`; only the *active* link is full white) and vertical
+  rhythm as a real menu. Padding is asymmetric (`0 0 0.5rem` desktop,
+  `1rem 0` mobile) specifically to match Dawn's menu links, so the two columns
+  land on the same baselines: measured 30px/30px desktop, 45px/45px mobile.
+  Scoped with `:has(> a:only-child)` so genuine inline links inside a
+  sentence stay inline; without `:has()` support they still lose the
+  underline and gain the gold hover, just not the menu rhythm.
+- **One hover language.** Dawn turned a footer menu link white + underlined
+  above 750px but gold below it — the same link behaving two ways either side
+  of the breakpoint. Gold everywhere now.
+- **The bottom bar reads as one tier.** Policy links were 14px uppercase —
+  the same size as the primary nav links above them — next to an 11.5px
+  copyright. Both are tertiary/legal, so they now match each other at 11.5px
+  and sit quieter than the menus. Side effect: the policy row fits on one
+  line on desktop instead of wrapping.
+- **Newsletter heading** joined the gold uppercase tracked treatment the
+  other block headings use.
+
+Heights after both passes: **1215 → 902px** at 390px, **503 → 456px** at
+1280px.
+
+### Content cleanup worth doing in admin (not theme)
+
+- The Shop menu and Customer Care list both contain **"Track Your Order"**,
+  and "About ATTARWALAS" (Shop) vs "About Us" (Customer Care) look like the
+  same page. Dropping the duplicates would shorten the footer further and
+  balance the two columns.
+- The Shop menu reads **"ABOUT ATTARWLAS"** — missing the second `A`.
+  Content → Menus → Main menu.
+
+## Offer pages: the bundle experience (2026-09-20)
+
+Burhan: "the offer for 2 3 and 5 … i want something cool, this should feel
+like an experience not a chore." Direction agreed with him up front: bundle
+tray **and** the calmer card treatment, not one or the other.
+
+**What made it a chore.** Every card was a small order form — image, a
+"SIZE:" dropdown, a price, a button — so adding two perfumes cost four
+interactions. And nothing accumulated: the bar read `0 / 2` plus a
+comma-joined list of names, so there was no sense of a bundle taking shape or
+a saving growing.
+
+**Three changes, in order of how much they matter:**
+
+1. **A tray of slots that fills.** One slot per pick the *active* group asks
+   for, filled left to right with the product thumbnail, with a small pop on
+   arrival. Clicking a filled slot removes that item. This is the feedback
+   loop the page never had.
+2. **One tap to add.** The whole card is a hit target now. The
+   `[data-offer-card-add]` button stays in the markup — it is the keyboard /
+   screen-reader path and the no-JS fallback — this only adds a larger hit
+   area over it.
+3. **Size chips instead of a dropdown**, so choosing a size is one tap.
+
+Plus a savings figure that counts up rather than snapping, and a one-shot
+flourish on the CTA when the last slot fills.
+
+### How it is wired (and why it is low-risk)
+
+- `offer-builder.js` is **offer-only**; the duo page has its own
+  `duo-pairs.js`. Behaviour changes can't reach the duo page.
+- **The chips are a view over the `<select>`, not a replacement.** The select
+  stays in the DOM and stays the source of truth; chips set `select.value` and
+  fire `change`. Everything downstream is untouched — in particular
+  `syncGroupSize`, the thing that stops a bundle reaching checkout with mixed
+  sizes. Rebuilding that on top of chips would have meant reimplementing it.
+  `applyVariantOption` calls `syncSizeChips`, so a size cascaded in from a
+  sibling card keeps the chips honest.
+- Chips are skipped for single-variant products and for >4 options, where a
+  dropdown is genuinely the better control. With JS off, none of this runs and
+  the select renders exactly as before.
+- The card click handler ignores clicks landing on the select, chips, stepper
+  or add button — otherwise choosing a size would also toggle the card, and
+  pressing "−" would re-add what it just removed.
+
+### Traps hit while building it, worth not re-introducing
+
+- **`requestAnimationFrame` is starved in a background tab.** The first
+  version of the savings count-up wrote the figure *only* inside the rAF
+  callback, so the savings line rendered empty and stayed empty — the number
+  the whole offer is selling. Caught because the automation tab reproduced it
+  exactly. `countSavingTo` now writes the final value **synchronously first**
+  and treats the animation as pure flourish; if rAF never runs, the right
+  figure is already on screen. Same failure class as
+  `snippets/floating-stack.liquid`.
+- **The tray must not cost a row.** Dropped in under the counter, the bar went
+  83px → 141px — on an 844px phone, 17% of the screen permanently given to a
+  toolbar. The tray now sits inline with the count, and
+  `.offer-builder__bar-picks` is hidden while the tray is showing (thumbnails
+  plus a list of the same names is noise). Measured back at **83px with five
+  slots filled** — no taller than before the feature existed.
+- **The "Buy 5" tray is the tight case on a narrow phone.** Five slots at
+  3.8rem plus gaps is 214px, and "5 / 5 SELECTED" is ~100px, against ~330px
+  usable at 360px — a 4px margin. Two defences: the word "selected" is
+  dropped once the tray shows (the row already reads `5 / 5` beside five
+  thumbnails), and the tray gets `min-width: 0` + `overflow-x: auto` so any
+  remainder scrolls inside the bar instead of widening the page. `min-width:
+  0` is the load-bearing part — flex children default to `min-width: auto` and
+  refuse to shrink below their content.
+- **Don't re-add the completion animation class on every render.** It is
+  gated on the *transition* into ready (`wasReady`), or it restarts on
+  unrelated re-renders (changing a size on an already-complete bundle) and
+  reads as a glitch. Same reason `renderTray` only rebuilds slots when the
+  count changes, and only sets `img.src` when the URL actually differs —
+  otherwise the tray flickers on every render.
+
+Verified on a throwaway unpublished theme with real interaction: slots fill
+and empty, remove-via-slot works, counter/progress/CTA track, savings compute
+correctly (₹2,999 + ₹2,499 = ₹5,498, −10% = ₹4,948.20; offer-5: ₹13,995 −20% =
+₹2,799 saved), zero horizontal overflow. The duo page was re-checked on the
+same theme and is unchanged: no tray, bar still 83px, label and picks still
+showing, selection still working.
+
+## Offer + duo pages: pill controls (2026-09-20)
+
+Burhan on the duo page: "the ui looks diff from the rest of the website… i
+want it to match the rest of the site and this looks different and bad."
+
+He was right, and the cause was a **stale design rule, not sloppy styling**.
+The top of `section-offer-builder.css` declared the design language as
+"square edges — the theme's corner radius is 0 everywhere", and every control
+on the offer and duo pages was built to it. That premise stopped being true:
+the product page, cart, quantity steppers, free-gift picker and fragrance
+picker all moved to 999px pills (the "ATTARWALAS — pill controls" blocks in
+`section-main-product.css` at both breakpoints, and
+`component-cart-redesign.css`). The offer/duo pages were the last square
+surfaces on the site.
+
+Measured on the same controls at 1366px before the fix:
+
+| control | duo / offer | product page |
+| --- | --- | --- |
+| size chip | 0px radius, 3.8rem, 1.2rem type | 999px, 4.6rem, 1.3rem |
+| primary CTA | 0px radius | 999px |
+| hero title | 3.8rem | 4.4rem (h1) |
+
+The tell was `.duo-size-label`, whose own comment claims it "matches the real
+product page's own Size picker **exactly**" — while rendering square corners
+on a picker class literally named `--pill`. The comment was written when that
+picker really was square; the picker moved and the copy never followed.
+
+Fixed by appending override blocks (radius / control size / type scale only —
+no colour, layout or markup changes):
+
+- `assets/section-offer-builder.css` — `.offer-card__variant`,
+  `.offer-card__add`, `.offer-card__qty`, `.offer-choice__tab`,
+  `.offer-group__pill`, `.offer-builder__bar-add`.
+- `assets/component-duo-pairs.css` — `.duo-size-label` re-pointed at the real
+  product picker's values, and `.duo-hero__title` onto the product h1's step
+  of the type scale.
+
+**Scope was confirmed with Burhan:** this stylesheet is shared by the duo page
+*and* the Buy 2/3/5 offer pages, and both were changed together — fixing only
+the duo page would have left the offer pages as the sole odd ones out.
+
+Two things deliberately left square: the sticky bar itself and the banner /
+card *surfaces*. It was the interactive controls that were inconsistent, not
+the page. `.offer-card__qty` also needed `overflow: hidden` — without it the
++/- buttons paint their square hover background over the new rounded corners.
+
+Verified against live HTML at 1366px and 390px: the duo chip now computes
+`999px / 46px / 13px / 0.12em` — identical to the product page picker — and
+all three pages (duo, offer, duo index) have 0px horizontal overflow at both
+widths. The design-language comment at the top of the file has been corrected
+so this doesn't drift back.
+
+### Live issue found while doing this: duo products aren't on the duo template
+
+`templates/product.duo.json` contains only the `duo-pairs` section, but **none
+of the six live duo products render it**. Fetched all six
+(`ambre-intense-duo`, `florence-orchidia-duo`, `fresh-woodscape-duo`,
+`mystique-island-duo`, `oudh-eternal-duo`, `yameni-yakud-duo`): every one
+serves the default product template (`main`, `custom_liquid`,
+`from-collection`, `perfumer`, `related-products`) and contains zero duo
+markup. The duo page only appears when `?view=duo` is appended to the URL,
+which is how it was being previewed.
+
+So a customer clicking a duo from `/collections/duo` currently gets an
+ordinary product page, not the duo builder. This is the launch-checklist item
+"set its Theme template to `duo`" — the products and the `duo` collection now
+exist, but the **Theme template is still unassigned** in
+admin → Products → [duo product] → Theme template. Nothing in the theme can
+fix this; it is one dropdown per product.
+
+## Responsive audit (2026-09-20)
+
+Burhan reported "some part is cut" on some laptops, around the signature
+series / product pages, and asked for the site to work across phone, tablet
+and laptop sizes.
+
+Audited **7 page types × 10–18 viewport widths** (320 → 1920px) by loading
+the real live HTML in `srcdoc` iframes and comparing
+`documentElement.scrollWidth` against `clientWidth`, then walking the DOM for
+elements whose right edge escapes the viewport (skipping anything inside an
+`overflow-x: auto/scroll/hidden/clip` ancestor, and skipping `position: fixed`
+off-canvas drawers).
+
+**Exactly one real defect across the whole site.** Everything else — home,
+collection, offer, cart, roll-ons — was clean at every width.
+
+### The bug: offer carousel arrows pushed the page 10px wide
+
+`.aw-offers__arrow--left/right` were `left/right: -1rem`, hanging outside
+`.aw-offers__wrapper`. Absolute offsets resolve against the wrapper's padding
+box, and the wrapper is `max-width: var(--page-width, 120rem); margin: 0 auto`,
+so **below ~1230px viewport the wrapper spans the full width and its edge is
+the viewport edge** — the right arrow stuck 10px past it and the document
+gained 10px of horizontal scroll.
+
+Measured on `/products/oudh-eternal` and `/products/customize-perfume-1`:
+`scrollWidth - clientWidth === 10` at 768, 820, 912, 989. That is iPad
+portrait, small tablets, and any laptop scaled enough to report a narrow CSS
+viewport — **a 1280×800 laptop at Windows 125% scaling reports 1024 CSS px**,
+which is how this shows up on "some laptops but not others".
+
+It looked clean at 1024+ only because the arrows happen to be `display: none`
+there — three offer tickets fit without scrolling. **Add a fourth offer and
+the same overflow appears on laptops**, which is why the fix is not scoped to
+a `max-width: 989px` media query.
+
+Fixed in `assets/component-offer-ticket.css`: arrows now default to the safe
+inside position (`left/right: 0`) and only hang outside at `min-width: 1240px`,
+where the centred container has slack. Slack each side is
+`(viewport - 1200) / 2`, so 10px of overhang needs ≥1220px; 1240 adds margin.
+**The safe value is the default on purpose** — if `--page-width` is ever
+changed in theme settings the breakpoint goes stale, and a stale breakpoint
+then degrades to "arrows sit slightly differently" rather than "the page
+scrolls sideways".
+
+Verified after the fix: 0px overflow on all three affected pages at every one
+of 320/360/390/414/600/768/820/912/1024/1100/1180/1240/1280/1366/1440/1536/1680/1920,
+with the arrows confirmed at `0px` up to 1180 and `-10px` from 1240 up, so the
+original look is kept everywhere there is room for it.
+
+### Checked and found healthy (don't go re-fixing these)
+
+- **Vertical clipping.** Scanned every element with `overflow-y: hidden/clip`
+  whose `scrollHeight` exceeds `clientHeight`, at five viewports including
+  short laptop heights (1366×660, 1280×620). The only hits are deliberate:
+  `figure.our-promise__media` (parallax drift needs the image oversized),
+  `.media--hover-effect` on product cards (hover zoom), and the off-canvas
+  empty cart drawer.
+- **`--header-height` vs the real header.** The homepage hero is pulled up by
+  `calc(-1 * var(--header-height))`, so a stale value would hide content under
+  the header. The variable tracks the real height within 1px (rounding) at
+  every width from 768 to 1536, including across the 990px switch from the
+  1-row to the 2-row header (53px → 108px).
+- **Desktop nav vs header icons.** The last nav item and the icon cluster do
+  overlap *horizontally* between 990 and ~1150px, which looks alarming when
+  measured — but the header grid is two rows
+  (`"left-icons heading icons" / "navigation navigation navigation"`), so they
+  are 11px apart vertically and never actually collide. Compare both axes
+  before calling this a bug.
+
+### Harness gotcha that cost a false negative
+
+Shopify emits section stylesheets with `{{ 'x.css' | asset_url | stylesheet_tag }}`
+**inside the section markup in `<body>`**, not in `<head>`. Injecting a test
+override into `document.head` therefore loses the cascade to a `<link>` that
+comes later in document order, and the fix silently appears not to work. When
+simulating a CSS change against a fetched Shopify page, append the `<style>`
+to the **end of `<body>`**. Confirmed here: the same rule read `right: -10px`
+when injected into head and `right: 0px` when injected at the end of body.
+
+## Measuring a change without a dev server
+
+Useful when `shopify theme dev` can't be run (its auth is interactive). The
+footer pass above was measured this way, and it works for any
+CSS-only/additive change:
+
+1. `curl` the live page, cut out the section's markup, and keep the page's
+   `<link rel=stylesheet>` tags (rewritten to absolute `https://`) and its
+   inline `<style>` blocks (that's where the section padding and the colour
+   scheme custom properties live).
+2. Build two documents: one with just that, one with the new CSS appended
+   inline. Since the change is additive, appending inline is byte-equivalent
+   to what the pushed file would do.
+3. Put both in `srcdoc` iframes at the widths you care about and measure with
+   `getBoundingClientRect()`. `srcdoc` inherits the parent origin, so
+   Shopify's `frame-ancestors` never applies.
+4. Serve the harness over `http://127.0.0.1:<port>` — the browser extension
+   refuses `file://` URLs.
+
+**Trap:** don't shrink the harness with CSS `zoom` to fit it on screen. `zoom`
+scales the iframe's *layout* box, so a 390px frame starts laying out at ~164px
+and invents text wrapping that won't happen on a real phone. Use
+`transform: scale()`, which scales the paint and leaves layout alone — or just
+read the numbers and skip the screenshot.
 
 ## Floating launchers (WhatsApp + Shopify Inbox) — keep them off the CTAs
 

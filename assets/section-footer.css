@@ -554,6 +554,17 @@
   color: var(--aw-gold);
 }
 
+/* ⚠ DEAD CODE — every rule from here to `a:not(:first-child)` below matches
+   nothing. `.footer-block__details-content .rte` (with a space) asks for a
+   `.rte` *inside* `.footer-block__details-content`, but the markup is one
+   element carrying both classes: <div class="footer-block__details-content rte">.
+   Verified in the browser: this selector matches 0 elements, the compound
+   form matches 2.
+
+   Editing anything in this block will appear to do nothing. The live
+   replacements are in the "Footer UI pass" at the end of this file, written
+   as `.footer-block__details-content.rte` (no space). Kept here only so the
+   diff that fixed it stays legible — safe to delete wholesale. */
 .footer-block__details-content .rte,
 .footer-block__details-content .rte p {
   font-size: 1.4rem;
@@ -757,4 +768,284 @@
   .footer__list-social.list-social {
     justify-content: center;
   }
+}
+
+/* ============================================================
+   Footer density pass (2026-09-20)
+   ============================================================
+   Burhan: the footer reads too tall, on mobile especially.
+
+   Everything below only shrinks vertical spacing — no colours, no font
+   sizes, no markup, no layout structure. It sits at the end of the file so it
+   wins on source order against the Dawn rules it tightens (all of which
+   are equal specificity), which is why each override below repeats the
+   original selector verbatim rather than inventing a stronger one.
+
+   Where the height actually was on mobile, before this block:
+     .footer-block.grid__item      margin: 4rem 0   (line 21)
+     .footer-block__details-content margin-bottom: 4rem (line 321)
+   Those two stack, so every one of the three footer blocks carried ~80px
+   of its own trailing space. With three blocks that was the bulk of it —
+   far more than the section's own padding, which was already modest.
+
+   Desktop is deliberately trimmed less: its blocks sit side by side in a
+   grid, so the same values cost height only once, not once per block. */
+
+@media screen and (max-width: 749px) {
+  /* The single biggest mobile saving, and the reason this isn't just a
+     padding trim: Dawn stacks all three footer blocks full width
+     (`.footer .grid { display: block }`, line 15), so the brand text, the
+     Shop menu and Customer Care each cost their full height in sequence.
+
+     Measured at 390px: 119 + 298 + 198 = 615px of blocks. Putting the two
+     link lists side by side costs max(298, 198) instead of their sum.
+
+     The Shop menu is what makes the stacked version so tall — six links at
+     45px each (10px padding + 25px line-height). That 45px is NOT padding
+     to reclaim: it's the touch target, right at the 44px WCAG 2.5.8 floor.
+     Verified at 390px that no link wraps to a second line in the narrower
+     column, so this buys the height back without shrinking any tap area.
+
+     The brand block spans both columns — it's a paragraph, not a list.
+
+     :has() guards it to 3+ blocks. With only two, the first would span and
+     the second would sit alone at half width, which looks like a mistake.
+     Where :has() is unsupported the rule simply doesn't apply and the
+     stacked layout stands, so this degrades to today's behaviour. */
+  .footer__content-top .footer__blocks-wrapper:has(> .footer-block:nth-child(3)) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.6rem;
+    row-gap: 2.2rem;
+  }
+
+  .footer__content-top .footer__blocks-wrapper:has(> .footer-block:nth-child(3)) > .footer-block {
+    margin: 0;
+  }
+
+  .footer__content-top .footer__blocks-wrapper:has(> .footer-block:nth-child(3)) > .footer-block:first-child {
+    grid-column: 1 / -1;
+  }
+
+  /* 4rem -> 2.2rem. Adjacent margins collapse, so this is the gap
+     *between* blocks, applied twice, plus once below the last one.
+     Still needed: it's what the grid above zeroes out, and it's the
+     spacing that applies when the grid doesn't engage. */
+  .footer-block.grid__item {
+    margin: 2.2rem 0;
+  }
+
+  /* 4rem -> 1.6rem. Stacks on top of the margin above, inside each block. */
+  .footer-block__details-content {
+    margin-bottom: 1.6rem;
+  }
+
+  /* Newsletter / Follow-on-Shop / social are three stacked flex children. */
+  .footer-block--newsletter {
+    margin-top: 1.8rem;
+    gap: 1.8rem;
+  }
+
+  .footer__list-social {
+    margin-top: 1.2rem;
+  }
+
+  /* The country + language selectors: Dawn pads the wrapper and then pads
+     each <h2> label again, which reads as a gap with nothing in it. */
+  .footer__localization {
+    padding: 0.4rem 0.6rem 0;
+  }
+
+  .footer__localization h2 {
+    margin: 0.6rem 1rem 0.2rem;
+  }
+
+  /* 9rem -> 7rem. This padding is NOT dead space: it keeps the policy
+     links clear of the WhatsApp + Shopify Inbox launchers, which are
+     fixed bottom-right with no bar down there for floating-stack.liquid
+     to lift them against (see the comment on the original rule at line 67
+     and the floating-launchers section in CLAUDE.md). 7rem still clears
+     the lower of the two launchers; don't take it much below this, and
+     re-check on a real phone if you do. */
+  .footer__content-bottom {
+    padding-bottom: 7rem;
+  }
+
+  .footer__copyright {
+    margin-top: 0.8rem;
+  }
+
+  .footer__payment {
+    margin-top: 0.8rem;
+  }
+}
+
+/* A line-height rule sat here, written as
+   `.footer-block__details-content .rte` — a descendant combinator that
+   matches nothing, because that element carries both classes itself. It
+   was dead, so it contributed none of the saving measured above. Removed
+   rather than repaired here: the UI pass at the end of this file sets the
+   leading with the correct compound selector, and having two line-height
+   rules for the same text in two places is how they drift apart. */
+
+@media screen and (min-width: 750px) {
+  .footer__content-top {
+    padding-bottom: 2rem;
+  }
+
+  .footer-block__heading {
+    margin-bottom: 1.2rem;
+  }
+
+  .footer__content-top .footer__blocks-wrapper {
+    column-gap: 3rem;
+    row-gap: 2.4rem;
+  }
+
+  .footer-block--newsletter {
+    margin-top: 2rem;
+  }
+
+  .footer__list-social {
+    margin-top: 1.2rem;
+  }
+}
+
+/* ============================================================
+   Footer UI pass (2026-09-20)
+   ============================================================
+   Burhan: make the footer better, UI and spacing. The density pass above
+   handled height; this handles how it reads.
+
+   THE BUG THIS FIXES
+   The ATTARWALAS block further up styles the text blocks with selectors
+   like `.footer-block__details-content .rte a` — a *descendant*
+   combinator. But the markup is one element carrying both classes:
+
+     <div class="footer-block__details-content rte">
+
+   so `.footer-block__details-content .rte` needs `.rte` to be a child of
+   `.footer-block__details-content`, and matches nothing. Verified live:
+   that selector matches 0 elements, `.footer-block__details-content.rte`
+   matches 2. Everything written under it has therefore been dead —
+   the line-height, the `text-decoration: none`, the link padding, and the
+   gold hover underline (its `::before` `content` computes to `none`,
+   i.e. the pseudo-element was never generated).
+
+   That is exactly why the two link columns don't match each other:
+   "Shop" is a link_list block, so its <a>s really are descendants and
+   they pick up the intended styling; "Customer Care" is a text block
+   whose links fell back to the browser/base defaults — sentence case,
+   underlined, dimmer.
+
+   Those original rules are left in place rather than edited, so this
+   block is a single self-contained thing to read or revert. It repeats
+   them with the compound selector (no space) that actually matches.
+
+   Don't "tidy" `.footer-block__details-content.rte` back into
+   `.footer-block__details-content .rte`. The missing space is the fix. */
+
+/* --- The two text blocks: brand copy + the Customer Care list --- */
+
+.footer-block__details-content.rte,
+.footer-block__details-content.rte p {
+  font-size: 1.4rem;
+  line-height: 1.7;
+  color: rgba(var(--color-foreground), 0.75);
+}
+
+/* Every link in a text block: no underline at rest, gold on hover. Safe
+   for prose links as well as the list below. */
+.footer-block__details-content.rte a {
+  color: rgba(var(--color-foreground), 0.75);
+  text-decoration: none;
+  transition: color var(--duration-short) ease;
+}
+
+.footer-block__details-content.rte a:hover {
+  color: var(--aw-gold);
+}
+
+/* A paragraph whose entire content is one link is a menu row, not prose —
+   that's how the Customer Care block is authored (one <p><a> per line).
+   Give those rows the same treatment as a real link_list block so the two
+   columns finally read as siblings: same case, tracking, weight, colour
+   and vertical rhythm as `.list-menu__item--link`.
+
+   :has() keeps this off genuine inline links inside a sentence, which
+   should stay inline. Where :has() is unsupported the links still lose
+   their underline and gain the gold hover from the rule above — they just
+   don't get the uppercase menu rhythm, which is a graceful fallback. */
+.footer-block__details-content.rte p:has(> a:only-child) {
+  margin: 0;
+}
+
+.footer-block__details-content.rte p:has(> a:only-child) > a {
+  display: block;
+  /* Asymmetric on purpose: `.list-menu__item--link` is 0 top / 0.5rem
+     bottom at this width, and matching it exactly is what makes the two
+     columns sit on the same baselines rather than drifting a few px per
+     row. Measured: both rows land at 30px. */
+  padding: 0 0 0.5rem;
+  /* 0.75, not full white. `.list-menu__item--link` is 0.75 (line 343);
+     only the *active* link is 100%, which is why "Home" looks brighter
+     than the rest of the Shop column. Matching 100% here made the whole
+     Customer Care column read as bolder than its neighbour. */
+  color: rgba(var(--color-foreground), 0.75);
+  font-size: 1.4rem;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+@media screen and (max-width: 749px) {
+  /* Matches the 10px/10px the real menu links carry on mobile, so both
+     columns keep the same ~45px touch target (WCAG 2.5.8 floor is 44px). */
+  .footer-block__details-content.rte p:has(> a:only-child) > a {
+    padding: 1rem 0;
+  }
+}
+
+/* --- One hover language --- */
+/* Dawn's own rule turns a footer menu link white + underlined on desktop
+   while the mobile rule turns it gold, so the same link behaved two ways
+   either side of 750px. Gold everywhere, matching the policy/copyright
+   links and the rest of the brand. */
+.footer .list-menu__item--link:hover,
+.footer-block__details-content .list-menu__item--link:hover,
+.footer .copyright__content a:hover,
+.footer .policies li a:hover {
+  color: var(--aw-gold);
+  text-decoration: none;
+}
+
+/* --- Bottom bar reads as one tier --- */
+/* The policy links were 14px uppercase — the same size as the primary nav
+   links above them — while the copyright beside them was 11.5px. Two
+   sizes for the same tier of information. Both are legal/tertiary, so
+   they now match each other and sit quieter than the menus. */
+.footer .policies li a {
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  color: rgba(var(--color-foreground), 0.6);
+}
+
+.footer .copyright__content {
+  color: rgba(var(--color-foreground), 0.6);
+}
+
+.footer .policies {
+  row-gap: 0.2rem;
+}
+
+/* --- Headings --- */
+/* The newsletter heading was the only block heading not sharing the gold
+   uppercase tracked treatment, which made it read as a different kind of
+   thing sitting in the same row. Kept a touch larger since it leads a
+   full-width block rather than a column. */
+.footer-block--newsletter .footer-block__heading {
+  font-size: 1.35rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--aw-gold);
 }

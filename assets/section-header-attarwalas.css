@@ -1,0 +1,322 @@
+/* ATTARWALAS header — text wordmark, desktop menu bar, transparent-over-hero
+   homepage state. Loaded from sections/header.liquid. */
+
+/* ---------- Wordmark ---------- */
+/* Matches the old remo.png logo: Cormorant Garamond 600, capitals tracked
+   ~0.18em, dark charcoal. Measured against the image at the same cap height. */
+.header__logo-text {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600;
+  font-size: 2.6rem;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  /* Tracking adds space after the last letter too; pull it back so the word
+     is optically centred. */
+  margin-right: -0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(var(--color-foreground));
+}
+
+@media screen and (max-width: 749px) {
+  .header__logo-text {
+    font-size: 2rem;
+  }
+}
+
+@media screen and (max-width: 389px) {
+  .header__logo-text {
+    font-size: 1.7rem;
+    letter-spacing: 0.14em;
+    margin-right: -0.14em;
+  }
+}
+
+.header__heading-link {
+  padding: 0.6rem 1rem;
+}
+
+/* ---------- Desktop menu bar ---------- */
+@media screen and (min-width: 990px) {
+  .header--top-center .header__inline-menu {
+    margin-top: 0.4rem;
+  }
+
+  .header__inline-menu .list-menu--inline {
+    column-gap: 1.2rem;
+  }
+
+  .header__inline-menu > .list-menu > li > .header__menu-item,
+  .header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item {
+    position: relative;
+    padding: 1rem 1.2rem;
+    font-size: 1.2rem;
+    letter-spacing: 0.14em;
+    color: rgba(var(--color-foreground), 0.85);
+  }
+
+  .header__inline-menu > .list-menu > li > header-menu > details > summary.header__menu-item {
+    padding-right: 2.8rem;
+  }
+
+  /* A thin line that draws in under the item instead of Dawn's text underline. */
+  .header__inline-menu .header__menu-item span,
+  .header__inline-menu .header__menu-item:hover span,
+  .header__inline-menu .header__active-menu-item,
+  .header__inline-menu details[open] > .header__menu-item {
+    text-decoration: none;
+  }
+
+  .header__inline-menu > .list-menu > li > .header__menu-item > span,
+  .header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item > span {
+    position: relative;
+  }
+
+  .header__inline-menu > .list-menu > li > .header__menu-item > span::after,
+  .header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item > span::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.4rem;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .header__inline-menu .header__menu-item:hover > span::after,
+  .header__inline-menu details[open] > .header__menu-item > span::after,
+  .header__inline-menu .header__active-menu-item::after {
+    transform: scaleX(1);
+  }
+
+  .header__inline-menu .header__menu-item:hover {
+    color: rgb(var(--color-foreground));
+  }
+
+  /* Dropdown panel */
+  .header__inline-menu .header__submenu.list-menu {
+    min-width: 22rem;
+    padding: 1.2rem 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.08);
+    /* No background of its own — the ::before fill panel below is what's
+       actually visible growing in on open. See the dropdown-fill comment
+       further down for why. */
+    background: transparent;
+  }
+
+  .header__inline-menu .header__submenu .header__menu-item {
+    padding: 0.8rem 2.2rem;
+    font-size: 1.3rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: rgba(var(--color-foreground), 0.8);
+  }
+
+  .header__inline-menu .header__submenu .header__menu-item:hover {
+    color: rgb(var(--color-foreground));
+    text-decoration: none;
+  }
+}
+
+/* ---------- Full width ---------- */
+/* Dawn caps the header at --page-width, which leaves the icons bunched in the
+   middle of a wide monitor. Let it span the screen with side padding instead. */
+.header.page-width {
+  max-width: none;
+}
+
+@media screen and (min-width: 1400px) {
+  .header.page-width {
+    padding-left: 6rem;
+    padding-right: 6rem;
+  }
+}
+
+/* ---------- Hide / reveal motion (all pages) ---------- */
+/* Dawn slides the header by animating `top`, which re-lays-out the page every
+   frame and stutters. Move it with a transform instead (composited, same as
+   naseemperfume.in): hidden = translated fully above the viewport. */
+/* Only once Dawn marks it `animate` (on reveal): the first hide happens while
+   the header is already scrolled out of view and must not visibly slide. */
+.section-header.animate {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.shopify-section-header-hidden {
+  top: 0;
+  transform: translateY(calc(-100% - 0.1rem));
+}
+
+.shopify-section-header-hidden.menu-open {
+  transform: none;
+}
+
+/* ---------- Header colour transitions ---------- */
+/* One duration and curve for everything that changes between the transparent
+   and solid header — background, text, icons, shade — so they cross-fade as a
+   single move. Mismatched timings are what made the old version look glitchy
+   (dark text appearing before the background behind it). */
+:root {
+  --aw-header-dur: 0.4s;
+  --aw-header-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header__icon,
+.header__logo-text,
+.header__inline-menu > .list-menu > li > .header__menu-item,
+.header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item {
+  transition: color var(--aw-header-dur) var(--aw-header-ease);
+}
+
+.header__icon .icon {
+  transition: transform 0.25s var(--aw-header-ease);
+}
+
+.header__icon:hover .icon {
+  transform: scale(1.07);
+}
+
+/* Dropdown: a background panel fills in from the top on open, instead of the
+   whole box just dropping into place (modelled on naseemperfume.in — their
+   dropdown has a ::before layer behind the items that animates height
+   0 -> 100%, separate from the box itself, which carries no background of
+   its own). The box's real .gradient background is turned off above so this
+   panel is the only thing visibly filling in. The box (and its shadow) still
+   fades in on its own, fast and slightly delayed, so it's never shown as an
+   empty outline before the panel arrives; each item then rises up shortly
+   after, so the menu reads as content settling into a space that's actively
+   filling, not just popping into view. */
+@media screen and (min-width: 990px) {
+  .header__inline-menu .header__submenu::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    height: 0;
+    background: rgb(var(--color-background));
+    z-index: -1;
+    transition: height 0.32s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .header__inline-menu details[open] > .header__submenu::before {
+    height: 100%;
+  }
+
+  .header__inline-menu details[open] > .header__submenu {
+    animation: awMenuFade 0.18s ease 0.04s both;
+  }
+
+  .header__inline-menu .header__submenu > li {
+    opacity: 0;
+    transform: translateY(0.6rem);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition-delay: 0.1s;
+  }
+
+  .header__inline-menu details[open] > .header__submenu > li {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes awMenuFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- Homepage: transparent over the hero ---------- */
+/* The hero is pulled up underneath the header by the header's own height
+   (published as --header-height by an inline script in header.liquid), so the
+   header sits on top of the video. The announcement bar above stays solid. */
+body.template-index .section-header {
+  margin-bottom: calc(-1 * var(--header-height, 0px));
+}
+
+/* The solid background lives on a panel behind the content rather than on the
+   wrapper itself: a background swap can't animate (the scheme's gradient is a
+   background-image), but a panel's opacity can. */
+body.template-index .section-header .header-wrapper {
+  background: transparent;
+  isolation: isolate;
+  transition: border-color var(--aw-header-dur) var(--aw-header-ease);
+}
+
+body.template-index .section-header .header-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(var(--color-background));
+  opacity: 1;
+  transition: opacity var(--aw-header-dur) var(--aw-header-ease);
+  pointer-events: none;
+}
+
+/* A soft shade behind the white text so it stays readable over bright frames
+   of the video. */
+body.template-index .section-header .header-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 -4rem;
+  z-index: -2;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.22) 60%, rgba(0, 0, 0, 0) 100%);
+  opacity: 0;
+  transition: opacity var(--aw-header-dur) var(--aw-header-ease);
+  pointer-events: none;
+}
+
+body.template-index .section-header .header {
+  position: relative;
+}
+
+/* Transparent only while resting at the top of the page with nothing open.
+   Hovering, keyboard focus, opening search/menus, or scrolling past the hero's
+   top all bring back the solid header. */
+body.template-index .section-header:not(.scrolled-past-header):not(:hover):not(:has(:focus-visible)):not(:has(details[open])) .header-wrapper {
+  --color-foreground: 255, 255, 255;
+  border-bottom-color: transparent;
+}
+
+body.template-index .section-header:not(.scrolled-past-header):not(:hover):not(:has(:focus-visible)):not(:has(details[open])) .header-wrapper::after {
+  opacity: 0;
+}
+
+body.template-index .section-header:not(.scrolled-past-header):not(:hover):not(:has(:focus-visible)):not(:has(details[open])) .header-wrapper::before {
+  opacity: 1;
+}
+
+/* Returning to transparent waits a beat, so sweeping the mouse across the top
+   of the page (e.g. up to the browser tabs) doesn't flicker the header. */
+body.template-index .section-header:not(.scrolled-past-header):not(:hover):not(:has(:focus-visible)):not(:has(details[open])) :is(.header-wrapper, .header__icon, .header__logo-text, .header__menu-item) {
+  transition-delay: 0.12s;
+}
+
+body.template-index .section-header:not(.scrolled-past-header):not(:hover):not(:has(:focus-visible)):not(:has(details[open])) .header-wrapper::after,
+body.template-index .section-header:not(.scrolled-past-header):not(:hover):not(:has(:focus-visible)):not(:has(details[open])) .header-wrapper::before {
+  transition-delay: 0.12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-header.animate,
+  .header__icon,
+  .header__logo-text,
+  .header__menu-item,
+  .header__inline-menu details[open] > .header__submenu,
+  .header__inline-menu .header__submenu::before,
+  .header__inline-menu .header__submenu > li,
+  body.template-index .section-header .header-wrapper,
+  body.template-index .section-header .header-wrapper::after,
+  body.template-index .section-header .header-wrapper::before {
+    transition: none;
+    animation: none;
+  }
+}

@@ -424,3 +424,49 @@
     scroll-behavior: auto;
   }
 }
+
+/* ------------------- Arrow overflow fix (2026-09-20) ---------------------- */
+/*
+  Burhan reported parts of the site being cut off on some laptops. Audited
+  7 page types across 10 viewport widths; this was the only horizontal
+  overflow anywhere on the site.
+
+  `.aw-offers__arrow--left/right` hang 1rem outside `.aw-offers__wrapper`.
+  Absolute offsets resolve against the wrapper's padding box, and the
+  wrapper is `max-width: var(--page-width, 120rem); margin: 0 auto`, so
+  below ~1230px viewport it spans the full width and its edge IS the
+  viewport edge. The right arrow therefore sticks 10px past it and the
+  whole document gains 10px of horizontal scroll.
+
+  Measured on /products/oudh-eternal: scrollWidth exceeded clientWidth by
+  exactly 10px at 768, 820, 912 and 989 — iPad portrait, small tablets, and
+  any laptop scaled enough to report a narrow CSS viewport (a 1280x800 at
+  Windows 125% reports 1024). Clean again at 1024+ only because the arrows
+  happen to be hidden there: three offer tickets fit without scrolling. Add
+  a fourth offer and the same 10px overflow appears on laptops too, which
+  is why this is not fixed with a `max-width: 989px` media query.
+
+  Slack each side = (viewport - 1200) / 2, so 10px of overhang needs a
+  viewport of at least 1220px. The breakpoint below is that plus a small
+  margin. If `--page-width` is ever changed in theme settings, this number
+  has to move with it — hence the arrows defaulting to the *safe* inside
+  position, so a stale breakpoint degrades to "slightly different look"
+  rather than "sideways scroll".
+*/
+.aw-offers__arrow--left {
+  left: 0;
+}
+
+.aw-offers__arrow--right {
+  right: 0;
+}
+
+@media screen and (min-width: 1240px) {
+  .aw-offers__arrow--left {
+    left: -1rem;
+  }
+
+  .aw-offers__arrow--right {
+    right: -1rem;
+  }
+}

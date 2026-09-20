@@ -475,3 +475,48 @@
     height: 1rem;
   }
 }
+
+
+/* ==========================================================================
+   Match the product page's Size picker for real (2026-09-20)
+   ==========================================================================
+   The `.duo-size-label` block above opens with:
+
+     "Size chips — matches the real product page's own Size picker exactly
+      ([id^="MainProduct-"] .product-form__input--pill)"
+
+   It did not. Measured against that picker at 1366px:
+
+     radius          duo (none -> 0px)   vs  product 999px
+     min-height      3.8rem              vs  product 4.6rem
+     font-size       1.2rem              vs  product 1.3rem
+     letter-spacing  0.1em               vs  product 0.12em
+
+   The comment was written when the product picker really was square; that
+   picker has since been moved to pills (the "ATTARWALAS — pill controls"
+   blocks in section-main-product.css, at both the mobile and >=750px
+   breakpoints) and the duo copy never followed. A picker class literally
+   named `--pill` rendering square corners is the tell.
+
+   Values below are copied from
+   `[id^="MainProduct-"] .product-form__input--pill input[type='radio'] + label`
+   so the claim the comment makes is now true. If that picker changes again,
+   change this with it.
+   ========================================================================== */
+
+.duo-size-label {
+  min-height: 4.6rem;
+  padding: 0 2.2rem;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+/* The hero title sat at 3.8rem while the product page's own h1 renders 4.4rem
+   and the offer page's title 5.2rem — the duo page read as a smaller, lesser
+   page than the ones either side of it. Brought onto the product page's step
+   of the scale; still below the offer title, which leads a wider layout. */
+.duo-hero__title {
+  font-size: clamp(3.2rem, 4.4vw, 4.4rem);
+}

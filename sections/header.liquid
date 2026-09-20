@@ -18,6 +18,8 @@
   {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
 {%- endif -%}
 
+{{ 'section-header-attarwalas.css' | asset_url | stylesheet_tag }}
+
 <style>
   header-drawer {
     justify-self: start;
@@ -163,25 +165,12 @@
         <h1 class="header__heading">
       {%- endif -%}
           <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset">
-            {%- if settings.logo != blank -%}
-              <div class="header__heading-logo-wrapper">
-                {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
-                {%- assign logo_height = settings.logo_width | divided_by: settings.logo.aspect_ratio -%}
-                {% capture sizes %}(max-width: {{ settings.logo_width | times: 2 }}px) 50vw, {{ settings.logo_width }}px{% endcapture %}
-                {% capture widths %}{{ settings.logo_width }}, {{ settings.logo_width | times: 1.5 | round }}, {{ settings.logo_width | times: 2 }}{% endcapture %}
-                {{ settings.logo | image_url: width: 600 | image_tag:
-                  class: 'header__heading-logo motion-reduce',
-                  widths: widths,
-                  height: logo_height,
-                  width: settings.logo_width,
-                  alt: logo_alt,
-                  sizes: sizes,
-                  preload: true
-                }}
-              </div>
-            {%- else -%}
-              <span class="h2">{{ shop.name }}</span>
-            {%- endif -%}
+            {%- comment -%}
+              Text wordmark instead of the logo image — same lettering the
+              image used (Cormorant Garamond 600, wide-tracked capitals), so it
+              stays crisp at any size and can turn white over the homepage hero.
+            {%- endcomment -%}
+            <span class="header__logo-text">{{ shop.name | escape }}</span>
           </a>
       {%- if request.page_type == 'index' -%}
         </h1>
@@ -203,25 +192,12 @@
         <h1 class="header__heading">
       {%- endif -%}
           <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset">
-            {%- if settings.logo != blank -%}
-              <div class="header__heading-logo-wrapper">
-                {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
-                {%- assign logo_height = settings.logo_width | divided_by: settings.logo.aspect_ratio -%}
-                {% capture sizes %}(min-width: 750px) {{ settings.logo_width }}px, 50vw{% endcapture %}
-                {% capture widths %}{{ settings.logo_width }}, {{ settings.logo_width | times: 1.5 | round }}, {{ settings.logo_width | times: 2 }}{% endcapture %}
-                {{ settings.logo | image_url: width: 600 | image_tag:
-                  class: 'header__heading-logo',
-                  widths: widths,
-                  height: logo_height,
-                  width: settings.logo_width,
-                  alt: logo_alt,
-                  sizes: sizes,
-                  preload: true
-                }}
-              </div>
-            {%- else -%}
-              <span class="h2">{{ shop.name }}</span>
-            {%- endif -%}
+            {%- comment -%}
+              Text wordmark instead of the logo image — same lettering the
+              image used (Cormorant Garamond 600, wide-tracked capitals), so it
+              stays crisp at any size and can turn white over the homepage hero.
+            {%- endcomment -%}
+            <span class="header__logo-text">{{ shop.name | escape }}</span>
           </a>
       {%- if request.page_type == 'index' -%}
         </h1>
@@ -303,6 +279,52 @@
     </div>
   </header>
 </{% if section.settings.sticky_header_type != 'none' %}sticky-header{% else %}div{% endif %}>
+
+{%- comment -%}
+  Publish the header's height straight away (sticky-header's own JS does the
+  same, but later). The homepage pulls the hero up underneath the header by
+  this amount so the header can sit transparently over it — without it
+  set before first paint the hero would jump up once the JS ran.
+{%- endcomment -%}
+<script>
+  (function () {
+    var h = document.currentScript.previousElementSibling;
+    var s = h && h.closest('.section-header');
+    if (s) document.documentElement.style.setProperty('--header-height', s.offsetHeight + 'px');
+  })();
+</script>
+
+{%- comment -%}
+  Desktop dropdowns open on hover (like naseemperfume.in) instead of needing a
+  click. Only on devices that can actually hover; touch keeps Dawn's tap.
+{%- endcomment -%}
+<script>
+  (function () {
+    if (!window.matchMedia('(hover: hover) and (min-width: 990px)').matches) return;
+    document.querySelectorAll('.header__inline-menu header-menu > details').forEach(function (details) {
+      var item = details.closest('li');
+      var closeTimer;
+      item.addEventListener('mouseenter', function () {
+        clearTimeout(closeTimer);
+        details.open = true;
+      });
+      item.addEventListener('mouseleave', function () {
+        closeTimer = setTimeout(function () {
+          details.open = false;
+        }, 120);
+      });
+      /* The header is always sticky, so scrolling never moves the pointer off
+         the item — close it explicitly or it rides along down the page. */
+      window.addEventListener(
+        'scroll',
+        function () {
+          if (details.open && !item.matches(':hover')) details.open = false;
+        },
+        { passive: true }
+      );
+    });
+  })();
+</script>
 
 {%- if settings.cart_type == "notification" -%}
   {%- render 'cart-notification', color_scheme: section.settings.color_scheme, desktop_menu_type: section.settings.menu_type_desktop -%}

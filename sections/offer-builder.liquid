@@ -477,6 +477,21 @@
           </span>
           <span class="offer-builder__bar-label">{{ section.settings.selected_label }}</span>
         </div>
+
+        {%- comment -%}
+          The bundle tray. offer-builder.js fills this with one slot per pick
+          the offer asks for: empty slots show a dashed outline, filled slots
+          show the product thumbnail and remove themselves when clicked.
+
+          Rendered empty here and built in JS because the slot count follows
+          the *active* group in choice mode (Perfumes vs Attar Roll-Ons have
+          their own pick counts), so it isn't known at Liquid time.
+
+          Without JS this stays an empty list and the text summary below still
+          describes the bundle, so nothing is lost.
+        {%- endcomment -%}
+        <ol class="offer-tray" data-offer-tray role="list" aria-label="Items in your bundle"></ol>
+
         <p class="offer-builder__bar-picks" data-offer-picks></p>
       </div>
 

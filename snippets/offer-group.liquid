@@ -256,6 +256,14 @@
               data-variant-title="{{ variant.title | escape }}"
               data-price="{{ variant.price }}"
               data-available="{{ variant.available }}"
+              {%- comment -%}
+                Thumbnail for the bundle tray in the sticky bar. Small on
+                purpose — it renders at ~48px, and the card's own <img> can't
+                be reused because the tray needs a src it can set directly.
+              {%- endcomment -%}
+              {% if item.featured_image %}
+                data-image="{{ item.featured_image | image_url: width: 160 }}"
+              {% endif %}
             >
               <div class="offer-card__media">
                 {%- if item.featured_image -%}

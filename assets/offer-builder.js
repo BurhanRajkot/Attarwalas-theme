@@ -85,6 +85,10 @@ if (!customElements.get('offer-builder')) {
         // key: card element, value: quantity
         this.selections = new Map();
 
+        this.tray = this.querySelector('[data-offer-tray]');
+        this.traySlots = [];
+        this.shownSaving = 0; // for the count-up on the savings figure
+
         this.cards.forEach((card) => {
           card.querySelector('[data-offer-card-add]')?.addEventListener('click', () => this.select(card));
           card.querySelector('[data-offer-qty-plus]')?.addEventListener('click', () => this.changeQty(card, 1));
@@ -92,6 +96,30 @@ if (!customElements.get('offer-builder')) {
           card
             .querySelector('[data-offer-variant]')
             ?.addEventListener('change', (event) => this.onVariantChange(card, event.target));
+
+          this.buildSizeChips(card);
+
+          /*
+            Tap anywhere on the card to add it. Picking two perfumes used to
+            cost four interactions (open dropdown, choose, then hunt for the
+            small "Add to bundle" button, twice) which is most of why this
+            page read as a form to fill in rather than a bundle to build.
+
+            The button stays in the markup and keeps working — it's the
+            keyboard and screen-reader path, and the no-JS fallback. This only
+            adds a second, larger hit area on top of it.
+
+            Guard: ignore clicks that land on a control which already does
+            something (the size select or chips, the +/- stepper, the add
+            button itself), otherwise choosing a size would also toggle the
+            card, and pressing "−" would re-add what it just removed.
+          */
+          card.addEventListener('click', (event) => {
+            if (card.classList.contains('offer-card--soldout')) return;
+            if (event.target.closest('[data-offer-card-add], [data-offer-card-qty], [data-offer-variant], [data-offer-size-chips]')) return;
+            if (this.selections.get(card)) return; // already in the bundle; remove via the tray
+            this.select(card);
+          });
         });
 
         this.tabs.forEach((tab) =>
@@ -108,6 +136,151 @@ if (!customElements.get('offer-builder')) {
 
         this.publishBarHeight();
         this.render();
+      }
+
+      /* --------------------------- size chips (view) -------------------------- */
+
+      /*
+        Render the card's size <select> as a row of tappable chips.
+
+        The select stays in the DOM and stays the source of truth — the chips
+        only set `select.value` and fire a `change`, so everything downstream
+        is untouched: onVariantChange, and in particular syncGroupSize, which
+        is what stops a bundle going to checkout with mixed sizes. Rebuilding
+        that logic on top of chips would have meant reimplementing it.
+
+        Falls back to the plain select and renders no chips when:
+          - there is no select (single-variant product), or
+          - there are more than 4 options, where chips would wrap badly and a
+            dropdown is genuinely the better control.
+
+        With JS off nothing here runs and the select renders as it always has.
+      */
+      buildSizeChips(card) {
+        const select = card.querySelector('[data-offer-variant]');
+        if (!select) return;
+
+        const options = Array.from(select.options);
+        if (options.length < 2 || options.length > 4) return;
+
+        const list = document.createElement('div');
+        list.className = 'offer-size-chips';
+        list.setAttribute('data-offer-size-chips', '');
+
+        options.forEach((option) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'offer-size-chip';
+          chip.textContent = option.dataset.option1 || option.textContent.trim();
+          chip.dataset.value = option.value;
+          if (option.disabled) chip.disabled = true;
+          chip.addEventListener('click', () => {
+            if (chip.disabled) return;
+            select.value = option.value;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+          list.appendChild(chip);
+        });
+
+        select.closest('.offer-card__variant-row')?.classList.add('offer-card__variant-row--chips');
+        select.closest('.offer-card__variant-row')?.appendChild(list);
+        card.__sizeChips = list;
+        this.syncSizeChips(card);
+      }
+
+      /* Reflect the select's current value onto the chips. Called after any
+         variant change, including one cascaded by syncGroupSize from a
+         sibling card — that path sets select.value directly, so without this
+         the chips would drift out of step with the real selection. */
+      syncSizeChips(card) {
+        const list = card.__sizeChips;
+        if (!list) return;
+        const select = card.querySelector('[data-offer-variant]');
+        if (!select) return;
+        Array.from(list.children).forEach((chip) => {
+          chip.classList.toggle('offer-size-chip--active', chip.dataset.value === select.value);
+        });
+      }
+
+      /* ------------------------------ bundle tray ----------------------------- */
+
+      /*
+        One slot per pick the *active* group asks for, filled left to right.
+
+        Why this exists: the bar previously showed "0 / 2" and a comma-joined
+        list of names. Nothing about it accumulated, so there was no sense of
+        making progress — which is the difference between building a bundle
+        and filling in a form.
+
+        Quantity mode (the duo page) has no fixed total to draw slots for, so
+        the tray is skipped there and the text summary carries on as before.
+      */
+      renderTray() {
+        if (!this.tray) return;
+
+        if (this.hasRange) {
+          this.tray.hidden = true;
+          return;
+        }
+
+        // Flatten the selections into one entry per unit, so a card picked
+        // twice fills two slots.
+        const picked = [];
+        this.selections.forEach((qty, card) => {
+          for (let i = 0; i < qty; i += 1) picked.push(card);
+        });
+
+        const want = this.totalPickCount;
+        this.tray.hidden = want <= 0;
+        if (want <= 0) return;
+
+        // Rebuild only when the slot count changes (a tab switch in choice
+        // mode), so filling a slot doesn't re-create the DOM under a running
+        // transition and restart it.
+        if (this.traySlots.length !== want) {
+          this.tray.textContent = '';
+          this.traySlots = [];
+          for (let i = 0; i < want; i += 1) {
+            const slot = document.createElement('li');
+            slot.className = 'offer-tray__slot';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'offer-tray__button';
+            button.innerHTML =
+              '<img class="offer-tray__img" alt="" aria-hidden="true">' +
+              '<span class="offer-tray__mark" aria-hidden="true"></span>';
+            slot.appendChild(button);
+            this.tray.appendChild(slot);
+            this.traySlots.push(slot);
+          }
+        }
+
+        this.traySlots.forEach((slot, i) => {
+          const card = picked[i];
+          const button = slot.querySelector('.offer-tray__button');
+          const img = slot.querySelector('.offer-tray__img');
+          const filled = Boolean(card);
+
+          slot.classList.toggle('offer-tray__slot--filled', filled);
+
+          if (filled) {
+            const src = card.dataset.image || '';
+            // Only touch src when it actually changes; reassigning the same
+            // URL restarts the fade-in and makes the tray flicker on every
+            // unrelated render (a size change, the other card being added).
+            if (src && img.getAttribute('src') !== src) img.setAttribute('src', src);
+            img.hidden = !src;
+            button.disabled = false;
+            button.setAttribute('aria-label', `Remove ${card.dataset.productTitle} from your bundle`);
+            button.onclick = () => this.changeQty(card, -1);
+          } else {
+            img.removeAttribute('src');
+            img.hidden = true;
+            button.disabled = true;
+            button.setAttribute('aria-label', 'Empty slot');
+            button.onclick = null;
+          }
+        });
       }
 
       /* ------------------------------- selection ------------------------------ */
@@ -278,6 +451,12 @@ if (!customElements.get('offer-builder')) {
 
         const priceElement = card.querySelector('[data-offer-price]');
         if (priceElement) priceElement.textContent = option.dataset.priceFormatted;
+
+        // Both callers land here, so this is the one place that keeps the
+        // chips honest — including a size cascaded in from a sibling card by
+        // syncGroupSize, which sets select.value directly and would otherwise
+        // leave the chips highlighting the previous size.
+        this.syncSizeChips(card);
       }
 
       /*
@@ -405,8 +584,24 @@ if (!customElements.get('offer-builder')) {
               : 0;
           this.bar.style.setProperty('--offer-progress', `${progress}%`);
           this.bar.classList.toggle('offer-builder__bar--ready', ready);
+
+          /*
+            Fire the completion flourish only on the transition into "ready",
+            not on every render while it stays ready. Re-adding the class each
+            time would restart the animation on unrelated renders (changing a
+            size on an already-complete bundle), which reads as a glitch.
+          */
+          if (ready && !this.wasReady) {
+            this.bar.classList.remove('offer-builder__bar--just-ready');
+            // Force a reflow so removing and re-adding actually restarts it.
+            void this.bar.offsetWidth;
+            this.bar.classList.add('offer-builder__bar--just-ready');
+          }
+          if (!ready) this.bar.classList.remove('offer-builder__bar--just-ready');
+          this.wasReady = ready;
         }
 
+        this.renderTray();
         this.renderWorth();
 
         // A fixed-price offer whose product has no price would travel to the
@@ -465,14 +660,74 @@ if (!customElements.get('offer-builder')) {
 
         if (saving <= 0) {
           this.worthElement.hidden = true;
+          // Reset so the next pick counts up from zero rather than animating
+          // down from whatever the last emptied bundle happened to save.
+          if (this.savingFrame) cancelAnimationFrame(this.savingFrame);
+          this.savingFrame = null;
+          this.shownSaving = 0;
           return;
         }
 
         this.worthElement.hidden = false;
-        this.worthElement.innerHTML = `<s>${formatOfferMoney(retail, this.moneyFormat)}</s> <b>save ${formatOfferMoney(
-          saving,
-          this.moneyFormat
-        )}</b>`;
+        this.countSavingTo(retail, saving);
+      }
+
+      /*
+        Count the saving up to its new value instead of snapping to it.
+
+        The saving is the whole point of the offer, and a number that jumps
+        silently reads as a recalculated total; one that climbs reads as a
+        reward for the pick just made. ~420ms, ease-out.
+
+        Cancels any run already in flight so two quick picks don't animate
+        over each other, and skips straight to the final value under
+        prefers-reduced-motion or when the change is trivial.
+      */
+      countSavingTo(retail, saving) {
+        const write = (value) => {
+          this.worthElement.innerHTML =
+            `<s>${formatOfferMoney(retail, this.moneyFormat)}</s> ` +
+            `<b>save ${formatOfferMoney(Math.round(value), this.moneyFormat)}</b>`;
+        };
+
+        if (this.savingFrame) cancelAnimationFrame(this.savingFrame);
+
+        const from = this.shownSaving || 0;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        /*
+          Write the final value synchronously, before any animation.
+
+          requestAnimationFrame is starved while a tab is backgrounded or the
+          window is occluded. If the only write happened inside the rAF
+          callback, a customer who picked an item and switched tabs would come
+          back to an empty savings line — the number the whole offer is
+          selling — until something else forced a re-render. Same failure the
+          floating launchers hit (see snippets/floating-stack.liquid).
+
+          So: correctness first, flourish second. The loop below overwrites
+          this with interpolated values and lands on the same number; if it
+          never runs, the right figure is already on screen.
+        */
+        this.shownSaving = saving;
+        write(saving);
+
+        if (reduced || Math.abs(saving - from) < 2) return;
+
+        const start = performance.now();
+        const DURATION = 420;
+        const step = (now) => {
+          const t = Math.min(1, (now - start) / DURATION);
+          const eased = 1 - Math.pow(1 - t, 3);
+          write(from + (saving - from) * eased);
+          if (t < 1) {
+            this.savingFrame = requestAnimationFrame(step);
+          } else {
+            this.savingFrame = null;
+            this.shownSaving = saving;
+          }
+        };
+        this.savingFrame = requestAnimationFrame(step);
       }
 
       picksSummary() {
