@@ -113,12 +113,12 @@
     "social_instagram_link": "https://www.instagram.com/attarwalasofficial",
     "social_youtube_link": "https://youtube.com/@attarwalasofficial?si=JLe96KlKQQ5u2et0",
     "social_tiktok_link": "",
-    "whatsapp_number": "91XXXXXXXXXX",
     "social_twitter_link": "",
     "social_snapchat_link": "",
     "social_pinterest_link": "",
     "social_tumblr_link": "",
     "social_vimeo_link": "",
+    "whatsapp_number": "",
     "predictive_search_enabled": true,
     "predictive_search_show_vendor": true,
     "predictive_search_show_price": false,
@@ -149,15 +149,32 @@
         "disabled": false,
         "settings": {}
       },
-      "5890205134905443601": {
-        "type": "shopify://apps/seoant-trust-badges/blocks/trust_core/f42f2346-5d14-4b41-a8b9-4b6ee352262e",
-        "disabled": true,
-        "settings": {}
-      },
       "3720565183479497137": {
         "type": "shopify://apps/globo-product-option/blocks/app-embed-block/fdc9fad5-1a0f-4bd4-9c8a-1af6a6eef6b8",
         "disabled": false,
         "settings": {}
+      },
+      "15683396631634586217": {
+        "type": "shopify://apps/inbox/blocks/chat/841fc607-4181-4ad1-842d-e24d7f8bad6b",
+        "disabled": false,
+        "settings": {
+          "greeting_message": "",
+          "show_featured_products": true,
+          "featured_products": [],
+          "background_color": "#fcfaf5",
+          "font_color": "#2b2418",
+          "agent_invert_activator_colors": false,
+          "button_color": "#000000",
+          "button_icon": "chat_bubble",
+          "button_text": "chat_with_us",
+          "button_horizontal_position": "bottom_right",
+          "button_vertical_position": "lowest",
+          "agent_inherit_fonts": true,
+          "agent_font": "system_ui_n4",
+          "agent_font_size": 14,
+          "agent_activator_font_size": 13,
+          "agent_border_radius": 0
+        }
       }
     },
     "color_schemes": {
