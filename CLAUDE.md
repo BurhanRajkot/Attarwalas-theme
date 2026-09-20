@@ -1346,6 +1346,64 @@ sellable — see the checklist item at the top of this file. Until a matching
 variant + price exists for a fragrance on `customize-perfume-1`, it simply
 won't appear in the picker, which is correct/expected behavior, not a bug.
 
+### Its own template, and why the rest of the page felt undeveloped (added 2026-09-20)
+
+Burhan: "the first part of that is working nicely... but the full page doesnot
+look that developed." `customize-perfume-1` was rendering the shared
+`templates/product.json` — same template every regular product uses — and
+that's what made it feel thin, for two unrelated reasons.
+
+**1. Two of its three real product photos were hidden.** Admin → Media showed
+3 images (bottle, navy gift-box shot, black gift-box shot), but the storefront
+gallery only ever showed 1 ("Open media 1 in modal", no "of 3" count). Root
+cause, confirmed via the raw product JSON: **every one of the 3 images is
+individually attached to at least one of the 594 variants** — plausibly a
+side effect of how the variants were bulk-created. `main-product`'s
+`hide_variants: true` (the sitewide default in `product.json`, meant for
+swapping a single image per variant like a color swatch) collapses the whole
+gallery to 1 image specifically when *every* image is variant-attached
+(`snippets/product-media-gallery.liquid`: `variant_images.size ==
+product.media.size` → `single_media_visible`). Fixed by setting
+`hide_variants: false` for this product only (see below) — the 3 images
+now always show as a normal thumbnail gallery, regardless of which
+variant is selected. This is very likely happening to nobody else on the
+site only because no other product has images individually variant-attached.
+
+**2. `from-collection` and the `duo_teaser` block both silently fell back to
+nothing useful.** `from-collection` (the "Signature Series" grid every other
+perfume page shows) has no explicit collection override in the shared
+template — it auto-picks whichever of the current product's own collections
+has the most other products (see the comment in `sections/from-collection.liquid`).
+`customize-perfume-1` isn't in `signature-series` (deliberate — see "Qualifying
+purchases" above), so it fell back to the `Customize` collection, which has
+exactly one other product (`Customize Attar Roll-On`) — a single oddly-laid-out
+card instead of a 4-up grid. Separately, `duo_teaser` ("Signature Duos") was
+never wired up **anywhere on the site** — `product.json`'s block has no
+`duo_product` set, so `snippets/duo-teaser.liquid`'s own blank-check
+(`duo_product == blank`) silently drops the whole section on every regular
+product page, sitewide, not just this one.
+
+Fixed by giving this product its own template, `templates/product.customize-perfume.json`
+(assigned in admin → Product → Theme template, same pattern as the offer/duo
+products) — a copy of `product.json` with `hide_variants: false`, `from-collection`'s
+`collection` overridden to Signature Series, and `duo_teaser`'s `duo_product` set
+to `oudh-eternal-duo` (any duo product works as the entry point — the actual
+fragrance shown is resolved from the URL's `?duo=` param, same as the homepage
+carousel). Left the shared `product.json` alone on purpose — forcing
+`from-collection` to Signature Series site-wide would wrongly override roll-on
+product pages that currently correctly show their own roll-on siblings.
+
+**Gotcha: a raw `gid://shopify/Product/…` or `gid://shopify/Collection/…`
+string in a JSON template's `product`/`collection`-type setting does not
+resolve**, even though Shopify silently accepts and stores it (re-serializing
+it lowercased, `gid://shopify/product/…`, without erroring). The block just
+renders as if the setting were blank. The setting has to be set through the
+theme editor's own picker at least once — Shopify then stores it as the bare
+handle (`"oudh-eternal-duo"`, `"signature-series"`), which **is** the correct
+format to hand-write directly in a template JSON file going forward. Caught
+this by comparing what pulled back down after using the real picker UI
+against what I'd hand-written.
+
 ## Announcement bar — continuous marquee, not a slideshow (added 2026-08-23)
 
 Reported by Burhan as "rolling in a single line, like news headlines." Dawn's

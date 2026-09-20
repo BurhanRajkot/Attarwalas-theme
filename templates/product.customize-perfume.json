@@ -1,0 +1,162 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "blocks": {
+        "vendor": {
+          "type": "text",
+          "settings": {
+            "text": "{{ product.vendor }}",
+            "text_style": "uppercase"
+          }
+        },
+        "title": {
+          "type": "title",
+          "settings": {}
+        },
+        "price": {
+          "type": "price",
+          "settings": {}
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "settings": {
+            "picker_type": "button",
+            "swatch_shape": "circle"
+          }
+        },
+        "quantity_selector": {
+          "type": "quantity_selector",
+          "settings": {}
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": true,
+            "show_gift_card_recipient": true
+          }
+        },
+        "share": {
+          "type": "share",
+          "settings": {
+            "share_label": "Share"
+          }
+        },
+        "best_fit": {
+          "type": "best_fit",
+          "settings": {
+            "heading": "Best Fit For",
+            "gender_tags": "Unisex",
+            "occasion_tags": "Day & Night"
+          }
+        },
+        "duo_teaser": {
+          "type": "duo_teaser",
+          "settings": {
+            "duo_product": "oudh-eternal-duo",
+            "heading": "Signature Duos",
+            "max_items": 4
+          }
+        }
+      },
+      "block_order": [
+        "vendor",
+        "title",
+        "price",
+        "variant_picker",
+        "quantity_selector",
+        "buy_buttons",
+        "share",
+        "best_fit",
+        "duo_teaser"
+      ],
+      "settings": {
+        "enable_sticky_info": true,
+        "color_scheme": "scheme-1",
+        "media_size": "small",
+        "constrain_to_viewport": true,
+        "media_fit": "contain",
+        "gallery_layout": "thumbnail",
+        "media_position": "left",
+        "image_zoom": "lightbox",
+        "mobile_thumbnails": "hide",
+        "hide_variants": false,
+        "enable_video_looping": false,
+        "padding_top": 36,
+        "padding_bottom": 12
+      }
+    },
+    "custom_liquid_W8Qik3": {
+      "type": "custom-liquid",
+      "name": "offers",
+      "settings": {
+        "custom_liquid": "{% render 'perfume-offers' %}",
+        "color_scheme": "",
+        "padding_top": 40,
+        "padding_bottom": 52
+      }
+    },
+    "from-collection": {
+      "type": "from-collection",
+      "settings": {
+        "heading": "From the Signature Series",
+        "collection": "signature-series",
+        "products_to_show": 4,
+        "columns_desktop": 4,
+        "image_ratio": "square",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "color_scheme": "scheme-1",
+        "padding_top": 40,
+        "padding_bottom": 52
+      }
+    },
+    "perfumer": {
+      "type": "perfumer",
+      "settings": {
+        "bio": "Every ATTARWALAS fragrance is composed in-house, blending rare oils and traditional attars with modern techniques to create scents that are both timeless and distinctive. Customize Perfume lets you choose exactly which one goes in your bottle.",
+        "name": "ATTARWALAS Perfumers",
+        "role": "",
+        "eyebrow": "Behind the scent",
+        "image_position": "right",
+        "background_color": "#2b2418",
+        "text_color": "#f6f0e4",
+        "muted_text_color": "#b3a68c"
+      }
+    },
+    "related-products": {
+      "type": "related-products",
+      "settings": {
+        "heading": "You may also like",
+        "heading_size": "h2",
+        "products_to_show": 6,
+        "columns_desktop": 6,
+        "color_scheme": "scheme-1",
+        "image_ratio": "square",
+        "image_shape": "default",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "show_rating": false,
+        "columns_mobile": "2",
+        "padding_top": 36,
+        "padding_bottom": 28
+      }
+    }
+  },
+  "order": [
+    "main",
+    "custom_liquid_W8Qik3",
+    "from-collection",
+    "perfumer",
+    "related-products"
+  ]
+}
