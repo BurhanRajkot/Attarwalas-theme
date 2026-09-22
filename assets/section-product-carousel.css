@@ -136,13 +136,31 @@
   list-style: none;
   /* Burhan asked for normal finger-swipe scrolling on mobile instead of
      being limited to the arrow buttons (2026-09-20) — so this is a real
-     scroll container (`overflow-x: auto`, `touch-action: pan-x pan-y`) and
-     the arrows are just a convenience on top of it. The JS already listens
-     to the track's own `scroll` event for the counter/progress bar, so a
-     manual swipe updates them exactly like an arrow-triggered scrollBy()
-     does — nothing else needed. */
+     scroll container (`overflow-x: auto`) and the arrows are just a
+     convenience on top of it. The JS already listens to the track's own
+     `scroll` event for the counter/progress bar, so a manual swipe updates
+     them exactly like an arrow-triggered scrollBy() does — nothing else
+     needed.
+
+     overflow-y: hidden is load-bearing, not decorative. Declaring only
+     overflow-x leaves overflow-y at its default, and per the CSS Overflow
+     spec a scroll container with one axis non-visible resolves the other
+     to `auto` too — so this row was ALSO vertically scrollable. Each slide
+     reveals in from `translateY(24px)` (see .product-carousel__slide
+     below), and a transformed box's offset position still counts toward
+     its container's scrollable overflow even though transforms don't
+     affect layout — so a slide that hasn't revealed yet (anything still
+     off-screen in the horizontal scroller when the page loads) stretched
+     this row's scrollable area 24px taller than its own height. Combined
+     with `touch-action: pan-y` below, a vertical swipe over the carousel
+     got captured as a 24px internal scroll instead of scrolling the page —
+     reported by Burhan as "the duo section is scrollable," since the
+     homepage's Duo & Trio carousel uses this same section. Fixed at the
+     root here rather than in the animation, since any future reveal effect
+     with a starting transform would reintroduce the same trap otherwise. */
   overflow-x: auto;
-  touch-action: pan-x pan-y;
+  overflow-y: hidden;
+  touch-action: pan-x;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
@@ -165,8 +183,21 @@
 
 .product-carousel__slide {
   flex: 0 0 auto;
-  /* 58vw: shows ~1.7 cards, making swipe gesture obvious */
-  width: 58vw;
+  /* Two full cards on a phone, not one card plus a sliver of the next.
+     Burhan: the Duo carousel on a Pixel 9 showed one product and "the rest
+     is half" — the old 58vw was deliberately sized to leave a peeking
+     sliver of card 2 as a hint to swipe, but the row already has its own
+     prev/next arrows and a "1 / 6" counter doing that job, so the sliver
+     was just a partly-cut-off product with no purpose of its own. Same
+     call Burhan already made for the offer picker (see "Mobile picker: one
+     grid, one scroll axis" in CLAUDE.md) — full cards, not peeking ones.
+
+     `%` here resolves against the flex container's content box, which
+     already excludes `.product-carousel__list`'s own left/right padding —
+     so this only has to subtract the one gap between the two visible
+     cards, and it self-adjusts to any screen width without needing a
+     separate breakpoint tuned by hand (the old 58vw/62vw split did). */
+  width: calc((100% - 1.2rem) / 2);
   scroll-snap-align: start;
   opacity: 0;
   transform: translateY(24px);
@@ -184,13 +215,6 @@
     opacity: 1;
     transform: none;
     transition: none;
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .product-carousel__slide {
-    /* On very small phones, show ~1.6 cards */
-    width: 62vw;
   }
 }
 

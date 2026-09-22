@@ -249,4 +249,9 @@
   .shop-by-category__header {
     margin-bottom: 1.2rem;
   }
+
+  /* Mobile only: no arrow */
+  .shop-by-category__arrow {
+    display: none;
+  }
 }

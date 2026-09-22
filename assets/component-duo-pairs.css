@@ -26,18 +26,99 @@
 }
 
 /*
-  Duo cards and hero view should never carry a boxy border or selected ring.
-  On a dedicated product hero, there is only one fragrance — a selected-state
-  ring (.offer-card--selected) made it look like a rigid form box/coupon instead
-  of a luxury product page (reported live: "looks so bad that golden border").
+  The hero view (one fragrance, reached via ?duo=<handle>) should never carry
+  a boxy border or selected ring — on a dedicated product hero, there is only
+  one fragrance, so a selected-state ring (.offer-card--selected) made it look
+  like a rigid form box/coupon instead of a luxury product page (reported
+  live: "looks so bad that golden border"). Scoped to .duo-hero only — see
+  the ".duo-card container" block below for why the grid cards are different.
 */
-.duo-card,
 .duo-hero,
 .duo-hero.offer-card--selected,
 .duo-hero.offer-card--selected:hover {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+}
+
+/*
+  .duo-card container (added 2026-09-22)
+
+  The grid view used to inherit the same "no border/shadow" rule as the hero
+  above, which was the wrong fix for it: on a *grid* of six near-identical
+  tiles, that rule left every card as bare text/pills floating directly on
+  the page background with nothing marking where one product ends and the
+  next begins — reported by Burhan as looking "very very very bad", the page
+  reading as one undifferentiated wall of round pills rather than six
+  distinct products. The hero is a single full-bleed product page, where a
+  boxed ring reads as a coupon; the grid is a set of repeating cards, where a
+  boxed container is exactly what a card grid needs to read as a grid at all
+  (this is also how every other card grid on the site — product cards, the
+  offer pages' own .offer-card — already works).
+
+  A flat, fully-rounded tinted panel, not the harsh gold ring that was
+  rejected on the hero: matches the rounded-card language already
+  established for .free-gift / .product-gift-picker elsewhere on the site,
+  so the duo grid reads as ATTARWALAS rather than as a stray coupon or a bare
+  form. `.duo-card` loads after `.offer-card` in the cascade (this file is
+  included after section-offer-builder.css), so these override the shared
+  card rules without needing !important.
+*/
+.duo-card {
+  border-radius: 1.6rem;
+  background: rgba(var(--offer-ink), 0.025);
+  border-color: rgba(var(--offer-ink), 0.08);
+  box-shadow: 0 0.6rem 1.8rem rgba(var(--offer-ink), 0.05);
+  overflow: hidden;
+}
+
+@media (hover: hover) {
+  .duo-card:hover {
+    border-color: rgba(var(--offer-ink), 0.16);
+    box-shadow: 0 1rem 2.6rem rgba(var(--offer-ink), 0.09);
+  }
+}
+
+/*
+  Selected state stays quiet too — a soft ink border, not the gold ring
+  (that combination is what read as a coupon in the first place). The
+  checkmark badge on the photo (.offer-card__check) already signals
+  "selected" on its own; this only needs to keep the card looking chosen,
+  not stamped.
+*/
+.duo-card.offer-card--selected,
+.duo-card.offer-card--selected:hover {
+  border-color: rgba(var(--offer-gold), 0.55);
+  box-shadow: 0 1rem 2.6rem rgba(var(--offer-ink), 0.09);
+}
+
+/*
+  A hairline above the price/CTA area separates "pick your sizes" from
+  "here's the price and the button" — the second thing Burhan's complaint
+  named ("nothing to separate out stuff"). Scoped to the grid card only; the
+  hero keeps its own open, unboxed rhythm.
+*/
+.duo-card .duo-card__breakdown {
+  align-self: stretch;
+  justify-content: center;
+  margin-top: 1.6rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(var(--offer-ink), 0.08);
+}
+
+/*
+  A little more air between cards now that each one is a visible panel —
+  1.2rem of gap on phones was tuned for borderless tiles and reads as
+  cramped once each tile has its own edge. Duo page only.
+*/
+.duo-pairs .offer-grid {
+  gap: 2rem 1.4rem;
+}
+
+@media screen and (min-width: 750px) {
+  .duo-pairs .offer-grid {
+    gap: 3.2rem 2.4rem;
+  }
 }
 
 .duo-card__subtitle {

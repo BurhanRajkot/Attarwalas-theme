@@ -121,76 +121,104 @@
     </p>
     <div class="product-gift-picker__select-wrap">
       {%- if use_fragrance_search -%}
-        <fragrance-picker class="fragrance-picker" data-gift-fragrance-picker>
-          <div class="fragrance-picker__search">
-            <svg class="icon icon-search fragrance-picker__search-icon" aria-hidden="true" focusable="false">
-              <use href="#icon-search">
-            </svg>
-            <input
-              type="search"
-              class="fragrance-picker__search-input"
-              placeholder="Search by fragrance name…"
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-              aria-label="Search fragrances for your free perfume"
-              data-fragrance-search
-            >
-            <button type="button" class="fragrance-picker__search-clear" data-fragrance-clear hidden>
-              <svg class="icon icon-close" aria-hidden="true" focusable="false">
-                <use xlink:href="#icon-reset">
+        {%- comment -%}
+          Cross-reference the `fragrance` metaobject for alias-based search,
+          same as fragrance-option-picker.liquid (the main "Customize your
+          own" picker above this one). Without this, data-search only ever
+          held the literal option value ("Sauvage Inspired (Masculine)"), so
+          a customer searching a real brand name like "Dior" got nothing —
+          even though matching brand names to in-house-inspired names is
+          exactly what the metaobject's aliases field exists for. The main
+          picker above already does this lookup, which is why it correctly
+          found "dior" and this one didn't — two separate <fragrance-picker>
+          instances on this page, only one of them wired to the metaobject.
+          Same 250-item paginate raise as that picker, for the same reason
+          (the default 50-item page silently drops alias data past #50).
+        {%- endcomment -%}
+        {%- paginate shop.metaobjects.fragrance.values by 250 -%}
+          {%- assign fragrances = shop.metaobjects.fragrance.values -%}
+          <fragrance-picker class="fragrance-picker" data-gift-fragrance-picker>
+            <div class="fragrance-picker__search">
+              <svg class="icon icon-search fragrance-picker__search-icon" aria-hidden="true" focusable="false">
+                <use href="#icon-search">
               </svg>
-              <span class="visually-hidden">Clear search</span>
-            </button>
-          </div>
-          <div class="fragrance-picker__list" data-fragrance-list role="listbox" tabindex="0" hidden>
-            <div class="fragrance-picker__item" data-fragrance-item data-search="">
-              <input type="radio" id="GiftSkip-{{ section_id }}" name="GiftFragrance-{{ section_id }}" value="" class="fragrance-picker__radio visually-hidden" checked>
-              <label for="GiftSkip-{{ section_id }}" class="fragrance-picker__label">
-                <span class="fragrance-picker__name">Skip for now</span>
-                <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
-              </label>
+              <input
+                type="search"
+                class="fragrance-picker__search-input"
+                placeholder="Search by fragrance name…"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                aria-label="Search fragrances for your free perfume"
+                data-fragrance-search
+              >
+              <button type="button" class="fragrance-picker__search-clear" data-fragrance-clear hidden>
+                <svg class="icon icon-close" aria-hidden="true" focusable="false">
+                  <use xlink:href="#icon-reset">
+                </svg>
+                <span class="visually-hidden">Clear search</span>
+              </button>
             </div>
-            {%- for value in gift_search_product.options_with_values[0].values -%}
-              {%- liquid
-                assign gift_variant_small = blank
-                assign gift_variant_large = blank
-                for v in gift_search_product.variants
-                  if v.option1 != value
-                    continue
-                  endif
-                  assign gift_size_lower = v.option2 | downcase
-                  if gift_size_lower == '10ml'
-                    assign gift_variant_small = v
-                  elsif gift_size_lower == '35ml'
-                    assign gift_variant_large = v
-                  endif
-                endfor
-                if gift_variant_small == blank and gift_variant_large == blank
-                  continue
-                endif
-              -%}
-              {%- capture gift_input_id -%}GiftFragrance-{{ section_id }}-{{ forloop.index0 }}{%- endcapture -%}
-              <div class="fragrance-picker__item" data-fragrance-item data-search="{{ value | downcase | escape }}">
-                <input
-                  type="radio"
-                  id="{{ gift_input_id }}"
-                  name="GiftFragrance-{{ section_id }}"
-                  value="{{ value | escape }}"
-                  class="fragrance-picker__radio visually-hidden"
-                  data-gift-variant-small="{{ gift_variant_small.id }}"
-                  data-gift-variant-large="{{ gift_variant_large.id }}"
-                >
-                <label for="{{ gift_input_id }}" class="fragrance-picker__label">
-                  <span class="fragrance-picker__name">{{ value | remove_first: 'ATTARWALAS ' }}</span>
+            <div class="fragrance-picker__list" data-fragrance-list role="listbox" tabindex="0" hidden>
+              <div class="fragrance-picker__item" data-fragrance-item data-search="">
+                <input type="radio" id="GiftSkip-{{ section_id }}" name="GiftFragrance-{{ section_id }}" value="" class="fragrance-picker__radio visually-hidden" checked>
+                <label for="GiftSkip-{{ section_id }}" class="fragrance-picker__label">
+                  <span class="fragrance-picker__name">Skip for now</span>
                   <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
                 </label>
               </div>
-            {%- endfor -%}
-            <p class="fragrance-picker__empty" data-fragrance-empty hidden>No fragrances match your search.</p>
-          </div>
-        </fragrance-picker>
+              {%- for value in gift_search_product.options_with_values[0].values -%}
+                {%- liquid
+                  assign gift_variant_small = blank
+                  assign gift_variant_large = blank
+                  for v in gift_search_product.variants
+                    if v.option1 != value
+                      continue
+                    endif
+                    assign gift_size_lower = v.option2 | downcase
+                    if gift_size_lower == '10ml'
+                      assign gift_variant_small = v
+                    elsif gift_size_lower == '35ml'
+                      assign gift_variant_large = v
+                    endif
+                  endfor
+                  if gift_variant_small == blank and gift_variant_large == blank
+                    continue
+                  endif
+
+                  assign fragrance_entry = null
+                  for f in fragrances
+                    if f.display_name.value == value
+                      assign fragrance_entry = f
+                      break
+                    endif
+                  endfor
+                  assign alias_list = fragrance_entry.aliases.value | join: ' '
+                  assign reference_name = fragrance_entry.reference_name.value
+                  assign search_text = value | append: ' ' | append: alias_list | append: ' ' | append: reference_name | downcase | strip | escape
+                -%}
+                {%- capture gift_input_id -%}GiftFragrance-{{ section_id }}-{{ forloop.index0 }}{%- endcapture -%}
+                <div class="fragrance-picker__item" data-fragrance-item data-search="{{ search_text }}">
+                  <input
+                    type="radio"
+                    id="{{ gift_input_id }}"
+                    name="GiftFragrance-{{ section_id }}"
+                    value="{{ value | escape }}"
+                    class="fragrance-picker__radio visually-hidden"
+                    data-gift-variant-small="{{ gift_variant_small.id }}"
+                    data-gift-variant-large="{{ gift_variant_large.id }}"
+                  >
+                  <label for="{{ gift_input_id }}" class="fragrance-picker__label">
+                    <span class="fragrance-picker__name">{{ value | remove_first: 'ATTARWALAS ' }}</span>
+                    <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
+                  </label>
+                </div>
+              {%- endfor -%}
+              <p class="fragrance-picker__empty" data-fragrance-empty hidden>No fragrances match your search.</p>
+            </div>
+          </fragrance-picker>
+        {%- endpaginate -%}
       {%- else -%}
         <select class="product-gift-picker__select" data-gift-select aria-label="Choose your free perfume">
           <option value="" selected>Skip for now</option>

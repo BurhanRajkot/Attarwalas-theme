@@ -12,18 +12,36 @@ function onIntersection(elements, observer) {
         elementTarget.classList.remove(SCROLL_ANIMATION_OFFSCREEN_CLASSNAME);
         if (elementTarget.hasAttribute('data-cascade'))
           elementTarget.setAttribute('style', `--animation-order: ${index};`);
-        // animation-fill-mode: forwards (--animation-slide-in) holds the
-        // reveal's final transform: translateY(0) on this element forever.
-        // That's visually a no-op, but a lingering transform still creates a
-        // new containing block — Chrome then closes any native <select>
-        // dropdown nested inside immediately after it opens. Drop it once
-        // the reveal has actually finished (see the matching CSS rule).
-        elementTarget.addEventListener(
-          'animationend',
-          () => elementTarget.classList.add('scroll-trigger--settled'),
-          { once: true }
-        );
       }
+      // animation-fill-mode: forwards (--animation-slide-in) holds the
+      // reveal's final transform: translateY(0) on this element forever.
+      // That's visually a no-op, but a lingering transform still creates a
+      // new containing block — Chrome then closes any native <select>
+      // dropdown nested inside immediately after it opens, and any
+      // position: absolute descendant with a z-index gets trapped in this
+      // element's own stacking context instead of the page's, so it can no
+      // longer render above later content (reported live: the "Your free
+      // perfume" search results on Customize Perfume rendering behind/mixed
+      // into the Bundle Offers section further down the page). Drop it once
+      // the reveal has actually finished (see the matching CSS rule).
+      //
+      // This has to run unconditionally, not only inside the "was offscreen"
+      // branch above. base.css runs the slide-in/fade-in animation via
+      // `.scroll-trigger:not(.scroll-trigger--offscreen)` — i.e. by default,
+      // with no JS involved — specifically so already-visible content (the
+      // product buy column, anything above the fold) animates in on load
+      // without needing to be hidden and revealed first. Such an element's
+      // first-ever IntersectionObserver callback already reports
+      // isIntersecting: true, so it never carries
+      // scroll-trigger--offscreen and the old code, which only attached
+      // this listener inside that class check, silently skipped it —
+      // permanently stuck at the held transform, exactly the elements this
+      // fix exists for.
+      elementTarget.addEventListener(
+        'animationend',
+        () => elementTarget.classList.add('scroll-trigger--settled'),
+        { once: true }
+      );
       observer.unobserve(elementTarget);
     } else {
       element.target.classList.add(SCROLL_ANIMATION_OFFSCREEN_CLASSNAME);

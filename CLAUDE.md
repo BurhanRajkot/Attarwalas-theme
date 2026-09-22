@@ -1338,6 +1338,42 @@ unavailable variant — disabling Add to Cart until a fragrance is chosen. Once
 chosen, Dawn's existing `onVariantChange` flow takes over exactly as it
 already does for Size/Type, with no other changes needed.
 
+### The free-gift search box is a second, separate `<fragrance-picker>` — and didn't get the alias fix (fixed 2026-09-22)
+
+Burhan reported that searching "dior" in the *free perfume* search box
+(`snippets/product-gift-picker.liquid`'s "Customize Complimentary" branch,
+`use_fragrance_search`) returned nothing, while the exact same search in the
+*main* "Search Your Fragrance" box above it (this snippet) worked correctly.
+
+Both boxes render the same `<fragrance-picker>` custom element and share
+`assets/fragrance-picker.js` and `component-fragrance-picker.css` — but
+they're two **separate instances built from separate Liquid**, and only this
+one (`fragrance-option-picker.liquid`) was ever wired up to cross-reference
+the `fragrance` metaobject's `aliases`/`reference_name` fields into each
+item's `data-search`. `product-gift-picker.liquid`'s copy built `data-search`
+from the raw option value only (e.g. `"sauvage inspired (masculine)"`) — so
+a customer searching a real brand name found nothing, even though matching
+brand names to in-house-inspired names is the entire reason the aliases
+field exists.
+
+Fixed by giving `product-gift-picker.liquid` the identical metaobject lookup
+this file uses: wrap its fragrance-search branch in
+`{% paginate shop.metaobjects.fragrance.values by 250 %}` (same 250-item
+raise as here, same reason — the default 50-item page silently drops alias
+data past #50), look up the matching `fragrance` entry by `display_name`,
+and append its aliases + reference name into `data-search`. Verified live:
+`data-search` on Sauvage Inspired now reads `"...sauvage inspired
+(masculine) dior sauvage ... dior sauvage perfume dior sauvage"` — "dior"
+now matches.
+
+**If a third fragrance-search box is ever added anywhere on the site, it
+needs this same metaobject cross-reference written into its own Liquid** —
+there's no shared snippet or JS-side lookup doing this centrally; each
+instance currently builds its own `data-search` string at render time, so
+copying the visible markup without also copying the metaobject loop
+reintroduces this exact bug silently (the box still works, it just can't
+find anything by brand name — no error, no visual sign anything's missing).
+
 ### Outstanding: metaobjects ≠ variants
 
 Burhan is bulk-populating the `fragrance` metaobject via Matrixify (50+ entries
@@ -2076,6 +2112,49 @@ alongside that `border: 0` (the desktop block already pairs the two) takes it to
 0 gutter at 320/360/375/393/412/430. **Keep `border` and `max-width` together in
 that rule** — resetting one without the other is what caused this.
 
+**5. A 5px band of page colour above and below every photo** — the "white
+border", and the one that affected *every* product, roll-ons included, not just
+signature series. `component-slider.css` gives each mobile slide
+`padding-top/bottom: max(var(--focus-outline-padding), var(--shadow-padding-*))`
+= `0.5rem`, reserving room for a focus ring and the media drop shadow. The
+gallery has neither (the shadow is switched off in the same block), so it only
+ever painted a band across the top and bottom of each slide. Measured: slide
+403px tall around a 393px image. Zeroed for
+`[id^="MainProduct-"] .product__media-list.slider--mobile .slider__slide`.
+Verified on the live roll-on (7 slides) and signature (5 slides) pages at
+393/402/412 — top, bottom, left and right bands all 0 on every slide.
+
+**6. `scroll-padding-left: 1.5rem` on the scroller — the one that mattered.**
+Burhan's description is what cracked it: "I scrolled right, the next image
+should cover the whole page and it doesn't." With a 1.5rem scroll-padding the
+browser aligns each `scroll-snap-align: start` slide **15px right of the
+container's left edge**, so every slide comes to rest 15px over and a 15px
+strip of the previous slide stays on screen. Measuring his screenshot's pixels
+confirmed it: `x=6..27` was `rgb(252,251,249)`, the page colour, ≈13 CSS px at
+that capture's scale — not white bleeding out of a photo, the neighbouring
+slide.
+
+**The cascade trap:** this block already said `scroll-padding-left: 0`, and it
+had been dead from the day it was written. `[id^="MainProduct-"]
+.product__media-list` is specificity (0,2,0); so is Dawn's
+`.slider.slider--mobile` in `component-slider.css` — and Shopify emits that
+file *after* this one on the product page, so it won on source order. Same for
+`margin-bottom: 2.4rem`, silently losing to Dawn's `1rem`. Both now live in
+`[id^="MainProduct-"] .product__media-list.slider.slider--mobile`, (0,4,0),
+which wins regardless of load order.
+
+**Before overriding anything on `.product__media-list`, check whether
+`component-slider.css` sets it too** — it also owns `overflow-x`,
+`scroll-snap-type` and `scroll-behavior` on the same element, and it always
+loads later. An equal-specificity override there is a no-op that looks correct
+in the source file.
+
+**Chasing this took four passes because each fix exposed the next band.** If a
+"border" is reported again, measure all four gaps between `.product__media-item`
+and its `img` before changing anything — the number tells you which rule owns
+it (5px = slider padding, 1px = the container's `max-width` frame reservation,
+4px on one side only = the grid `column-gap`).
+
 **Not a bug: images 3 and 4 have white baked in.** Every signature-series
 product's images 3 and 4 are white-background studio shots with ~8-16% empty at
 the top and ~21% at the bottom, against a page of `rgb(252,250,245)`, while
@@ -2155,6 +2234,59 @@ adding `scroll-trigger--settled` and checking computed styles; the JS side
 and should be spot-checked in a normal, focused browser: open Customize
 Perfume (or any product with `animations_reveal_on_scroll` on), wait a
 second, click the free-gift select, and confirm the option list stays open.
+
+### The fix above never actually reached above-the-fold elements (fixed 2026-09-22)
+
+That "known verification limit" turned out to be masking a real bug, not
+just an automation artifact. Burhan reported the free-gift search dropdown on
+Customize Perfume rendering as a garbled mess mid-scroll, its result rows
+visibly interleaved with the "Bundle Offers" section further down the page —
+the *stacking* half of the exact same containing-block problem documented
+above, not the `<select>`-closing half, but the identical root cause.
+
+`onIntersection`'s `animationend`-listener attachment was nested inside
+`if (elementTarget.classList.contains('scroll-trigger--offscreen'))`. That
+class is only ever added by this same function's `else` branch, when an
+element's *first* intersection check reports `isIntersecting: false`. An
+element already visible in the viewport at page load — `.product__info-wrapper`
+on any product page is exactly this, being the buy column near the top —
+reports `isIntersecting: true` on that very first check, so it never carries
+`--offscreen` and the listener-attachment was skipped entirely. Nothing was
+timing-dependent about this: `base.css` runs the reveal animation via
+`.scroll-trigger:not(.scroll-trigger--offscreen)` specifically so
+already-visible content animates in with no JS help at all (confirmed via
+`element.getAnimations()` — a real, finished, 1-second animation, with zero
+class manipulation from JS) — but that same already-visible element then had
+no path to ever reach `scroll-trigger--settled`, so `animation-fill-mode:
+forwards` held `transform: translateY(0)` → `matrix(1,0,0,1,0,0)` on it
+**permanently**, not just for the first second after load. Every
+above-the-fold `.scroll-trigger` element site-wide has been silently stuck
+like this since the original fix — the `<select>`-closing bug above likely
+looked "fixed" mainly because most of the elements it was tested against
+were below the fold, where the offscreen→intersecting path works correctly.
+
+Fixed by moving the `addEventListener('animationend', …)` call out of that
+nested `if`, so it always runs once `isIntersecting` is true, regardless of
+whether the element was ever marked offscreen. Verified two ways: (1) read
+the deployed minified `animations.js` directly and confirmed the listener
+call is now comma-joined at the same statement level as the offscreen check,
+not nested inside it; (2) since this harness's animation timeline still
+wouldn't reliably fire a real `animationend` event (the same automation
+limitation as above — `getAnimations()` reached `finished`/`currentTime:
+1000` after forcing a repaint, but the DOM event itself still didn't
+dispatch), dispatched a synthetic `AnimationEvent('animationend')` directly
+and confirmed the listener responds correctly (`scroll-trigger--settled`
+added, computed `transform` flips to `none`), then confirmed every ancestor
+of the gift picker's dropdown reads `transform: none` once settled — i.e.
+the z-index:10 list is free to stack against the whole document again, not
+trapped inside `.product__info-wrapper`'s local stacking context.
+
+If a future report describes stacking/overlap on any above-the-fold section
+(not just this one), check whether its `.scroll-trigger` ancestor ever
+reaches `scroll-trigger--settled` before assuming it's a new bug — this fix
+covers it, but any *other* code path that adds `.scroll-trigger` to an
+element and expects `onIntersection` to settle it should be checked against
+this same trap.
 
 ## Mobile pass (2026-09-07)
 
