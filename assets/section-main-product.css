@@ -2168,13 +2168,26 @@ a.product__text {
   @media (orientation: portrait) {
     /* All slides share the same 1:1 square height so white-background product
        shots (images 3/4) don't appear taller than lifestyle images.
+       Targets BOTH the base .media rule (used when constrain_to_viewport is off,
+       which is the default for Signature Series) AND the constrain-height variant,
+       so this fix applies to every product page regardless of theme settings.
        object-fit: contain keeps the full product visible and centred. */
     [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height.media-fit-contain {
       width: 100%;
     }
 
-    [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height .media {
+    /* Override the base padding-top (driven by each image's own --ratio-percent)
+       with a fixed 1:1 square so all slides are the same height. This selector
+       is less specific than the constrain-height one above but covers the case
+       where constrain_to_viewport is disabled (no .constrain-height class at all). */
+    [id^="MainProduct-"] .product__media-wrapper .product-media-container .media {
       padding-top: 100%; /* fixed 1:1 square — same height for every slide */
+    }
+
+    /* The constrain-height version would otherwise win with its own padding-top:
+       keep it in sync so both paths use the same square. */
+    [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height .media {
+      padding-top: 100%;
     }
 
     [id^="MainProduct-"] .product__media-wrapper .product-media-container .product__media img {
