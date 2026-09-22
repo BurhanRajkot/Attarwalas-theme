@@ -11,6 +11,13 @@ if (!customElements.get('product-sticky-bar')) {
         this.buyButtons = document.querySelector(
           `#ProductInfo-${this.sectionId} .product-form__buttons`
         );
+        /* The bar repeats the product's title and price. On a phone the buy
+           buttons sit below the fold while the real price is still on screen,
+           so watching the buttons alone put the bar up with the price showing
+           twice, a few pixels apart (reported by Burhan). Watch the price
+           block too and only take over once BOTH have gone. */
+        this.mainPrice = document.getElementById(`price-${this.sectionId}`);
+        this.onScreen = new Set();
         this.observer = null;
         this.variantUnsubscriber = null;
         this.cartUnsubscribers = [];
@@ -25,12 +32,16 @@ if (!customElements.get('product-sticky-bar')) {
 
         this.observer = new IntersectionObserver(
           (entries) => {
-            const entry = entries[entries.length - 1];
-            this.classList.toggle('is-visible', !entry.isIntersecting);
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) this.onScreen.add(entry.target);
+              else this.onScreen.delete(entry.target);
+            });
+            this.classList.toggle('is-visible', this.onScreen.size === 0);
           },
           { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }
         );
         this.observer.observe(this.buyButtons);
+        if (this.mainPrice) this.observer.observe(this.mainPrice);
 
         this.variantUnsubscriber = subscribe(
           PUB_SUB_EVENTS.variantChange,

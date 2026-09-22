@@ -440,7 +440,8 @@
       >
         <div class="duo-hero__media">
           {%- if gallery_images.size > 0 -%}
-            <div class="duo-hero__gallery" data-duo-gallery role="group" aria-label="{{ perfume.title | escape }} photos" tabindex="0">
+            <div class="duo-hero__frame">
+              <div class="duo-hero__gallery" data-duo-gallery role="group" aria-label="{{ perfume.title | escape }} photos" tabindex="0">
               {%- for image in gallery_images -%}
                 {%- assign slide_loading = 'lazy' -%}
                 {%- if forloop.first -%}
@@ -459,6 +460,22 @@
                   }}
                 </div>
               {%- endfor -%}
+              </div>
+              {%- comment -%}
+                Same floating "2 / 5" pill the product page shows over its
+                gallery. It sits in .duo-hero__frame — a wrapper around the
+                gallery alone — because .duo-hero__media also holds the
+                thumbnail strip, and anchoring to that would park the pill
+                over the thumbs instead of the photo. aria-hidden since the
+                thumb buttons already announce "Show photo N of M".
+              {%- endcomment -%}
+              {%- if gallery_images.size > 1 -%}
+                <div class="duo-hero__counter" data-duo-gallery-counter aria-hidden="true">
+                  <span data-duo-counter-current>1</span>
+                  <span> / </span>
+                  <span>{{ gallery_images.size }}</span>
+                </div>
+              {%- endif -%}
             </div>
             {%- if gallery_images.size > 1 -%}
               <div class="duo-hero__thumbs" data-duo-gallery-dots>

@@ -2134,6 +2134,18 @@ a.product__text {
     margin-left: 0;
     width: 100%;
     column-gap: 0;
+  }
+
+  /* scroll-padding-left and margin-bottom are ALSO set by
+     `.slider.slider--mobile` in component-slider.css, at the same (0,2,0)
+     specificity as `[id^="MainProduct-"] .product__media-list` — and that file
+     is emitted after this one on the product page, so it wins on source order
+     and any value set above is silently dead. That is what put a 1.5rem
+     scroll-padding on this scroller: every slide snapped 15px right of the
+     screen edge, so the photo never covered the width and a 15px strip of the
+     previous slide stayed visible down the left. Matching Dawn's own classes
+     here lifts this to (0,4,0), which wins whatever the load order. */
+  [id^="MainProduct-"] .product__media-list.slider.slider--mobile {
     scroll-padding-left: 0;
     margin-bottom: 2.4rem;
   }
@@ -2149,6 +2161,19 @@ a.product__text {
   [id^="MainProduct-"] .product__media-list:after {
     padding-left: 0;
     margin-left: 0;
+  }
+
+  /* component-slider.css gives every mobile slide
+     padding-top/bottom: max(--focus-outline-padding, --shadow-padding-*),
+     i.e. 0.5rem, to leave room for a focus ring and the media drop shadow.
+     This gallery has neither — the shadow is switched off just above — so
+     that 5px only ever paints page colour as a band across the top and
+     bottom of each photo. Edge to edge means edge to edge on all four
+     sides, so it goes. Most visible on the dark full-bleed shots, which is
+     why it read as a border on the roll-ons. */
+  [id^="MainProduct-"] .product__media-list.slider--mobile .slider__slide {
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   /* Dawn caps the media box at max(300px, 100vh - 400px), and with
@@ -2546,4 +2571,71 @@ a.product__text {
 [id^="MainProduct-"] .gpo-app .gpo-select select:focus-visible {
   outline: 0 !important;
   box-shadow: 0 0 0 0.2rem rgba(var(--color-button), 0.18) !important;
+}
+
+/* ============================================================
+   ATTARWALAS — buy column density pass (mobile)
+   Burhan: the product page "looks too big and not very refined"
+   on a phone. Measured at 393px: the buy column was 718px tall,
+   and the two stacked 54px buttons plus their surrounding 25px
+   margins came to 178px of it — a third of the column for two
+   controls. Share took a 44px row and another 24px of margin for
+   a tertiary action.
+
+   Sizes, not layout: nothing moves or is removed, everything is
+   just brought in. 48px still clears the 44px WCAG 2.5.8 touch
+   target, and the 34px Share row is a text link, not a target
+   that needs the full height.
+
+   Result at 393px: 718 -> 656px, and the buy block through to
+   the free-gift card now lands on one screen.
+
+   Specificity note: these have to match the selectors they
+   override — `[id^="MainProduct-"] .product-form__buttons
+   .button` etc. A plainer `.product-form__submit` rule loses to
+   the existing (0,3,0) ones earlier in this file and silently
+   does nothing.
+   ============================================================ */
+
+@media screen and (max-width: 749px) {
+  [id^="MainProduct-"] .product-form__buttons .button {
+    min-height: 4.8rem;
+    font-size: 1.25rem;
+  }
+
+  [id^="MainProduct-"] .product-form__buttons .product-form__submit {
+    margin-bottom: 0.8rem;
+  }
+
+  [id^="MainProduct-"] .product-form__buttons {
+    margin-top: 1.4rem;
+    padding-top: 0;
+  }
+
+  [id^="MainProduct-"] .product__info-container .product-form {
+    margin-top: 1.4rem;
+    margin-bottom: 1.4rem;
+  }
+
+  [id^="MainProduct-"] .product__info-container > .product__tax {
+    margin-top: 0.4rem;
+  }
+
+  [id^="MainProduct-"] .product__info-container > share-button,
+  [id^="MainProduct-"] .product__info-container > .product__best-fit {
+    margin-top: 0.8rem;
+  }
+
+  [id^="MainProduct-"] .product__info-container share-button .share-button__button {
+    min-height: 3.4rem;
+    font-size: 1.25rem;
+  }
+
+  [id^="MainProduct-"] .product__info-container .product-gift-picker {
+    padding: 1.3rem;
+  }
+
+  [id^="MainProduct-"] .product__info-container .product-gift-picker__select {
+    min-height: 4.2rem;
+  }
 }

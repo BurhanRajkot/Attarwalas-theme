@@ -266,6 +266,42 @@
   needed for the scrolling itself — duo-pairs.js only syncs the dots to
   whichever slide is currently snapped into view.
 */
+/*
+  Positioned wrapper for the gallery alone, so the "2 / 5" pill can be
+  anchored to the photo's bottom-right corner. It cannot live inside
+  .duo-hero__gallery itself — that is the scroll container, so an absolutely
+  positioned child would scroll away with the slides.
+*/
+.duo-hero__frame {
+  position: relative;
+}
+
+/* Matches the product page's floating counter (the .slider-buttons pill in
+   section-main-product.css) — same size, radius, frosted background and
+   type, so the duo page reads as the same site. */
+.duo-hero__counter {
+  position: absolute;
+  z-index: 2;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.8rem;
+  height: 3.2rem;
+  padding: 0 1.4rem;
+  border-radius: 999px;
+  background-color: rgba(var(--color-background), 0.85);
+  backdrop-filter: blur(0.8rem);
+  -webkit-backdrop-filter: blur(0.8rem);
+  box-shadow: 0 0.2rem 1.2rem rgba(var(--color-foreground), 0.12);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgb(var(--color-foreground));
+  pointer-events: none;
+}
+
 .duo-hero__gallery {
   display: flex;
   aspect-ratio: 1 / 1;

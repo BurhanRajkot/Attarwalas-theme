@@ -87,9 +87,14 @@ if (!customElements.get('duo-pairs')) {
       */
       setupGalleries() {
         this.querySelectorAll('[data-duo-gallery]').forEach((gallery) => {
-          const dotsWrap = gallery.parentElement?.querySelector('[data-duo-gallery-dots]');
+          // Scope both lookups to .duo-hero__media, not gallery.parentElement:
+          // the gallery now sits inside .duo-hero__frame (which the counter
+          // is positioned against) while the dots remain a level above it.
+          const media = gallery.closest('.duo-hero__media') || gallery.parentElement;
+          const dotsWrap = media?.querySelector('[data-duo-gallery-dots]');
           const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('[data-duo-dot]')) : [];
           const slides = Array.from(gallery.querySelectorAll('[data-duo-slide]'));
+          const counter = media?.querySelector('[data-duo-counter-current]');
           if (!dots.length || !slides.length) return;
 
           dots.forEach((dot) => {
@@ -106,6 +111,7 @@ if (!customElements.get('duo-pairs')) {
                 const index = slides.indexOf(entry.target);
                 if (index === -1) return;
                 dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+                if (counter) counter.textContent = index + 1;
               });
             },
             { root: gallery, threshold: 0.6 }
