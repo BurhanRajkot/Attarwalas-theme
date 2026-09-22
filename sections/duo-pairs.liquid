@@ -29,6 +29,16 @@
   assign rollon_collection = collections['attar-roll-ons']
 
   comment
+    Each real duo product (Ambre Intense Duo, Yameni Yakud Duo, etc. — the
+    six placeholder products in the "duo" collection) carries its own
+    dedicated photos, uploaded separately from the signature-series perfume
+    product's own bottle-only shots. Matched by title the same way the
+    perfume/roll-on pairing already is: "<Fragrance> Duo" against the
+    perfume's own title + " Duo".
+  endcomment
+  assign duo_collection = collections['duo']
+
+  comment
     "All Signature Duos" back link target. Deliberately NOT product.url of
     whichever duo product happens to be showing right now — since each of
     the 6 real per-fragrance duo products is in the "Duo" collection, their
@@ -199,6 +209,19 @@
           {%- assign rendered_count = rendered_count | plus: 1 -%}
           {%- assign card_id = 'DuoCard-' | append: section.id | append: '-' | append: forloop.index0 -%}
 
+          {%- assign duo_product = blank -%}
+          {%- assign duo_title = perfume.title | append: ' Duo' -%}
+          {%- for candidate in duo_collection.products -%}
+            {%- if candidate.title == duo_title -%}
+              {%- assign duo_product = candidate -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- assign card_image = perfume.featured_image -%}
+          {%- if duo_product != blank and duo_product.featured_image != blank -%}
+            {%- assign card_image = duo_product.featured_image -%}
+          {%- endif -%}
+
           <div
             class="offer-card duo-card"
             data-duo-card
@@ -206,9 +229,9 @@
             data-bundle-handle="{{ perfume.handle }}"
           >
             <div class="offer-card__media">
-              {%- if perfume.featured_image -%}
+              {%- if card_image -%}
                 {{
-                  perfume.featured_image
+                  card_image
                   | image_url: width: 600
                   | image_tag:
                     loading: 'lazy',
@@ -381,6 +404,27 @@
       {%- assign hero_id = 'DuoHero-' | append: section.id | append: '-' | append: forloop.index0 -%}
 
       {%- comment -%}
+        Gallery source: the dedicated duo product's own photos (uploaded to
+        the "duo" collection product, e.g. "Ambre Intense Duo" — a lifestyle
+        shot of the pair, the box, the fragrance pyramid, etc.), not the
+        signature-series perfume's own bottle-only images. Falls back to the
+        perfume's images if a duo product doesn't exist yet or has none of
+        its own, so a fragrance never renders with zero photos.
+      {%- endcomment -%}
+      {%- assign duo_product = blank -%}
+      {%- assign duo_title = perfume.title | append: ' Duo' -%}
+      {%- for candidate in duo_collection.products -%}
+        {%- if candidate.title == duo_title -%}
+          {%- assign duo_product = candidate -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- assign gallery_images = perfume.images -%}
+      {%- if duo_product != blank and duo_product.images.size > 0 -%}
+        {%- assign gallery_images = duo_product.images -%}
+      {%- endif -%}
+
+      {%- comment -%}
         Carries the same data-duo-card / data-duo-*-select / data-duo-price /
         data-duo-retail attributes the grid cards use — duo-pairs.js treats
         every element matching [data-duo-card] the same way (price render,
@@ -395,17 +439,51 @@
         hidden
       >
         <div class="duo-hero__media">
-          {%- if perfume.featured_image -%}
-            {{
-              perfume.featured_image
-              | image_url: width: 1200
-              | image_tag:
-                loading: 'eager',
-                widths: '480, 720, 960, 1200',
-                sizes: '(min-width: 750px) 44vw, 92vw',
-                class: 'duo-hero__image',
-                alt: perfume.title | escape
-            }}
+          {%- if gallery_images.size > 0 -%}
+            <div class="duo-hero__gallery" data-duo-gallery role="group" aria-label="{{ perfume.title | escape }} photos" tabindex="0">
+              {%- for image in gallery_images -%}
+                {%- assign slide_loading = 'lazy' -%}
+                {%- if forloop.first -%}
+                  {%- assign slide_loading = 'eager' -%}
+                {%- endif -%}
+                <div class="duo-hero__slide" data-duo-slide>
+                  {{
+                    image
+                    | image_url: width: 1200
+                    | image_tag:
+                      loading: slide_loading,
+                      widths: '480, 720, 960, 1200',
+                      sizes: '(min-width: 750px) 44vw, 92vw',
+                      class: 'duo-hero__image',
+                      alt: perfume.title | escape
+                  }}
+                </div>
+              {%- endfor -%}
+            </div>
+            {%- if gallery_images.size > 1 -%}
+              <div class="duo-hero__thumbs" data-duo-gallery-dots>
+                {%- for image in gallery_images -%}
+                  <button
+                    type="button"
+                    class="duo-hero__thumb{% if forloop.first %} is-active{% endif %}"
+                    data-duo-dot
+                    data-index="{{ forloop.index0 }}"
+                    aria-label="Show photo {{ forloop.index }} of {{ gallery_images.size }}"
+                  >
+                    {{
+                      image
+                      | image_url: width: 160
+                      | image_tag:
+                        loading: 'lazy',
+                        widths: '80, 120, 160',
+                        sizes: '7rem',
+                        class: 'duo-hero__thumb-image',
+                        alt: ''
+                    }}
+                  </button>
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
           {%- else -%}
             {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg duo-hero__image' }}
           {%- endif -%}

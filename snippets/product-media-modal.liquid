@@ -33,15 +33,35 @@
       tabindex="0"
     >
       {%- liquid
+        comment
+          Same hide_variants scoping as product-media-gallery.liquid: it
+          collapses the modal to the selected variant's image, which is
+          correct for the roll-ons' color swatches but wrongly hides every
+          other signature-series photo that happens to be attached to a
+          Size variant (this modal has its own copy of the gallery's skip
+          logic, so it needed the same collection-scoped fix — the gallery
+          fix alone didn't reach the zoom modal). Keep this in sync with
+          product-media-gallery.liquid if the scoping ever changes again.
+        endcomment
+        assign hide_variants = section.settings.hide_variants
+        if hide_variants
+          for product_collection in product.collections
+            if product_collection.handle == 'signature-series'
+              assign hide_variants = false
+              break
+            endif
+          endfor
+        endif
+
         if product.selected_or_first_available_variant.featured_media != null
           assign media = product.selected_or_first_available_variant.featured_media
-          render 'product-media', media: media, loop: section.settings.enable_video_looping, variant_image: section.settings.hide_variants
+          render 'product-media', media: media, loop: section.settings.enable_video_looping, variant_image: hide_variants
         endif
       -%}
 
       {%- for media in product.media -%}
         {%- liquid
-          if section.settings.hide_variants and variant_images contains media.src or variant_images contains media.id
+          if hide_variants and variant_images contains media.src or variant_images contains media.id
             assign variant_image = true
           else
             assign variant_image = false

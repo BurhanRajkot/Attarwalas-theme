@@ -12,7 +12,34 @@
 {% endcomment %}
 
 {%- liquid
-  if section.settings.hide_variants and variant_images.size == product.media.size
+  comment
+    hide_variants collapses the gallery to whichever image is attached to the
+    currently-selected variant, hiding every other variant-attached image
+    entirely — built for genuine color-swatch products (the attar roll-ons'
+    Box Colour option: Red/Green each have their own photo, and this is what
+    swaps between them). Signature-series perfumes have no such swatch use
+    case; any image that ends up attached to a Size variant there is almost
+    always accidental (bulk import, a stray admin edit), and hide_variants
+    then just drops that photo from the swipeable gallery and the slide
+    count silently stops matching the thumbnail count. Found live on
+    Mystique Island: 6 thumbnails, only 5 real slides, because one photo was
+    attached to a Size variant that wasn't the one initially selected.
+    Scoped off for that collection specifically, the same way
+    product-variant-options.liquid and price.liquid already scope other
+    signature-series-only behavior — a global hide_variants: false would fix
+    this but silently break the roll-ons' real color swap.
+  endcomment
+  assign hide_variants = section.settings.hide_variants
+  if hide_variants
+    for product_collection in product.collections
+      if product_collection.handle == 'signature-series'
+        assign hide_variants = false
+        break
+      endif
+    endfor
+  endif
+
+  if hide_variants and variant_images.size == product.media.size
     assign single_media_visible = true
   endif
 
@@ -21,7 +48,7 @@
   endif
 
   assign media_count = product.media.size
-  if section.settings.hide_variants and media_count > 1 and variant_images.size > 0
+  if hide_variants and media_count > 1 and variant_images.size > 0
     assign media_count = media_count | minus: variant_images.size | plus: 1
   endif
 
@@ -31,6 +58,23 @@
 
   if media_count == 0 or single_media_visible_mobile or section.settings.mobile_thumbnails == 'show' or section.settings.mobile_thumbnails == 'columns' and media_count < 3
     assign hide_mobile_slider = true
+  endif
+
+  comment
+    Only the first slide gets the scroll reveal. Every other slide is either
+    horizontally off-screen in the mobile slider or display:none behind a
+    thumbnail on desktop, so it never intersects the viewport — meaning
+    animations.js leaves it at the reveal's starting opacity (0.01) until the
+    customer has already swiped/clicked it into view. On a phone that reads as
+    swiping to image 3 or 4 and landing on a blank white frame that only fades
+    in afterwards (reported by Burhan on an iPhone; IntersectionObserver is
+    deferred during momentum scroll there, so the blank beat is much longer
+    than on desktop). The reveal can only ever hide these slides, never reveal
+    them at a useful moment.
+  endcomment
+  assign gallery_reveal = ''
+  if settings.animations_reveal_on_scroll
+    assign gallery_reveal = ' scroll-trigger animate--fade-in'
   endif
 
   if section.settings.media_size == 'large'
@@ -65,7 +109,7 @@
         {%- assign featured_media = product.selected_or_first_available_variant.featured_media -%}
         <li
           id="Slide-{{ section.id }}-{{ featured_media.id }}"
-          class="product__media-item grid__item slider__slide is-active{% if single_media_visible %} product__media-item--single{% endif %}{% if featured_media.media_type != 'image' %} product__media-item--full{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
+          class="product__media-item grid__item slider__slide is-active{% if single_media_visible %} product__media-item--single{% endif %}{% if featured_media.media_type != 'image' %} product__media-item--full{% endif %}{{ gallery_reveal }}"
           data-media-id="{{ section.id }}-{{ featured_media.id }}"
         >
           {%- assign media_position = 1 -%}
@@ -88,7 +132,7 @@
       {%- for media in product.media -%}
         {% if media_position >= limit
           or media_position >= 1
-          and section.settings.hide_variants
+          and hide_variants
           and variant_images contains media.src
         %}
           {% continue %}
@@ -97,15 +141,24 @@
         {%- unless media.id == product.selected_or_first_available_variant.featured_media.id -%}
           <li
             id="Slide-{{ section.id }}-{{ media.id }}"
-            class="product__media-item grid__item slider__slide{% if single_media_visible %} product__media-item--single{% endif %}{% if product.selected_or_first_available_variant.featured_media == nil and forloop.index == 1 %} is-active{% endif %}{% if media.media_type != 'image' %} product__media-item--full{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
+            class="product__media-item grid__item slider__slide{% if single_media_visible %} product__media-item--single{% endif %}{% if product.selected_or_first_available_variant.featured_media == nil and forloop.index == 1 %} is-active{{ gallery_reveal }}{% endif %}{% if media.media_type != 'image' %} product__media-item--full{% endif %}"
             data-media-id="{{ section.id }}-{{ media.id }}"
           >
             {%- liquid
               assign media_position = media_position | default: 0 | plus: 1
+              comment
+                Every slide beyond the first used to be loading="lazy". On a
+                horizontal scroll-snap gallery, native lazy-loading is tuned
+                for vertical scroll proximity — swiping to slide 3/4 on a
+                real phone with real network latency can outrun the browser's
+                own fetch, showing a half-loaded/blank frame for a moment
+                (reported by Burhan: fine in Chrome's mobile emulation, which
+                has instant/cached loads, but visibly broken-looking on a
+                real device). Product galleries are a handful of small
+                images the customer is meant to swipe through immediately, so
+                eager-loading all of them removes the gap entirely.
+              endcomment
               assign lazy_load = false
-              if media_position > 1
-                assign lazy_load = true
-              endif
             -%}
             {% render 'product-thumbnail',
               media: media,
@@ -215,7 +268,7 @@
           -%}
           <li
             id="Slide-Thumbnails-{{ section.id }}-0"
-            class="thumbnail-list__item slider__slide{% if section.settings.hide_variants and variant_images contains featured_media.src %} thumbnail-list_item--variant{% endif %}"
+            class="thumbnail-list__item slider__slide{% if hide_variants and variant_images contains featured_media.src %} thumbnail-list_item--variant{% endif %}"
             data-target="{{ section.id }}-{{ featured_media.id }}"
             data-media-position="{{ media_index }}"
           >
@@ -259,7 +312,7 @@
             -%}
             <li
               id="Slide-Thumbnails-{{ section.id }}-{{ forloop.index }}"
-              class="thumbnail-list__item slider__slide{% if section.settings.hide_variants and variant_images contains media.src %} thumbnail-list_item--variant{% endif %}"
+              class="thumbnail-list__item slider__slide{% if hide_variants and variant_images contains media.src %} thumbnail-list_item--variant{% endif %}"
               data-target="{{ section.id }}-{{ media.id }}"
               data-media-position="{{ media_index }}"
             >

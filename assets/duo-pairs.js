@@ -76,6 +76,42 @@ if (!customElements.get('duo-pairs')) {
 
         this.addButton.addEventListener('click', () => this.addToCart());
         this.setupHeroView();
+        this.setupGalleries();
+      }
+
+      /*
+        Dots under the hero gallery: click jumps to that slide, and an
+        IntersectionObserver keeps the active dot synced to whichever slide
+        is actually snapped into view (native scroll-snap does the swiping
+        itself — this only mirrors that position, it never drives it).
+      */
+      setupGalleries() {
+        this.querySelectorAll('[data-duo-gallery]').forEach((gallery) => {
+          const dotsWrap = gallery.parentElement?.querySelector('[data-duo-gallery-dots]');
+          const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('[data-duo-dot]')) : [];
+          const slides = Array.from(gallery.querySelectorAll('[data-duo-slide]'));
+          if (!dots.length || !slides.length) return;
+
+          dots.forEach((dot) => {
+            dot.addEventListener('click', () => {
+              const index = parseInt(dot.dataset.index, 10) || 0;
+              slides[index]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            });
+          });
+
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                const index = slides.indexOf(entry.target);
+                if (index === -1) return;
+                dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+              });
+            },
+            { root: gallery, threshold: 0.6 }
+          );
+          slides.forEach((slide) => observer.observe(slide));
+        });
       }
 
       /*

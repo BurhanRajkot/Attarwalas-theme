@@ -1998,6 +1998,105 @@ Gotchas:
   lift of 0 the activator lands pixel-identical to Inbox's default, and at 120px
   it rises 120px and stays fully visible.
 
+## Product gallery on mobile: blank slides and a counter that overcounts (fixed 2026-09-22)
+
+Burhan, on an iPhone: swiping to image 3 or 4 of a signature-series perfume
+showed overlap and white space. Two independent defects, both reproduced at a
+real 390px viewport (see "Auditing at a phone viewport"):
+
+**1. Every slide but the first started invisible.** `product-media-gallery.liquid`
+put `scroll-trigger animate--fade-in` on each `<li>`, and Dawn's
+`animate--fade-in` holds `opacity: 0.01` until `animations.js`'s
+IntersectionObserver says the element is on screen. A slide in a horizontal
+scroller is never on screen until it has already been swiped to — and on the
+desktop `thumbnail` layout the inactive slides are `display: none`, which never
+intersects either. So the reveal could only ever *hide* those slides: you swipe,
+land on a blank white frame, and the photo fades in afterwards. Measured on the
+live page — slides 2-6 all sat at `opacity: 0.01` on load, and a screenshot
+mid-swipe caught slide 4 as a near-empty white frame reading "4/7". iOS defers
+IntersectionObserver during momentum scroll, which is why it looks far worse on
+a real phone than in desktop emulation.
+
+Fixed by emitting the reveal classes only on the first slide (`gallery_reveal`
+in that snippet) — the one that is genuinely below the fold on load and the only
+one the reveal was ever doing anything for.
+
+**2. The counter read "1 / 7" for six images.** The ATTARWALAS mobile block in
+`section-main-product.css` makes each slide `width: 100%` (no peek), but left
+`.grid`'s `column-gap` in place, so slides sat 394px apart inside a 390px
+scroller. `SliderComponent.initPages()` computes
+`slidesPerPage = Math.floor(clientWidth / itemOffset)` → `floor(390 / 394)` →
+**0**, and `totalPages = items - 0 + 1` → 7, a page the slider can never scroll
+to. The same 4px is the white seam visible between two photos mid-swipe.
+
+Fixed with `column-gap: 0` on that list. The `:after` spacer's
+`margin-left: calc(-1 * var(--grid-mobile-horizontal-spacing))` had to be zeroed
+in the same block: it is the counterweight to that gap, and on its own it pulls
+the scrollable width 4px short of the last slide's snap point, putting the last
+photo permanently out of reach. Verified at 390px and at iPhone 16's 393px —
+`scrollWidth - clientWidth` lands exactly on the last slide's `offsetLeft`, the
+counter reads `3 / 6`, and page overflow is 0.
+
+**Any full-bleed slider built on `.grid` needs both halves of this.** Setting a
+slide to `width: 100%` without also zeroing the gap silently breaks the
+counter's arithmetic, and zeroing the gap without the `:after` margin silently
+strands the last slide.
+
+**3. The photo's size was decided by the viewport's HEIGHT** — which is why it
+looked right on some phones and wrong on others. `constrain_to_viewport` is on,
+so Dawn caps the media box at `max(300px, 100vh - 400px)`, and with
+`media_fit: contain` it applies that cap to the **width** as well
+(`--contained-width: calc(var(--constrained-height) * var(--aspect-ratio))`).
+A square photo therefore only goes edge to edge when `100vh ≥ width + 400`:
+
+| phone | box in the slide |
+| --- | --- |
+| 390×844, 393×852, 412×915 | full width — looks correct |
+| 375×667 (SE/8) | **300×300, 38px of white each side** |
+| 320×568, Display Zoom, in-app browsers | shrunk the same way |
+
+Mid-swipe that reads as two undersized photos with a white band between them.
+Fixed in the mobile block by sizing the media from its own aspect ratio
+(`width: 100%` + `padding-top: var(--ratio-percent)`) so the slide's width is
+the only thing that decides, wrapped in `@media (orientation: portrait)`: a
+square photo is then as tall as the slide is wide, always inside a portrait
+viewport but not a landscape one, which keeps Dawn's cap.
+
+Verified on the live page at 320/360/375/390/393/412/430 wide — every slide is
+the viewport width, square, identical to its siblings, counter correct, last
+slide reachable, zero page overflow.
+
+**4. A 1px hairline of page colour down both edges of every photo.** What
+Burhan actually meant by "white border" — visible against the dark lifestyle
+shots, invisible against the white-background ones. `.product-media-container`
+carries `max-width: calc(100% - var(--media-border-width) * 2)`, reserving room
+for a frame the mobile block removes with `border: 0` — so the media box
+measured **390.77px inside a 392.78px slide**. Adding `max-width: 100%`
+alongside that `border: 0` (the desktop block already pairs the two) takes it to
+0 gutter at 320/360/375/393/412/430. **Keep `border` and `max-width` together in
+that rule** — resetting one without the other is what caused this.
+
+**Not a bug: images 3 and 4 have white baked in.** Every signature-series
+product's images 3 and 4 are white-background studio shots with ~8-16% empty at
+the top and ~21% at the bottom, against a page of `rgb(252,250,245)`, while
+images 1-2 are full-bleed lifestyle shots. Full-bleed mobile slides make that
+read as a white slab. The subject is a wide composition in a square frame, so
+cropping to square just re-adds the bands — it needs re-exported artwork or a
+background recolour to the page colour, decided in admin, not in CSS.
+
+**Not changed: the lightbox is still Dawn's pan-to-zoom.** Tapping a photo
+opens `product-media-modal`, and `.product-media-modal__content > * { width:
+100% }` lives only in `@media (min-width: 750px)` — so on a phone the image
+renders at its intrinsic ~1100px inside a 375px scroller and you pan around it.
+It is also `loading="lazy"` inside a `display: none` modal, so nothing is
+fetched until the tap, and a slow connection shows a blank pannable canvas
+first. That is stock Dawn behaviour, not a regression, but it is a plausible
+second source of "white space" reports. Making it fit the screen means adding
+that `width: 100%` at mobile too and dropping `sizes="…, 1100px"` in
+`snippets/product-media.liquid` to `100vw` so it reuses the image the gallery
+already downloaded — a UX decision (fit vs. pinch-to-inspect) to put to Burhan
+before doing it.
+
 ## Gotcha: scroll-reveal animations trap native `<select>` dropdowns (fixed 2026-08-31)
 
 Burhan reported the "Your free perfume" dropdown on the Customize Perfume

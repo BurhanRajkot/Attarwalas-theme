@@ -2103,11 +2103,18 @@ a.product__text {
     padding-bottom: 4rem;
   }
 
-  /* ---- gallery: frameless, edge-to-edge ---- */
+  /* ---- gallery: frameless, edge-to-edge ----
+     max-width matters as much as the border: the container's stock
+     max-width is calc(100% - var(--media-border-width) * 2), reserving room
+     for a frame this block has just removed. With the gallery running edge
+     to edge, that leftover 1px each side shows as a hairline of page colour
+     down both edges of every photo. The desktop block resets it the same
+     way. */
 
   [id^="MainProduct-"] .product__media-wrapper .product-media-container,
   [id^="MainProduct-"] .product__media-wrapper .product-media-container .media {
     border: 0;
+    max-width: 100%;
   }
 
   [id^="MainProduct-"] .product__media-wrapper .global-media-settings:after {
@@ -2115,10 +2122,18 @@ a.product__text {
   }
 
   /* The stock "peek" layout shows a sliver of the next slide and offsets
-     the first one; kill both so every slide fills the viewport width. */
+     the first one; kill both so every slide fills the viewport width.
+     column-gap has to go with them: a full-width slide plus the grid's own
+     gap puts the slides 4px further apart than the scroller is wide, so
+     SliderComponent floors slidesPerPage to 0 and renders "1 / 7" for six
+     images (a count it can never reach). The gap is also the white seam
+     between two images mid-swipe. The :after's negative margin is paired
+     with that gap — leaving it behind would pull the scrollable width 4px
+     short of the last slide's snap point, putting it out of reach. */
   [id^="MainProduct-"] .product__media-list {
     margin-left: 0;
     width: 100%;
+    column-gap: 0;
     scroll-padding-left: 0;
     margin-bottom: 2.4rem;
   }
@@ -2133,6 +2148,39 @@ a.product__text {
 
   [id^="MainProduct-"] .product__media-list:after {
     padding-left: 0;
+    margin-left: 0;
+  }
+
+  /* Dawn caps the media box at max(300px, 100vh - 400px), and with
+     media_fit: contain it applies that cap to the *width* too. So the
+     photo's size on a phone is decided by the viewport's HEIGHT: the same
+     square image fills the screen edge to edge on a 390x844 phone and
+     shrinks to a 300px square with 38px of white down each side on a
+     375x667 one (and on anything shorter — Display Zoom, an in-app
+     browser's reduced viewport). That is why the gallery looked correct on
+     some phones and broken on others, and why mid-swipe it read as two
+     shrunken images with a white band between them. Size the media from its
+     own aspect ratio instead and let the slide's width decide.
+
+     Portrait only: a square photo is then as tall as the slide is wide,
+     which is always comfortably inside a portrait viewport but would
+     overflow a landscape one. Landscape keeps Dawn's cap. */
+  @media (orientation: portrait) {
+    /* All slides share the same 1:1 square height so white-background product
+       shots (images 3/4) don't appear taller than lifestyle images.
+       object-fit: contain keeps the full product visible and centred. */
+    [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height.media-fit-contain {
+      width: 100%;
+    }
+
+    [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height .media {
+      padding-top: 100%; /* fixed 1:1 square — same height for every slide */
+    }
+
+    [id^="MainProduct-"] .product__media-wrapper .product-media-container .product__media img {
+      object-fit: contain;
+      object-position: center center;
+    }
   }
 
   /* Lightbox still opens on tap; the zoom badge just adds clutter. */
