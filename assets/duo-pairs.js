@@ -138,6 +138,11 @@ if (!customElements.get('duo-pairs')) {
         const duoParam = new URLSearchParams(window.location.search).get('duo');
         const match = duoParam && heroes.find((card) => card.dataset.bundleHandle === duoParam);
 
+        // The sticky add-to-cart bar only makes sense once a single fragrance
+        // is on screen (the hero view) — the grid is a plain browse page now,
+        // with nothing in it to add to cart, so the bar has no reason to show.
+        if (this.bar) this.bar.hidden = !match;
+
         if (!match) {
           this.heroView.hidden = true;
           return;

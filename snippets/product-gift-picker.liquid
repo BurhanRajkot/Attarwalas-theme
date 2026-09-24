@@ -1,11 +1,18 @@
 {% comment %}
-  Renders an optional "choose your free perfume" picker directly on a
-  qualifying signature-series product's page, so the customer can pick their
-  free 10ml/35ml gift before ever reaching the cart, instead of only being
-  able to claim it from snippets/free-gift-picker.liquid once they're already
-  in the cart. Picking here is entirely optional — skipping it just leaves
-  the earned slot unclaimed in the cart exactly as before, so nothing about
-  the existing cart-based flow had to change.
+  Renders a "choose your free perfume" picker directly on a qualifying
+  signature-series product's page, so the customer can pick their free
+  10ml/35ml gift before ever reaching the cart, instead of only being able to
+  claim it from snippets/free-gift-picker.liquid once they're already in the
+  cart.
+
+  Picking here is now REQUIRED (Burhan, 2026-09-24: "the 35ml free bottle is
+  compulsory to select before adding to cart or buying it") — see the
+  updateBuyButtons()/getBuyButtons() logic in product-gift-picker.js, which
+  keeps this product's Add to cart, Buy Now, and sticky-bar buttons disabled
+  until a real option (not "Skip for now") is chosen. Was optional until
+  this date; the cart-based picker (free-gift-picker.liquid) is unaffected
+  and still lets a customer pick or skip freely once in the cart — this only
+  gates the product page's own buttons.
 
   Deliberately only ever offers ONE slot regardless of the quantity chosen on
   this page (Burhan's call, 2026-08-29): buying multiple units here still
@@ -111,13 +118,14 @@
     data-initial-variant-id="{{ initial_variant.id }}"
     data-initial-size="{{ initial_size_value }}"
     data-size-option-key="{{ size_option_key }}"
+    data-initial-available="{{ initial_variant.available }}"
     data-gift-label="{{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
   >
     <p class="product-gift-picker__heading">
       {{- settings.free_gift_heading | default: 'Your free perfume' -}}
     </p>
     <p class="product-gift-picker__subtext" data-gift-subtext>
-      Pick a free perfume with this order — optional, you can also choose one later in your cart.
+      Required — pick your free perfume to add this to your cart or buy it.
     </p>
     <div class="product-gift-picker__select-wrap">
       {%- if use_fragrance_search -%}
@@ -164,7 +172,7 @@
               <div class="fragrance-picker__item" data-fragrance-item data-search="">
                 <input type="radio" id="GiftSkip-{{ section_id }}" name="GiftFragrance-{{ section_id }}" value="" class="fragrance-picker__radio visually-hidden" checked>
                 <label for="GiftSkip-{{ section_id }}" class="fragrance-picker__label">
-                  <span class="fragrance-picker__name">Skip for now</span>
+                  <span class="fragrance-picker__name">Select your free perfume…</span>
                   <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
                 </label>
               </div>
@@ -221,7 +229,7 @@
         {%- endpaginate -%}
       {%- else -%}
         <select class="product-gift-picker__select" data-gift-select aria-label="Choose your free perfume">
-          <option value="" selected>Skip for now</option>
+          <option value="" selected disabled>Select your free perfume…</option>
           {%- liquid
             assign gift_slot = 0
           -%}
@@ -260,5 +268,8 @@
       {%- endif -%}
     </div>
     <p class="product-gift-picker__confirm" data-gift-confirm hidden></p>
+    <p class="product-gift-picker__required-hint" data-gift-required-hint>
+      Select your free perfume above to continue.
+    </p>
   </product-gift-picker>
 {%- endif -%}

@@ -160,11 +160,31 @@
      with a starting transform would reintroduce the same trap otherwise. */
   overflow-x: auto;
   overflow-y: hidden;
-  touch-action: pan-x;
+  /* Not pan-x (2026-09-24, same fix as customer-reviews__grid — see that
+     file for the full explanation): pan-x tells the browser to handle only
+     horizontal panning here and opt out of vertical, expecting a vertical
+     drag to bubble to the page — but real-device touch (phone, finger-drag)
+     showed it getting stuck instead, even after mouse/trackpad scrolling
+     was already confirmed fine. iOS Safari and some Android WebViews drop
+     the vertical component rather than bubbling it. overflow-y: hidden
+     above already gives the browser's default per-axis negotiation
+     everything it needs (zero vertical scroll range here), so the fix is
+     to stop overriding that negotiation. */
   overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
+  /* No scroll-snap at all, any width (2026-09-24) — this went mandatory ->
+     proximity -> off-on-mobile-only (see the 2026-09-23 history below) and
+     still came back reported stuck, this time on desktop too. A trackpad's
+     diagonal swipe hits the same Chrome/Safari axis-lock as a touchscreen
+     once scroll-snap-type is set on the x-axis, regardless of touch-action/
+     overflow-y already being correct — "no touch-gesture ambiguity on
+     desktop" was the wrong assumption. Snap was purely a cosmetic
+     end-of-scroll alignment; not worth trading the page's own scroll ever
+     getting stuck again. The mobile-only override below is now redundant
+     but harmless; left as the historical record of how this was diagnosed. */
+  scroll-snap-type: none;
   scroll-behavior: smooth;
   scroll-padding-left: 1.5rem;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -174,6 +194,28 @@
     padding: 0 5rem;
     scroll-padding-left: 5rem;
     gap: 2.6rem;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  /* Still reported stuck after switching mandatory -> proximity above
+     (2026-09-23, same day): any scroll-snap-type on this axis at all gives
+     mobile WebKit/Blink a reason to commit an in-progress diagonal touch
+     gesture to this row instead of letting it continue up the page as a
+     vertical scroll — proximity only softens *where* it snaps once
+     scrolling, it doesn't stop that early axis-lock decision. Dropping snap
+     entirely on mobile removes the thing being locked onto. The JS never
+     depended on snap for anything (arrows use plain scrollBy(), the
+     counter is Math.round on scrollLeft), so this is purely cosmetic
+     end-of-swipe alignment being traded for the row actually letting a
+     vertical swipe pass through. Snap stays on for desktop/tablet, where
+     there's no touch-gesture ambiguity to begin with. */
+  .product-carousel__list {
+    scroll-snap-type: none;
+  }
+
+  .product-carousel__slide {
+    scroll-snap-align: none;
   }
 }
 

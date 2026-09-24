@@ -85,6 +85,32 @@
   display: none;
 }
 
+.product-gift-picker__required-hint,
+.product-gift-picker__buy-warning {
+  --gift-warning: 196, 47, 47;
+  margin: 1.4rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--gift-warning));
+}
+
+.product-gift-picker__required-hint[hidden],
+.product-gift-picker__buy-warning[hidden] {
+  display: none;
+}
+
+/* Sits above the Add to cart / Buy Now buttons (injected by
+   product-gift-picker.js, since buy-buttons.liquid is shared by every
+   product on the site and can't carry gift-specific markup) — the picker
+   itself can be scrolled out of view by the time a customer reaches the
+   buttons, so the same warning repeats right where they're about to click.
+   Plain text only (Burhan, 2026-09-24: the boxed/bordered version "doesn't
+   look that good" — just the line, asterisk-led, no card around it). */
+.product-gift-picker__buy-warning {
+  margin: 0 0 1.2rem;
+  font-size: 1.3rem;
+}
+
 @media screen and (max-width: 749px) {
   .product-gift-picker {
     padding: 1.6rem 1.6rem;

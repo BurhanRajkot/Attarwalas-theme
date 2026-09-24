@@ -46,6 +46,37 @@
   line-height: calc(1 + 0.5 / var(--font-body-scale));
 }
 
+/* Collection descriptions are free-text from admin, and at least one
+   ("Attar Roll-Ons") was entered as fully-bold paragraphs — every word
+   wrapped in <strong>, meant to be a normal sentence. That reads as a loud
+   wall of bold text next to every other collection's plain description.
+   Normalizing weight here means it renders right regardless of how it was
+   typed, rather than relying on admin content staying unbolded forever. */
+.collection-hero__description strong,
+.collection-hero__description b {
+  font-weight: inherit;
+}
+
+/* Truncate to a single line, any collection, however many paragraphs admin
+   enters — Burhan asked for the Attar Roll-Ons description specifically to
+   be cut down, and a line-clamp here does it generically (and keeps any
+   other collection's description from ever ballooning the hero the same
+   way) instead of hardcoding one collection's text length. -webkit-box is
+   the only display mode line-clamp works with; it still renders each <p>
+   as normal text, just stops painting anything past line 1 and adds the
+   ellipsis. */
+.collection-hero__description {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.collection-hero__description p {
+  margin: 0;
+  display: inline;
+}
+
 @media screen and (min-width: 750px) {
   .collection-hero__title + .collection-hero__description {
     font-size: 1.8rem;

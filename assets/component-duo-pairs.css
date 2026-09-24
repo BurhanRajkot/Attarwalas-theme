@@ -9,15 +9,8 @@
 
 /*
   duo-pairs.js toggles the grid view / hero view / individual hero cards via
-  the plain `hidden` attribute, which normally works via the browser's [hidden]
-  UA-stylesheet rule (display: none) — but any author rule that sets `display`
-  on the same element (`.duo-hero { display: grid }` below, in particular)
-  silently wins over that UA rule regardless of selector specificity, since
-  author styles always beat UA styles. Without this, a hidden hero still
-  rendered in normal flow — found live: selecting Fresh Woodscape from the
-  grid still showed Oudh Eternal's hero on screen (first in DOM order) while
-  the sticky bar correctly priced Fresh Woodscape, since the bar reads
-  selection state via JS/classes, not visibility.
+  the plain `hidden` attribute — author `display` rules beat UA rules, so we
+  need to enforce `display: none` explicitly.
 */
 [data-duo-grid-view][hidden],
 [data-duo-hero-view][hidden],
@@ -25,13 +18,19 @@
   display: none !important;
 }
 
+/* ==========================================================================
+   SECTION WRAPPER
+   ========================================================================== */
+
+.duo-pairs {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--header-height, 100px));
+  padding-bottom: 0 !important;
+}
+
 /*
-  The hero view (one fragrance, reached via ?duo=<handle>) should never carry
-  a boxy border or selected ring — on a dedicated product hero, there is only
-  one fragrance, so a selected-state ring (.offer-card--selected) made it look
-  like a rigid form box/coupon instead of a luxury product page (reported
-  live: "looks so bad that golden border"). Scoped to .duo-hero only — see
-  the ".duo-card container" block below for why the grid cards are different.
+  Hero has no card chrome — a single product page doesn't need a box.
 */
 .duo-hero,
 .duo-hero.offer-card--selected,
@@ -41,133 +40,112 @@
   outline: none !important;
 }
 
-/*
-  .duo-card container (added 2026-09-22)
+.duo-card__subtitle {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--offer-ink), 0.42);
+  font-weight: 500;
+}
 
-  The grid view used to inherit the same "no border/shadow" rule as the hero
-  above, which was the wrong fix for it: on a *grid* of six near-identical
-  tiles, that rule left every card as bare text/pills floating directly on
-  the page background with nothing marking where one product ends and the
-  next begins — reported by Burhan as looking "very very very bad", the page
-  reading as one undifferentiated wall of round pills rather than six
-  distinct products. The hero is a single full-bleed product page, where a
-  boxed ring reads as a coupon; the grid is a set of repeating cards, where a
-  boxed container is exactly what a card grid needs to read as a grid at all
-  (this is also how every other card grid on the site — product cards, the
-  offer pages' own .offer-card — already works).
+/* ==========================================================================
+   GRID — plain browse tiles (added 2026-09-22)
 
-  A flat, fully-rounded tinted panel, not the harsh gold ring that was
-  rejected on the hero: matches the rounded-card language already
-  established for .free-gift / .product-gift-picker elsewhere on the site,
-  so the duo grid reads as ATTARWALAS rather than as a stray coupon or a bare
-  form. `.duo-card` loads after `.offer-card` in the cascade (this file is
-  included after section-offer-builder.css), so these override the shared
-  card rules without needing !important.
-*/
-.duo-card {
-  border-radius: 1.6rem;
-  background: rgba(var(--offer-ink), 0.025);
-  border-color: rgba(var(--offer-ink), 0.08);
-  box-shadow: 0 0.6rem 1.8rem rgba(var(--offer-ink), 0.05);
+   Burhan asked for the duo grid to drop the size pickers/add-to-cart card
+   entirely and just read like every other product grid on the site (named
+   Signature Series specifically) — a photo, a title, a "from" price, the
+   whole tile a link. Sizing and adding to cart still happen, unchanged, on
+   the single-fragrance hero view a click lands on (?duo=<handle>).
+
+   Typography values below were read directly off the live Signature Series
+   grid (getComputedStyle on .card__heading / .price) rather than guessed, so
+   this reads as the same page family rather than an approximation of it.
+   ========================================================================== */
+
+.duo-browse-card {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
+.duo-browse-card__media {
+  position: relative;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
+  background: rgb(var(--color-background));
+}
+
+.duo-browse-card__media img,
+.duo-browse-card__media .placeholder-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @media (hover: hover) {
-  .duo-card:hover {
-    border-color: rgba(var(--offer-ink), 0.16);
-    box-shadow: 0 1rem 2.6rem rgba(var(--offer-ink), 0.09);
+  .duo-browse-card:hover .duo-browse-card__media img {
+    transform: scale(1.04);
   }
 }
 
-/*
-  Selected state stays quiet too — a soft ink border, not the gold ring
-  (that combination is what read as a coupon in the first place). The
-  checkmark badge on the photo (.offer-card__check) already signals
-  "selected" on its own; this only needs to keep the card looking chosen,
-  not stamped.
-*/
-.duo-card.offer-card--selected,
-.duo-card.offer-card--selected:hover {
-  border-color: rgba(var(--offer-gold), 0.55);
-  box-shadow: 0 1rem 2.6rem rgba(var(--offer-ink), 0.09);
+.duo-browse-card__info {
+  margin-top: 1.4rem;
 }
 
-/*
-  A hairline above the price/CTA area separates "pick your sizes" from
-  "here's the price and the button" — the second thing Burhan's complaint
-  named ("nothing to separate out stuff"). Scoped to the grid card only; the
-  hero keeps its own open, unboxed rhythm.
-*/
-.duo-card .duo-card__breakdown {
-  align-self: stretch;
-  justify-content: center;
-  margin-top: 1.6rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid rgba(var(--offer-ink), 0.08);
+.duo-browse-card__title {
+  margin: 0;
+  font-family: var(--font-heading-family);
+  font-weight: 500;
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: rgb(var(--offer-ink));
+  transition: color 0.15s ease;
 }
 
-/*
-  A little more air between cards now that each one is a visible panel —
-  1.2rem of gap on phones was tuned for borderless tiles and reads as
-  cramped once each tile has its own edge. Duo page only.
-*/
-.duo-pairs .offer-grid {
-  gap: 2rem 1.4rem;
+.duo-browse-card:hover .duo-browse-card__title {
+  color: rgb(var(--offer-gold));
 }
 
-@media screen and (min-width: 750px) {
-  .duo-pairs .offer-grid {
-    gap: 3.2rem 2.4rem;
-  }
+.duo-browse-card__price {
+  margin: 0.7rem 0 0;
+  font-family: var(--font-body-family);
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(var(--offer-ink), 0.65);
 }
 
-.duo-card__subtitle {
-  margin: -0.4rem 0 0.4rem;
-  font-size: 1.1rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(var(--offer-ink), 0.5);
-}
+/* ==========================================================================
+   SIZE CHIPS — pill controls matching the product page (hero view only)
+   ========================================================================== */
 
-/*
-  Size chips — matches the real product page's own Size picker exactly
-  (assets/section-main-product.css, [id^="MainProduct-"] .product-form__input--pill),
-  scoped here instead of borrowing that ID-prefixed selector directly. Native
-  radio + label (not <button>) for the same reason the real picker uses it:
-  free keyboard/screen-reader semantics as a radio group. Was previously a
-  bare <select> with a caret icon, which is what actually read as "kind of
-  bad" / inconsistent with the rest of the site.
-
-  Row spacing was a second round of the same complaint: the real product
-  page gives each option group `margin-bottom: 2.2rem` of its own breathing
-  room (component-product-variant-picker.css), but this used to cram the
-  Perfume and Roll-on rows together with a *negative* margin between them —
-  the chips themselves were correct, the rhythm around them wasn't. Applied
-  uniformly (not just "row after the first") so the gap above the very
-  first row, under the "Perfume + Attar Roll-On" subtitle, matches too.
-*/
 .duo-size-row {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.9rem;
+  gap: 0.8rem;
   width: 100%;
-  margin-top: 1.6rem;
+  margin-top: 1.4rem;
 }
 
 .duo-size-row__label {
   font-family: var(--font-body-family);
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.3em;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(var(--color-button), 0.9);
+  color: rgb(var(--offer-gold));
+  opacity: 0.9;
 }
 
 .duo-size-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  gap: 0.7rem;
 }
 
 .duo-size-input {
@@ -184,30 +162,36 @@
   justify-content: center;
   min-height: 3.8rem;
   padding: 0 1.6rem;
-  border: 0.1rem solid rgba(var(--offer-ink), 0.22);
+  border: 1px solid rgba(var(--offer-ink), 0.18);
+  border-radius: 999px;
   background-color: transparent;
-  color: rgba(var(--offer-ink), 0.8);
+  color: rgba(var(--offer-ink), 0.75);
   font-family: var(--font-body-family);
-  font-size: 1.2rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   line-height: 1;
   text-align: center;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .duo-size-input:hover + .duo-size-label {
-  border-color: rgb(var(--offer-gold));
+  border-color: rgba(var(--offer-gold), 0.6);
   color: rgb(var(--offer-gold));
-  background-color: rgba(var(--offer-gold), 0.06);
+  background-color: rgba(var(--offer-gold), 0.05);
 }
 
 .duo-size-input:checked + .duo-size-label {
   background-color: rgb(var(--offer-gold));
   border-color: rgb(var(--offer-gold));
   color: rgb(var(--color-button-text));
+  box-shadow: 0 0.3rem 1rem rgba(var(--offer-gold), 0.35);
 }
 
 .duo-size-input:focus-visible + .duo-size-label {
@@ -216,11 +200,22 @@
 }
 
 .duo-size-input:disabled + .duo-size-label {
-  border-color: rgba(var(--offer-ink), 0.12);
-  color: rgba(var(--offer-ink), 0.35);
+  border-color: rgba(var(--offer-ink), 0.1);
+  color: rgba(var(--offer-ink), 0.28);
   text-decoration: line-through;
   cursor: not-allowed;
 }
+
+/* Larger chips on the hero */
+.duo-hero .duo-size-label {
+  min-height: 4.6rem;
+  padding: 0 2.2rem;
+  font-size: 1.3rem;
+}
+
+/* ==========================================================================
+   PRICE + RETAIL
+   ========================================================================== */
 
 .duo-card__breakdown {
   display: flex;
@@ -230,49 +225,18 @@
 }
 
 .duo-card__retail {
-  font-size: 1.2rem;
-  color: rgba(var(--offer-ink), 0.45);
+  font-size: 1.15rem;
+  color: rgba(var(--offer-ink), 0.38);
+  text-decoration: line-through;
 }
 
 .duo-card__retail[hidden] {
   display: none;
 }
 
-/* ------------------------------ Single-duo hero ---------------------------
-   The "product page" view for one fragrance, reached via ?duo=<handle>
-   (see snippets/duo-teaser.liquid and duo-pairs.js's setupHeroView). Two
-   columns on desktop — image left, buy box right — same shape as the
-   theme's real product page; one stacked column on mobile.
+/* ==========================================================================
+   SINGLE-DUO HERO VIEW
    ========================================================================== */
-
-/*
-  The sticky bar below (.offer-builder__bar, position: sticky; bottom: 0) is
-  ~110px tall on mobile (stacked name/price/button rows) and ~86px on
-  desktop (one row) — both taller than the 4rem this used to reserve, so it
-  visually covered the roll-on size select at the bottom of the form on
-  mobile (reported live on the Yameni Yakud Duo page). Sticky elements don't
-  push preceding siblings out of the way on their own; the container has to
-  reserve the room itself. Padding here is comfortably larger than either
-  measured height so text reflow/safe-area-inset doesn't reopen the gap.
-
-  8rem/6rem, not 11rem/6rem: `.offer-builder` (section-offer-builder.css)
-  already reserves its own 2rem of bottom padding on every offer/duo page.
-  That 2rem stacks with whatever this rule adds, since `.duo-hero-view` is a
-  child of the `.offer-builder` element, not a replacement for it — the two
-  were double-reserving space, which left a visible blank gap between the
-  sticky bar and the footer once the bar scrolled past its sticky range
-  (reported as "add to cart not touching the footer"). Total reserved space
-  is 10rem/160px mobile once the shared 2rem is added back in — the bar itself
-  measures ~110px there, so this still clears it with room to spare; the
-  original 13rem/208px total (reported 2026-09-05 as "padding on mobile is a
-  little too big") was carrying roughly 60% more buffer than the bar needs.
-*/
-.duo-pairs {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - var(--header-height, 100px));
-  padding-bottom: 0 !important;
-}
 
 .duo-hero-view {
   flex: 1 0 auto;
@@ -294,12 +258,13 @@
   align-items: center;
   gap: 0.7rem;
   margin-bottom: 2.4rem;
-  font-size: 1.2rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(var(--offer-ink), 0.7);
+  color: rgba(var(--offer-ink), 0.55);
   text-decoration: none;
+  transition: color 0.18s ease;
 }
 
 .duo-hero__back svg {
@@ -338,49 +303,15 @@
   object-fit: contain;
 }
 
-/*
-  Real, swipeable gallery — the hero used to render only
-  perfume.featured_image, a single static photo, even on products with
-  several. This is a plain CSS scroll-snap carousel (same mechanism as
-  .duo-teaser__grid's peek strip elsewhere on the site): one slide per
-  product photo, full width, swipe/scroll to move between them. No JS is
-  needed for the scrolling itself — duo-pairs.js only syncs the dots to
-  whichever slide is currently snapped into view.
-*/
-/*
-  Positioned wrapper for the gallery alone, so the "2 / 5" pill can be
-  anchored to the photo's bottom-right corner. It cannot live inside
-  .duo-hero__gallery itself — that is the scroll container, so an absolutely
-  positioned child would scroll away with the slides.
-*/
+/* Gallery frame */
 .duo-hero__frame {
   position: relative;
-}
-
-/* Matches the product page's floating counter (the .slider-buttons pill in
-   section-main-product.css) — same size, radius, frosted background and
-   type, so the duo page reads as the same site. */
-.duo-hero__counter {
-  position: absolute;
-  z-index: 2;
-  right: 1.2rem;
-  bottom: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 4.8rem;
-  height: 3.2rem;
-  padding: 0 1.4rem;
-  border-radius: 999px;
-  background-color: rgba(var(--color-background), 0.85);
-  backdrop-filter: blur(0.8rem);
-  -webkit-backdrop-filter: blur(0.8rem);
-  box-shadow: 0 0.2rem 1.2rem rgba(var(--color-foreground), 0.12);
-  font-size: 1.2rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: rgb(var(--color-foreground));
-  pointer-events: none;
+  border-radius: 2rem;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgb(252, 248, 242) 0%, rgb(245, 238, 225) 100%);
+  box-shadow:
+    0 0.8rem 2.4rem rgba(var(--offer-ink), 0.06),
+    0 2rem 4.8rem rgba(var(--offer-ink), 0.08);
 }
 
 .duo-hero__gallery {
@@ -415,15 +346,34 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  padding: 1.6rem;
 }
 
-/*
-  Thumbnail strip under the main image — a real product-gallery pattern
-  (main photo + clickable thumbnails), not just position dots. Each thumb is
-  a small copy of the same photo in the main gallery; clicking one scrolls
-  the main gallery to that slide (duo-pairs.js), and the active thumb gets a
-  gold border synced to whichever slide the main gallery has snapped to.
-*/
+/* Floating photo counter pill */
+.duo-hero__counter {
+  position: absolute;
+  z-index: 2;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.8rem;
+  height: 3.2rem;
+  padding: 0 1.4rem;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(0.8rem);
+  -webkit-backdrop-filter: blur(0.8rem);
+  box-shadow: 0 0.2rem 1.2rem rgba(var(--color-foreground), 0.12);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgb(var(--color-foreground));
+  pointer-events: none;
+}
+
+/* Thumbnail strip */
 .duo-hero__thumbs {
   display: flex;
   align-items: center;
@@ -431,6 +381,7 @@
   gap: 0.8rem;
   overflow-x: auto;
   scrollbar-width: none;
+  padding: 0.2rem 0;
 }
 
 .duo-hero__thumbs::-webkit-scrollbar {
@@ -442,13 +393,13 @@
   width: 5.6rem;
   height: 5.6rem;
   padding: 0;
-  border: 0.15rem solid transparent;
-  border-radius: 0.6rem;
+  border: 0.2rem solid transparent;
+  border-radius: 0.8rem;
   overflow: hidden;
-  background-color: rgba(var(--offer-ink), 0.05);
+  background-color: rgba(var(--offer-ink), 0.04);
   cursor: pointer;
-  opacity: 0.65;
-  transition: opacity 0.15s ease, border-color 0.15s ease;
+  opacity: 0.6;
+  transition: opacity 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .duo-hero__thumb-image {
@@ -459,7 +410,8 @@
 }
 
 .duo-hero__thumb:hover {
-  opacity: 0.9;
+  opacity: 0.88;
+  transform: translateY(-1px);
 }
 
 .duo-hero__thumb.is-active {
@@ -479,6 +431,7 @@
   }
 }
 
+/* Hero info column */
 .duo-hero__info {
   display: flex;
   flex-direction: column;
@@ -488,18 +441,18 @@
 
 .duo-hero__eyebrow {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: rgb(var(--offer-gold));
 }
 
 .duo-hero__title {
-  margin: 0.2rem 0 0;
+  margin: 0.4rem 0 0;
   font-family: var(--font-heading-family);
   font-weight: 400;
-  font-size: clamp(2.8rem, 3.6vw, 3.8rem);
+  font-size: clamp(3.2rem, 4.4vw, 4.4rem);
   line-height: 1.1;
   letter-spacing: -0.01em;
 }
@@ -508,18 +461,12 @@
   margin: 0.8rem 0 1rem;
   font-size: 1.4rem;
   line-height: 1.55;
-  color: rgba(var(--offer-ink), 0.62);
+  color: rgba(var(--offer-ink), 0.58);
 }
 
 .duo-hero .duo-size-row {
   max-width: 40rem;
   margin-top: 2rem;
-}
-
-.duo-hero .duo-size-label {
-  min-height: 4.6rem;
-  padding: 0 2.2rem;
-  font-size: 1.3rem;
 }
 
 .duo-hero__price {
@@ -536,18 +483,42 @@
   margin-top: 1.6rem;
 }
 
+/* ==========================================================================
+   STICKY BAR — rich dark bar with gold accent
+   ========================================================================== */
+
 /*
-  section-offer-builder.css's own mobile rule gives `.offer-builder__bar-add`
-  `flex: 1` inside `.offer-builder__bar-cta` (justify-content: space-between)
-  — on a real offer page the button shares that row with only a short price,
-  so it settles at a reasonable width. On a duo hero it's competing with a
-  wider price block (a struck-through retail price *and* a "save ₹X" line —
-  see .offer-builder__bar-worth), so the button was left claiming most of the
-  row: a large solid-gold rectangle spanning the width of the screen right
-  above the footer gap fixed above, reported as "golden background looks
-  bad". Capped here (duo pages only, not the shared file every offer page
-  also uses) rather than resizing the shared button everywhere.
+  Override the shared bar to a deeper, richer dark with a warm undertone.
 */
+.duo-pairs .offer-builder__bar {
+  background: linear-gradient(
+    90deg,
+    rgb(22, 18, 10) 0%,
+    rgb(35, 28, 15) 50%,
+    rgb(22, 18, 10) 100%
+  );
+  box-shadow:
+    0 -0.4rem 2rem rgba(0, 0, 0, 0.25),
+    0 -1px 0 rgba(var(--offer-gold), 0.2);
+}
+
+/* Gold progress line */
+.duo-pairs .offer-builder__bar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.duo-pairs .offer-builder__bar-fill {
+  background: rgb(var(--offer-gold));
+}
+
+/* Bar selected name — large and prominent */
+.duo-pairs .offer-builder__bar-count {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Mobile bar cap for duo button */
 @media screen and (max-width: 749px) {
   .duo-pairs .offer-builder__bar-add {
     flex: 0 1 auto;
@@ -556,21 +527,10 @@
   }
 }
 
-/* --------------------------------- Teaser ---------------------------------
-   snippets/duo-teaser.liquid — a compact "Signature Duos" cross-sell row for
-   a normal product page. Reuses .offer-deals/.offer-deals__heading from
-   section-offer-teaser.css for the outer container + heading; only the
-   image-tile grid itself is new.
+/* ==========================================================================
+   TEASER SNIPPET (duo-teaser.liquid cross-sell)
    ========================================================================== */
 
-/*
-  Mobile: a small swipeable row of thumbnails (same carousel idiom as
-  .offer-deals__grid in section-offer-teaser.css) rather than a cramped
-  2-column grid — reported as looking bad/grid-like on phones. Desktop keeps
-  the plain 4-across grid. Sized noticeably smaller than the offer-ticket
-  carousel's cards (those are full coupon cards; these are square thumbnails,
-  so ~3 fit on screen with the next one peeking rather than 1 card at a time).
-*/
 .duo-teaser__grid {
   display: flex;
   gap: 1.2rem;
@@ -638,6 +598,7 @@
   overflow: hidden;
   background: rgba(var(--color-foreground), 0.03);
   border: 1px solid rgba(var(--color-foreground), 0.1);
+  border-radius: 1rem;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -677,9 +638,6 @@
   flex-shrink: 0;
 }
 
-/* Smaller thumbnails on mobile read cleaner with less text crammed in —
-   "Shop the duo" wraps/overflows awkwardly on a ~29vw tile, so only the
-   arrow shows; the title alone plus an arrow reads as "tap to shop" fine. */
 @media screen and (max-width: 749px) {
   .duo-teaser__title {
     font-size: 1.2rem;
@@ -695,32 +653,8 @@
   }
 }
 
-
 /* ==========================================================================
-   Match the product page's Size picker for real (2026-09-20)
-   ==========================================================================
-   The `.duo-size-label` block above opens with:
-
-     "Size chips — matches the real product page's own Size picker exactly
-      ([id^="MainProduct-"] .product-form__input--pill)"
-
-   It did not. Measured against that picker at 1366px:
-
-     radius          duo (none -> 0px)   vs  product 999px
-     min-height      3.8rem              vs  product 4.6rem
-     font-size       1.2rem              vs  product 1.3rem
-     letter-spacing  0.1em               vs  product 0.12em
-
-   The comment was written when the product picker really was square; that
-   picker has since been moved to pills (the "ATTARWALAS — pill controls"
-   blocks in section-main-product.css, at both the mobile and >=750px
-   breakpoints) and the duo copy never followed. A picker class literally
-   named `--pill` rendering square corners is the tell.
-
-   Values below are copied from
-   `[id^="MainProduct-"] .product-form__input--pill input[type='radio'] + label`
-   so the claim the comment makes is now true. If that picker changes again,
-   change this with it.
+   SIZE CHIP SIZING — match real product page pills exactly
    ========================================================================== */
 
 .duo-size-label {
@@ -732,10 +666,25 @@
   line-height: 1;
 }
 
-/* The hero title sat at 3.8rem while the product page's own h1 renders 4.4rem
-   and the offer page's title 5.2rem — the duo page read as a smaller, lesser
-   page than the ones either side of it. Brought onto the product page's step
-   of the scale; still below the offer title, which leads a wider layout. */
+/* Hero title — matched to product page scale */
 .duo-hero__title {
   font-size: clamp(3.2rem, 4.4vw, 4.4rem);
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .duo-browse-card,
+  .duo-browse-card__media img,
+  .duo-browse-card__title,
+  .duo-hero__thumb,
+  .duo-size-label {
+    transition: none;
+  }
+
+  .duo-browse-card:hover .duo-browse-card__media img {
+    transform: none !important;
+  }
 }

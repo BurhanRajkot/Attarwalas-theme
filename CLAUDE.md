@@ -1207,12 +1207,34 @@ how `assets/free-gift.js` already adds a gift as an ordinary cart line with
 `Gift` + `_free_gift` properties. It publishes its own `cartUpdate` afterward
 so the cart drawer/bubble pick up the new line.
 
-**Known limitation: doesn't fire on "Buy Now."** `product-form.js` redirects
-straight to `/checkout` on that path without ever publishing `cartUpdate`, so
-there's no hook to attach to without touching that shared file. A customer
-using Buy Now on a qualifying product simply doesn't get the pre-pick
-opportunity — no worse than before this feature existed, since Buy Now
-already skipped the theme's cart (and its free-gift picker) entirely.
+**Fixed 2026-09-25: now fires on "Buy Now" too.** Was a known limitation —
+`product-form.js` redirected straight to `/checkout` on that path without
+ever publishing `cartUpdate`, so the gift picker's `onCartUpdate` (its only
+hook) never ran, and a customer using Buy Now on a qualifying product
+reached checkout with only the main perfume in the cart, no gift. Reported
+by Burhan: "after clicking buy now... i dont see the complementary free
+perfume added there."
+
+Fixed by touching `product-form.js` after all (the thing the note above said
+would be required): its `buyNowButton` branch now publishes `cartUpdate` the
+same as the regular Add to cart path, then waits (capped at 4s via
+`Promise.race`) before redirecting, instead of redirecting immediately.
+`assets/product-gift-picker.js`'s `onCartUpdate` now `return`s its
+`fetch(...)` promise instead of firing it and forgetting it, and
+`assets/pubsub.js`'s `publish()` now returns the array of each subscriber's
+own return value (`subscribers[eventName].map(...)` instead of
+`.forEach(...)`) so a publisher can `Promise.all()` async subscribers —
+purely additive, every other caller already ignores `publish()`'s return
+value. If `pending` (the filtered array of thenables) is empty — no gift
+picker on the page, or nothing chosen — checkout redirects immediately, same
+as before this fix. The 4s cap means a slow or failed gift add can never
+strand the customer on the product page instead of reaching checkout; the
+gift add itself already swallows its own errors (`.catch(() => {})`), same
+as the regular cart-page flow.
+
+Applies to every qualifying product's page, since it's a fix to the one
+shared `product-form.js` / `product-gift-picker.js` pair every such product
+page renders — not a per-template or per-product change.
 
 **Gotcha hit while building this: `data-*` attributes with a digit right
 after the hyphen don't camelCase.** The first version used
@@ -1877,6 +1899,44 @@ ordinary product page, not the duo builder. This is the launch-checklist item
 exist, but the **Theme template is still unassigned** in
 admin → Products → [duo product] → Theme template. Nothing in the theme can
 fix this; it is one dropdown per product.
+
+## Homepage "Duo & Trio" carousel: bottles looked like they were floating (fixed 2026-09-22)
+
+Burhan: the duo bottle images on the homepage (desktop and mobile both) have
+no shadow, so they read as flat cutouts floating in the air rather than
+sitting on the page. This is `sections/product-carousel.liquid` (the "Duo &
+Trio" carousel, `product_carousel_duo_trio` in `templates/index.json`), not
+`sections/duo-pairs.liquid` — that one is the actual duo *product page*.
+
+`.product-carousel__media` is deliberately `background-color: transparent`
+so the duo PNGs' own cut-out transparent backgrounds sit straight on the
+section background — see the comment already there. That's also exactly why
+nothing ever grounded them: there was no surface for a shadow to fall on.
+
+Tried `filter: drop-shadow()` on the `<img>` first (traces the PNG's own
+alpha silhouette) but this theme's `--color-shadow` custom property
+(`layout/theme.liquid`) is a light warm gold (`184,138,42`), which has almost
+no contrast against the equally warm cream page background — the shadow was
+there but essentially invisible.
+
+Fixed instead with a fixed **contact shadow**: a small blurred radial-gradient
+ellipse on `.product-carousel__media::before`, pinned near the bottom of the
+box (`bottom: 1.5%; height: 6%; width: 56%` of the box, `blur(0.4rem)`,
+`rgba(var(--color-shadow), 0.6)` fading to 0). Sits behind the image in paint
+order for free — `::before` is generated before the `<img>` in DOM order, and
+neither has an explicit `z-index`, so the `<img>` naturally paints on top.
+No change needed to the `<img>`/`<svg>` rule itself.
+
+Checked against all 6 live duo product photos (downloaded and measured each
+PNG's alpha bbox — they're all 800×800 squares with 4.9%–9% of transparent
+margin below the bottle's visible base, cropped only horizontally by
+`object-fit: cover` into the 4:5 box, so that margin percentage carries
+straight through to the rendered box). A fixed-percentage ellipse this size
+sits inside that margin for every product without ever being clipped by the
+box's `overflow: hidden` (needed for the hover zoom) — confirmed by
+temporarily forcing the pseudo-element to opaque red and screenshotting real
+`attarwalas.com` markup/CSS in a local `srcdoc` harness (see "Measuring a
+change without a dev server" below) at both desktop and 390px-wide mobile.
 
 ## Responsive audit (2026-09-20)
 

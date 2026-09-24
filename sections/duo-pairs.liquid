@@ -222,13 +222,45 @@
             {%- assign card_image = duo_product.featured_image -%}
           {%- endif -%}
 
-          <div
-            class="offer-card duo-card"
-            data-duo-card
-            data-fragrance="{{ perfume.title | escape }}"
-            data-bundle-handle="{{ perfume.handle }}"
-          >
-            <div class="offer-card__media">
+          {%- comment -%}
+            Plain browse tile — no size pickers, no add-to-cart, matching the
+            collection-grid look elsewhere on the site (e.g. Signature
+            Series). The whole tile links to that fragrance's own dedicated
+            duo product (e.g. /products/ambre-intense-duo), not back to this
+            page — ?view=duo forces Shopify to render templates/product.duo.json
+            on that product regardless of its own (still unassigned) Theme
+            template, and &duo=<handle> tells duo-pairs.js's setupHeroView
+            which single hero to show. Falls back to the current page (this
+            grid's own product) if that fragrance has no matching real duo
+            product yet, so a tile never dead-ends.
+          {%- endcomment -%}
+          {%- assign duo_href = product.url | append: '?view=duo&duo=' | append: perfume.handle -%}
+          {%- if duo_product != blank -%}
+            {%- assign duo_href = duo_product.url | append: '?view=duo&duo=' | append: perfume.handle -%}
+          {%- endif -%}
+
+          {%- assign duo_perfume_variant = perfume.variants | where: 'option1', '50ML' | first -%}
+          {%- if duo_perfume_variant == blank -%}
+            {%- assign duo_perfume_variant = perfume.variants | where: 'option1', '100ML' | first -%}
+          {%- endif -%}
+          {%- assign duo_rollon_variant = blank -%}
+          {%- for v in matched_rollon.variants -%}
+            {%- assign v_upcase_size = v.option1 | upcase -%}
+            {%- if v.option1 != blank and v_upcase_size == '6ML' -%}
+              {%- assign duo_rollon_variant = v -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- assign duo_from_price = 0 -%}
+          {%- if duo_perfume_variant != blank -%}
+            {%- assign duo_from_price = duo_from_price | plus: duo_perfume_variant.price -%}
+          {%- endif -%}
+          {%- if duo_rollon_variant != blank -%}
+            {%- assign duo_from_price = duo_from_price | plus: duo_rollon_variant.price -%}
+          {%- endif -%}
+
+          <a href="{{ duo_href }}" class="duo-browse-card">
+            <div class="duo-browse-card__media">
               {%- if card_image -%}
                 {{
                   card_image
@@ -236,88 +268,22 @@
                   | image_tag:
                     loading: 'lazy',
                     widths: '240, 360, 480, 600',
-                    sizes: '(min-width: 990px) 22vw, (min-width: 750px) 30vw, 56vw',
-                    class: 'offer-card__image',
+                    sizes: '(min-width: 990px) 22vw, (min-width: 750px) 30vw, 45vw',
+                    class: 'duo-browse-card__image',
                     alt: perfume.title | escape
                 }}
               {%- else -%}
-                {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg offer-card__image' }}
+                {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg duo-browse-card__image' }}
               {%- endif -%}
-              <span class="offer-card__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
             </div>
 
-            <div class="offer-card__body">
-              <h3 class="offer-card__title">{{ perfume.title | escape }} Duo</h3>
-              <p class="duo-card__subtitle">Perfume + Attar Roll-On</p>
-
-              <div class="duo-size-row">
-                <span class="duo-size-row__label">Perfume</span>
-                <div class="duo-size-group" data-duo-perfume-group>
-                  {%- for size in perfume_sizes -%}
-                    {%- assign found = blank -%}
-                    {%- for v in perfume.variants -%}
-                      {%- assign v_size = v.option1 | upcase -%}
-                      {%- if v.option1 != blank and v_size == size -%}
-                        {%- assign found = v -%}
-                        {%- break -%}
-                      {%- endif -%}
-                    {%- endfor -%}
-                    {%- if found != blank -%}
-                      <input
-                        type="radio"
-                        class="duo-size-input"
-                        name="{{ card_id }}-perfume-size"
-                        id="{{ card_id }}-perfume-{{ size }}"
-                        value="{{ found.id }}"
-                        data-price="{{ found.price }}"
-                        {% if forloop.first %}checked{% endif %}
-                        {% unless found.available %}disabled{% endunless %}
-                      >
-                      <label class="duo-size-label" for="{{ card_id }}-perfume-{{ size }}">{{ size }}</label>
-                    {%- endif -%}
-                  {%- endfor -%}
-                </div>
-              </div>
-
-              <div class="duo-size-row">
-                <span class="duo-size-row__label">Roll-on</span>
-                <div class="duo-size-group" data-duo-rollon-group>
-                  {%- for size in rollon_sizes -%}
-                    {%- assign found = blank -%}
-                    {%- for v in matched_rollon.variants -%}
-                      {%- assign v_size = v.option1 | upcase -%}
-                      {%- if v.option1 != blank and v_size == size -%}
-                        {%- assign found = v -%}
-                        {%- break -%}
-                      {%- endif -%}
-                    {%- endfor -%}
-                    {%- if found != blank -%}
-                      <input
-                        type="radio"
-                        class="duo-size-input"
-                        name="{{ card_id }}-rollon-size"
-                        id="{{ card_id }}-rollon-{{ size }}"
-                        value="{{ found.id }}"
-                        data-price="{{ found.price }}"
-                        {% if forloop.first %}checked{% endif %}
-                        {% unless found.available %}disabled{% endunless %}
-                      >
-                      <label class="duo-size-label" for="{{ card_id }}-rollon-{{ size }}">{{ size }}</label>
-                    {%- endif -%}
-                  {%- endfor -%}
-                </div>
-              </div>
-
-              <div class="duo-card__breakdown">
-                <span class="duo-card__retail" data-duo-retail hidden></span>
-                <span class="offer-card__price" data-duo-price></span>
-              </div>
-
-              <button type="button" class="offer-card__add" data-duo-select-btn>
-                {{ section.settings.select_label | default: 'Select this duo' }}
-              </button>
+            <div class="duo-browse-card__info">
+              <h3 class="duo-browse-card__title">{{ perfume.title | escape }} Duo</h3>
+              {%- if duo_from_price > 0 -%}
+                <p class="duo-browse-card__price">From {{ duo_from_price | money }}</p>
+              {%- endif -%}
             </div>
-          </div>
+          </a>
         {%- endfor -%}
       </div>
     </div>

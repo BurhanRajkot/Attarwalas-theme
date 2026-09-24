@@ -53,7 +53,33 @@ if (!customElements.get('product-form')) {
                 this.error = true;
                 return;
               }
-              window.location.href = '/checkout';
+
+              // Buy Now used to redirect straight to /checkout here without
+              // ever publishing cartUpdate, so product-gift-picker.js's own
+              // add (which only listens for that event) never fired — a
+              // product-page free gift never made it into the cart on this
+              // path. Publishing it now gives that picker (and anything
+              // else listening) the same chance it already gets on the
+              // regular Add to cart path; its subscriber returns the
+              // /cart/add.js promise so it can be waited on below instead of
+              // racing the redirect. A timeout caps the wait so a slow or
+              // failed gift add can never strand the customer on this page.
+              const pending = publish(PUB_SUB_EVENTS.cartUpdate, {
+                source: 'product-form',
+                productVariantId: formData.get('id'),
+                cartData: response,
+              }).filter((result) => result && typeof result.then === 'function');
+
+              const goToCheckout = () => {
+                window.location.href = '/checkout';
+              };
+
+              if (pending.length === 0) {
+                goToCheckout();
+              } else {
+                const timeout = new Promise((resolve) => setTimeout(resolve, 4000));
+                Promise.race([Promise.all(pending), timeout]).then(goToCheckout).catch(goToCheckout);
+              }
               return;
             }
 

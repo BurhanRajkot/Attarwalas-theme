@@ -59,74 +59,6 @@
   color: rgba(var(--color-foreground), 0.6);
 }
 
-/* ---------- Scroll controls ---------- */
-.customer-reviews__arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4.4rem;
-  height: 4.4rem;
-  padding: 0;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.14);
-  color: rgb(var(--color-foreground));
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease, color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-}
-
-.customer-reviews__arrow--prev {
-  left: 1.2rem;
-}
-
-.customer-reviews__arrow--next {
-  right: 1.2rem;
-}
-
-.customer-reviews__carousel:hover .customer-reviews__arrow,
-.customer-reviews__carousel:focus-within .customer-reviews__arrow {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-@media (hover: none) {
-  .customer-reviews__arrow {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-.customer-reviews__arrow svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.customer-reviews__arrow--prev svg {
-  transform: rotate(90deg);
-}
-
-.customer-reviews__arrow--next svg {
-  transform: rotate(-90deg);
-}
-
-.customer-reviews__arrow:hover:not(:disabled) {
-  border-color: rgb(var(--color-button));
-  background: rgb(var(--color-button));
-  color: rgb(var(--color-button-label));
-}
-
-.customer-reviews__arrow:disabled {
-  opacity: 0.25;
-  cursor: default;
-}
-
 .customer-reviews__video-placeholder {
   display: flex;
   flex-direction: column;
@@ -162,7 +94,33 @@
   gap: 2rem;
   padding: 0.4rem 0 3rem;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  overflow-y: hidden;
+  /* Not pan-x (2026-09-24): pan-x tells the browser to handle ONLY
+     horizontal panning natively on this element and to opt this element out
+     of vertical panning — the idea being a vertical drag then bubbles to
+     the page instead. In theory. In practice, real-device touch (reported
+     on phone, confirmed the mouse/trackpad path was already fine) showed a
+     finger-drag getting stuck here instead of bubbling: iOS Safari and some
+     Android WebViews just drop the vertical component of the gesture rather
+     than handing it to the ancestor. overflow-y: hidden above already caps
+     this element's own vertical scroll range at zero, which is what a
+     browser's default per-axis negotiation needs to correctly route a
+     vertical drag to the page on its own — so the fix is to stop
+     overriding that negotiation, not to keep hunting for a "more correct"
+     touch-action value. */
+  overscroll-behavior-x: contain;
+  /* No scroll-snap at all, any width — not just mobile. This was
+     `x mandatory` on desktop/tablet on the assumption that a mouse/trackpad
+     has no touch-gesture ambiguity, but reports of the page getting stuck
+     mid-scroll over this section came in from desktop too: a trackpad's
+     diagonal swipe hits the exact same Chrome/Safari axis-lock behavior as
+     a touchscreen once scroll-snap-type is set on the x-axis, regardless of
+     touch-action/overflow-y already being correct (see the Duo & Trio
+     carousel's own history of this bug in section-product-carousel.css).
+     Snap was purely a cosmetic end-of-scroll alignment; not worth trading
+     the page's own scroll ever getting stuck again. */
+  scroll-snap-type: none;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -174,8 +132,21 @@
 .customer-reviews__card {
   position: relative;
   flex: 0 0 auto;
-  width: 30rem;
-  scroll-snap-align: start;
+  /* Two vertical cards per page on narrower screens, swipeable left/right —
+     no arrows, no per-viewport column count (see settings' now-unused
+     `columns_desktop`, left alone as it drives nothing here).
+
+     max-width is load-bearing, not a nicety: this section runs full-width
+     (edge to edge, see .customer-reviews--full-width above), so on a wide
+     desktop window the uncapped 50% formula stretched each card past
+     700-900px — and since .customer-reviews__video-wrap is a 9:16 PORTRAIT
+     box, that same width became a 1200-1600px tall card, blowing the whole
+     section up into something that reads as completely broken. Capped back
+     to the card's original fixed size, so above ~1000px width the row shows
+     more than two cards (scrollable) instead of two gigantic ones — a much
+     safer trade-off than an unbounded card. */
+  width: calc((100% - 2rem) / 2);
+  max-width: 30rem;
   border-radius: 0.8rem;
   background: rgb(var(--color-background));
   box-shadow:
@@ -589,18 +560,21 @@ body.customer-reviews__modal-locked {
     white-space: normal;
   }
 
+  /* Burhan wants this strip swipeable (not a static grid) — a real
+     horizontal scroller. overflow-y/touch-action stay inherited from the
+     base .customer-reviews__grid rule above, which is what stops a vertical
+     swipe here from being trapped as internal scroll instead of reaching
+     the page. Two full cards per screen, not one plus a sliver — same
+     sizing approach as `.product-carousel__slide` (Duo & Trio). Scroll-snap
+     is off unconditionally now (see the base .customer-reviews__grid rule
+     above), so nothing to repeat here. */
   .customer-reviews__grid {
-    gap: 1.4rem;
-    padding: 0.4rem 0 2.6rem;
-  }
-
-  .customer-reviews__arrow {
-    width: 3.6rem;
-    height: 3.6rem;
+    gap: 1.2rem;
+    padding: 0.4rem 1.5rem 2.6rem;
   }
 
   .customer-reviews__card {
-    width: 24rem;
+    width: calc((100% - 1.2rem) / 2);
   }
 
   .customer-reviews__modal {

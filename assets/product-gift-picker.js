@@ -29,7 +29,16 @@ if (!customElements.get('product-gift-picker')) {
       this.select = this.querySelector('[data-gift-select]');
       this.fragrancePicker = this.querySelector('[data-gift-fragrance-picker]');
       this.confirmEl = this.querySelector('[data-gift-confirm]');
+      this.requiredHint = this.querySelector('[data-gift-required-hint]');
       this.sectionId = this.dataset.section;
+      // A second copy of the required-hint's message, injected right above
+      // the Add to cart / Buy Now buttons themselves (see buyWarningMessage()
+      // and updateBuyButtons() below) — this picker can be scrolled out of
+      // view by the time a customer reaches those buttons, so the warning
+      // repeats where they're actually about to click. Not markup in
+      // buy-buttons.liquid on purpose: that snippet is shared by every
+      // product on the site, and this only applies to gift-eligible ones.
+      this.buyWarning = this.createBuyWarning();
       this.currentVariantId = this.dataset.initialVariantId;
       // Which of a live variant's option1/option2/option3 is actually "Size"
       // varies by product (see snippets/product-gift-picker.liquid, which
@@ -37,6 +46,11 @@ if (!customElements.get('product-gift-picker')) {
       // option2, not option1 like the single-option signature-series bottles.
       this.sizeOptionKey = this.dataset.sizeOptionKey || 'option1';
       this.currentBucket = this.sizeToBucket(this.dataset.initialSize);
+      // Whether the *current* variant is purchasable at all — tracked so the
+      // required-gift gating below never fights Dawn's own sold-out
+      // handling (see updateBuyButtons()). 'false' is the only value that
+      // means unavailable; missing/blank defaults to available.
+      this.variantAvailable = this.dataset.initialAvailable !== 'false';
 
       this.onVariantChange = this.onVariantChange.bind(this);
       this.onCartUpdate = this.onCartUpdate.bind(this);
@@ -52,7 +66,14 @@ if (!customElements.get('product-gift-picker')) {
       // this.select specifically) covers both input shapes: a native
       // <select>'s change event, and the bubbled change fragrance-picker.js
       // dispatches when a radio is picked.
-      this.addEventListener('change', () => this.hideConfirm());
+      this.addEventListener('change', () => {
+        this.hideConfirm();
+        this.updateBuyButtons();
+      });
+
+      // Picking a free perfume here is required (2026-09-24) — start with
+      // the product's own buttons locked, same as nothing being chosen yet.
+      this.updateBuyButtons();
     }
 
     // Product Size option values aren't cased consistently across products
@@ -61,6 +82,36 @@ if (!customElements.get('product-gift-picker')) {
     // choice doesn't silently default to '100' for every lowercase product.
     sizeToBucket(size) {
       return (size || '').toLowerCase() === '50ml' ? '50' : '100';
+    }
+
+    // Builds (once) the red warning banner that sits directly above the buy
+    // buttons — see the constructor comment. Placed as the previous sibling
+    // of .product-form__buttons rather than inside it, so it reads before
+    // the buttons rather than between Add to cart and Buy Now. Dawn's own
+    // variant-change re-render (global.js renderProductInfo) only ever
+    // swaps price/inventory/sku innerHTML and toggles the add button's own
+    // disabled attribute — it never touches .product-form__buttons itself —
+    // so this stays in the DOM across variant changes and doesn't need
+    // re-creating.
+    createBuyWarning() {
+      const form = document.getElementById(`product-form-${this.sectionId}`);
+      const buttons = form ? form.querySelector('.product-form__buttons') : null;
+      if (!buttons) return null;
+      const existing = buttons.parentElement.querySelector('[data-gift-buy-warning]');
+      if (existing) return existing;
+      const warning = document.createElement('p');
+      warning.className = 'product-gift-picker__buy-warning';
+      warning.setAttribute('data-gift-buy-warning', '');
+      warning.hidden = true;
+      buttons.parentElement.insertBefore(warning, buttons);
+      return warning;
+    }
+
+    // "10ml" for a 50ml bottle, "35ml" for everything else — mirrors the
+    // bucket the rest of this component already tracks (see sizeToBucket()).
+    buyWarningMessage() {
+      const size = this.currentBucket === '50' ? '10ml' : '35ml';
+      return `*Select your free ${size} perfume below before you can buy.`;
     }
 
     // Reads whichever input is actually present. For the select, that's the
@@ -96,9 +147,86 @@ if (!customElements.get('product-gift-picker')) {
     onVariantChange(event) {
       if (!event.data || event.data.sectionId !== this.sectionId) return;
       const variant = event.data.variant;
-      if (!variant) return;
+      // No matching variant for the chosen options (Dawn's own "Unavailable"
+      // state) — nothing to gate against a gift choice, and touching the
+      // buttons here would fight setUnavailable()'s own label/disable work.
+      if (!variant) {
+        this.variantAvailable = false;
+        this.updateBuyButtons();
+        return;
+      }
       this.currentVariantId = variant.id;
       this.currentBucket = this.sizeToBucket(variant[this.sizeOptionKey]);
+      this.variantAvailable = variant.available;
+      this.updateBuyButtons();
+    }
+
+    // Every button that can submit this product's form: the Add to cart and
+    // Buy Now buttons inside <product-form>, plus the sticky bar's own Add
+    // button, which lives outside the form and targets it via the `form`
+    // attribute instead (see sections/main-product.liquid). Without gating
+    // that one too, a customer could scroll past this picker, ignore it, and
+    // still buy through the sticky bar.
+    getBuyButtons() {
+      const buttons = [];
+      const form = document.getElementById(`product-form-${this.sectionId}`);
+      if (form) {
+        const addButton = form.querySelector('[name="add"]');
+        if (addButton) buttons.push(addButton);
+        const buyNowButton = form.querySelector('[name="checkout"]');
+        if (buyNowButton) buttons.push(buyNowButton);
+      }
+      // `button`, not just `[form="…"]` — every variant-option radio/select,
+      // the swatch inputs, and the quantity field all carry this same `form`
+      // attribute too (see snippets/product-variant-options.liquid,
+      // swatch-input.liquid, product-variant-picker.liquid), so the bare
+      // attribute selector was locking the entire picker — including every
+      // fragrance radio — instead of just the sticky bar's button. Scoping
+      // to `button` is what actually limits this to the one real match,
+      // sections/main-product.liquid's `[data-sticky-bar-add]`.
+      document.querySelectorAll(`button[form="product-form-${this.sectionId}"]`).forEach((button) => {
+        if (!buttons.includes(button)) buttons.push(button);
+      });
+      return buttons;
+    }
+
+    // Keeps this product's buy buttons locked until a real gift is chosen
+    // (not the "Select your free perfume…" placeholder). Only ever acts
+    // while the variant is actually available — when it isn't, Dawn's own
+    // sold-out handling owns these buttons and this backs off entirely, so
+    // the two systems can never fight over the same disabled attribute.
+    // data-gift-locked marks a button as disabled *by this component*, so a
+    // later re-enable only ever touches buttons this component itself
+    // disabled, never one disabled for an unrelated reason.
+    updateBuyButtons() {
+      if (!this.requiredHint) return;
+
+      if (!this.variantAvailable) {
+        this.requiredHint.hidden = true;
+        if (this.buyWarning) this.buyWarning.hidden = true;
+        return;
+      }
+
+      const option = this.getSelectedOption();
+      const giftChosen = !!(option && option.value);
+
+      this.getBuyButtons().forEach((button) => {
+        if (giftChosen) {
+          if (button.dataset.giftLocked === 'true') {
+            button.removeAttribute('disabled');
+            delete button.dataset.giftLocked;
+          }
+        } else {
+          button.setAttribute('disabled', 'disabled');
+          button.dataset.giftLocked = 'true';
+        }
+      });
+
+      this.requiredHint.hidden = giftChosen;
+      if (this.buyWarning) {
+        this.buyWarning.textContent = this.buyWarningMessage();
+        this.buyWarning.hidden = giftChosen;
+      }
     }
 
     onCartUpdate(event) {
@@ -119,7 +247,11 @@ if (!customElements.get('product-gift-picker')) {
         ? nameEl.querySelector('.fragrance-picker__name').textContent.trim()
         : option.textContent.trim();
 
-      fetch(window.routes.cart_add_url, {
+      // Returned (not just fired-and-forgotten) so a Buy Now click — which
+      // publishes this same cartUpdate event and then wants to redirect to
+      // /checkout — can wait for this add to actually go out first. See
+      // product-form.js's buyNowButton branch.
+      return fetch(window.routes.cart_add_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
@@ -140,12 +272,17 @@ if (!customElements.get('product-gift-picker')) {
           if (state.status) return;
           this.showConfirm(title);
           this.resetSelection();
+          // resetSelection() sets .value programmatically, which doesn't
+          // fire 'change' — update the buttons/hint explicitly so they go
+          // back to locked instead of staying enabled from the choice that
+          // was just cleared.
+          this.updateBuyButtons();
           publish(PUB_SUB_EVENTS.cartUpdate, {
             source: 'product-gift-picker',
             cartData: state,
           });
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     showConfirm(title) {

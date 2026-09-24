@@ -40,17 +40,6 @@
       <p class="customer-reviews__empty">Add video blocks in the section settings to feature customer reviews.</p>
     {%- else -%}
       <div class="customer-reviews__carousel">
-        <button
-          type="button"
-          class="customer-reviews__arrow customer-reviews__arrow--prev"
-          name="previous"
-          aria-label="Scroll reviews left"
-          aria-controls="CustomerReviewsTrack-{{ section.id }}"
-          disabled
-        >
-          {% render 'icon-caret' %}
-        </button>
-
         <div class="customer-reviews__grid" id="CustomerReviewsTrack-{{ section.id }}">
           {%- for block in section.blocks -%}
             {%- assign featured_product = blank -%}
@@ -144,16 +133,6 @@
             </button>
           {%- endfor -%}
         </div>
-
-        <button
-          type="button"
-          class="customer-reviews__arrow customer-reviews__arrow--next"
-          name="next"
-          aria-label="Scroll reviews right"
-          aria-controls="CustomerReviewsTrack-{{ section.id }}"
-        >
-          {% render 'icon-caret' %}
-        </button>
       </div>
     {%- endif -%}
   </div>
@@ -283,31 +262,6 @@
           revealObserver.observe(el);
         });
       }
-    }
-
-    var track = section.querySelector('.customer-reviews__grid');
-    var prevButton = section.querySelector('.customer-reviews__arrow--prev');
-    var nextButton = section.querySelector('.customer-reviews__arrow--next');
-
-    if (track && (prevButton || nextButton)) {
-      var updateArrows = function () {
-        var maxScroll = track.scrollWidth - track.clientWidth;
-        if (prevButton) prevButton.disabled = track.scrollLeft <= 2;
-        if (nextButton) nextButton.disabled = track.scrollLeft >= maxScroll - 2;
-      };
-
-      var scrollByCard = function (direction) {
-        var card = track.querySelector('.customer-reviews__card');
-        var step = card ? card.offsetWidth : track.clientWidth;
-        var gap = parseFloat(getComputedStyle(track).gap || 0);
-        track.scrollBy({ left: direction * (step + gap), behavior: 'smooth' });
-      };
-
-      if (prevButton) prevButton.addEventListener('click', function () { scrollByCard(-1); });
-      if (nextButton) nextButton.addEventListener('click', function () { scrollByCard(1); });
-      track.addEventListener('scroll', updateArrows, { passive: true });
-      window.addEventListener('resize', updateArrows);
-      updateArrows();
     }
 
     /* ---------- Mute toggles ---------- */

@@ -99,6 +99,7 @@
       if option.selected_value == value
         assign checked = true
       endif
+      assign escaped_value = value | escape
     %}
     {%- capture help_text -%}
       <span class="visually-hidden">{{ value | escape }}</span>
@@ -108,7 +109,7 @@
       render 'swatch-input',
       id: input_id,
       name: option.name,
-      value: value | escape,
+      value: escaped_value,
       swatch: value.swatch,
       product_form_id: product_form_id,
       checked: checked,

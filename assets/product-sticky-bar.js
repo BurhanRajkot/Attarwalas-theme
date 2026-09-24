@@ -8,8 +8,15 @@ if (!customElements.get('product-sticky-bar')) {
         this.priceElement = this.querySelector('[data-sticky-bar-price]');
         this.button = this.querySelector('[data-sticky-bar-add]');
         this.buttonLabel = this.button.querySelector('span');
+        // The Buy Now button when this product has one (it's the last
+        // button in the row), else Add to cart — not the whole
+        // .product-form__buttons wrapper. Burhan wants the bar to appear
+        // "just after the buy now button" specifically, and watching the
+        // wrapper meant the trigger point was whatever the row's own box
+        // happened to be (its border/padding included), not the actual
+        // button a customer sees leave the screen.
         this.buyButtons = document.querySelector(
-          `#ProductInfo-${this.sectionId} .product-form__buttons`
+          `#ProductInfo-${this.sectionId} .product-form__buttons > button:last-of-type`
         );
         /* The bar repeats the product's title and price. On a phone the buy
            buttons sit below the fold while the real price is still on screen,
@@ -30,6 +37,13 @@ if (!customElements.get('product-sticky-bar')) {
           return;
         }
 
+        /* threshold was 0.1, which only flips isIntersecting to false once
+           the target is down to its last 10% visible — so the buy buttons
+           had to be scrolled almost entirely past before the bar showed up,
+           reading as laggy (Burhan: wants it "as soon as the buy button
+           leaves the page... a little faster"). 0 is the earliest an
+           IntersectionObserver can fire: it flips the moment the target has
+           zero pixels left on screen, no later. */
         this.observer = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
@@ -38,7 +52,7 @@ if (!customElements.get('product-sticky-bar')) {
             });
             this.classList.toggle('is-visible', this.onScreen.size === 0);
           },
-          { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }
+          { rootMargin: '0px 0px -10% 0px', threshold: 0 }
         );
         this.observer.observe(this.buyButtons);
         if (this.mainPrice) this.observer.observe(this.mainPrice);
@@ -89,7 +103,18 @@ if (!customElements.get('product-sticky-bar')) {
           : variant && !variant.available;
 
         if (this.button && this.buttonLabel) {
-          this.button.disabled = soldOut;
+          /* <product-gift-picker> (snippets/product-gift-picker.liquid) can
+             require picking a free gift before this button is submittable,
+             and it re-locks it via its own variantChange subscription right
+             before this one runs (it sits earlier in the DOM, so it
+             subscribes first — see assets/pubsub.js, callbacks run in
+             subscription order). Overwriting `disabled` here with only the
+             sold-out state would silently re-enable a still-gift-locked
+             button on every variant change. `data-gift-locked` is the
+             picker's own marker for "disabled by this component", so OR it
+             in rather than ignoring it. */
+          const giftLocked = this.button.dataset.giftLocked === 'true';
+          this.button.disabled = soldOut || giftLocked;
           this.buttonLabel.textContent = soldOut
             ? window.variantStrings.soldOut
             : window.variantStrings.addToCart;
