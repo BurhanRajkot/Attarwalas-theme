@@ -162,6 +162,29 @@ if (!customElements.get('duo-pairs')) {
         return card.querySelector(`${groupSelector} input:checked`);
       }
 
+      /*
+        Free-gift picker (see the hero markup in sections/duo-pairs.liquid):
+        which gift variant to add depends on the perfume size actually
+        selected right now (50ML → the 10ml gift, everything else → 35ml),
+        the same bucket rule free-gift-picker.liquid and product-gift-picker
+        already use — read fresh here rather than cached, since the
+        customer can switch Perfume size after picking a gift.
+      */
+      giftBucket(card) {
+        const perfumeInput = this.selectedSizeInput(card, '[data-duo-perfume-group]');
+        return (perfumeInput?.dataset.size || '').toUpperCase() === '50ML' ? 'small' : 'large';
+      }
+
+      selectedGiftItem(card) {
+        const select = card.querySelector('[data-duo-gift-select]');
+        if (!select || !select.value) return null;
+        const option = select.options[select.selectedIndex];
+        const bucket = this.giftBucket(card);
+        const variantId = option.dataset[bucket === 'small' ? 'giftVariantSmall' : 'giftVariantLarge'];
+        if (!variantId) return null;
+        return { variantId, title: option.textContent.trim() };
+      }
+
       cardRetail(card) {
         const perfumeInput = this.selectedSizeInput(card, '[data-duo-perfume-group]');
         const rollonInput = this.selectedSizeInput(card, '[data-duo-rollon-group]');
@@ -290,6 +313,25 @@ if (!customElements.get('duo-pairs')) {
           { id: rollonVariantId, quantity: 1, properties: { ...properties } },
         ];
 
+        // Added as an ordinary cart line, not tagged with the duo's own
+        // _bundle properties — the offer-discount function zeroes it purely
+        // off Gift/_free_gift + the line's own variant/collection, the same
+        // way it already does for a gift claimed from the cart or a regular
+        // product page (see CLAUDE.md "What makes it ₹0"). One request
+        // covers all three lines since, unlike Dawn's shared product-form.js,
+        // this component already fully controls its own /cart/add payload.
+        const giftItem = this.selectedGiftItem(card);
+        if (giftItem) {
+          items.push({
+            id: giftItem.variantId,
+            quantity: 1,
+            properties: {
+              Gift: giftItem.title,
+              _free_gift: '1',
+            },
+          });
+        }
+
         const config = fetchConfig('javascript');
         config.headers['X-Requested-With'] = 'XMLHttpRequest';
 
@@ -323,6 +365,9 @@ if (!customElements.get('duo-pairs')) {
               window.location = window.routes.cart_url;
               return;
             }
+
+            const giftSelect = card.querySelector('[data-duo-gift-select]');
+            if (giftSelect) giftSelect.value = '';
 
             this.cart.renderContents(response);
           })

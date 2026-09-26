@@ -65,19 +65,67 @@
 
   /* ---- Product and category images settle into their frame as the card
      arrives. `scale` (not transform) so it composes with each card's own
-     hover zoom instead of fighting it. ---- */
+     hover zoom instead of fighting it. A touch of blur clearing as it
+     settles is what makes it read as a deliberate reveal rather than a
+     plain zoom — the same idiom as the editorial photo unveil above, just
+     faster since it's a small grid thumbnail, not a hero image. ---- */
 
   @keyframes awSettle {
     from {
-      scale: 1.08;
+      scale: 1.14;
+      filter: blur(10px);
+    }
+    60% {
+      filter: blur(0);
     }
   }
 
   .product-carousel__slide--visible .product-carousel__media img,
   .shop-by-category__card--visible .shop-by-category__image-wrapper img,
   .scroll-trigger:not(.scroll-trigger--offscreen) .card__media img {
-    animation: awSettle 1.6s var(--aw-ease) backwards;
-    animation-delay: calc(var(--animation-order, 0) * 75ms);
+    animation: awSettle 1.9s var(--aw-ease) backwards;
+    animation-delay: calc(var(--animation-order, 0) * 90ms);
+  }
+
+  /* ---- Product cards in a collection grid: a fuller, slower reveal than
+     Dawn's plain 2rem rise (below) — a little more rise, a soft scale-up
+     and a blur clearing alongside the fade, so cards feel like they're
+     settling into place rather than just sliding up. Scoped to grid items
+     that actually hold a product/collection card (:has(.card-wrapper)) so
+     it doesn't touch the many other unrelated things that also carry
+     .scroll-trigger.animate--slide-in (headings, rich text, forms, ...) —
+     see the file header for why that shared class is otherwise left alone.
+     Must still end at transform: none / opacity: 1 / filter: none, same
+     reason as everywhere else in this file: a lingering transform on a
+     card creates a containing block that can trap a native <select> (the
+     quick-add overlay's own controls) or re-anchor a fixed descendant. ---- */
+
+  .grid__item.scroll-trigger:not(.scroll-trigger--offscreen).animate--slide-in:has(.card-wrapper) {
+    animation: awCardIn 1.15s var(--aw-ease) both;
+    animation-delay: calc(var(--animation-order, 0) * 110ms);
+  }
+
+  .grid__item.scroll-trigger.animate--slide-in.scroll-trigger--settled:has(.card-wrapper) {
+    animation: none;
+    transform: none;
+    filter: none;
+    opacity: 1;
+  }
+
+  @keyframes awCardIn {
+    from {
+      opacity: 0;
+      transform: translateY(3.4rem) scale(0.96);
+      filter: blur(6px);
+    }
+    55% {
+      filter: blur(0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
   }
 
   /* ---- Scroll-linked depth. Browsers without scroll-driven animations

@@ -59,28 +59,21 @@
   margin-bottom: 0;
 }
 
-.customize-trio-picker__required-hint,
-.customize-trio-picker__buy-warning {
-  --trio-warning: 196, 47, 47;
-  margin: 1.4rem 0 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: rgb(var(--trio-warning));
-}
-
-.customize-trio-picker__required-hint[hidden],
-.customize-trio-picker__buy-warning[hidden] {
-  display: none;
-}
-
 /* Sits above the Add to cart / Buy Now buttons (injected by
-   assets/customize-trio-picker.js) — the picker itself can be scrolled out
-   of view by the time a customer reaches the buttons, so the same warning
-   repeats right where they're about to click. Matches
-   .product-gift-picker__buy-warning: plain text, no card around it. */
-.customize-trio-picker__buy-warning {
+   assets/customize-trio-picker.js), outside the .customize-trio-picker
+   element itself (it's inserted into the product form), so it can't rely on
+   that element's own --trio-ink custom property — same reason
+   .product-gift-picker__buy-warning sets its own color var instead of
+   inheriting one. Plain muted text, not a warning (no red, no asterisk),
+   since it's a direction, not an error. */
+.customize-trio-picker__buy-hint {
   margin: 0 0 1.2rem;
   font-size: 1.3rem;
+  color: rgba(var(--color-foreground), 0.65);
+}
+
+.customize-trio-picker__buy-hint[hidden] {
+  display: none;
 }
 
 @media screen and (max-width: 749px) {

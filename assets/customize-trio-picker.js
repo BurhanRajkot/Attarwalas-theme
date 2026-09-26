@@ -10,9 +10,16 @@
  *
  * Mirrors assets/product-gift-picker.js's own required-pick gating
  * (getBuyButtons()/updateBuyButtons(), the data-trio-locked marker so a
- * later re-enable only ever touches buttons this component itself disabled,
- * and the repeated warning line injected above the buttons since this
- * picker can be scrolled out of view by the time a customer reaches them).
+ * later re-enable only ever touches buttons this component itself disabled).
+ *
+ * Burhan, 2026-09-26: removed the "*Choose all 3 fragrances... before you
+ * can buy/add" warning text entirely (it read as an error/scold). Then asked
+ * for it back in a softer form, specifically next to the buttons: the
+ * picker itself can be scrolled out of view by the time a customer reaches
+ * Add to cart / Buy Now, so there needs to be *something* there pointing
+ * them back up — just phrased as a plain direction ("Select your fragrances
+ * below") instead of a warning about what they can't do yet. Only the copy
+ * and the styling changed; the button-disabling logic never did.
  */
 if (!customElements.get('customize-trio-picker')) {
   class CustomizeTrioPicker extends HTMLElement {
@@ -21,10 +28,9 @@ if (!customElements.get('customize-trio-picker')) {
 
       this.sectionId = this.dataset.section;
       this.productFormId = this.dataset.productFormId;
-      this.requiredHint = this.querySelector('[data-trio-required-hint]');
       this.fieldGroups = Array.from(this.querySelectorAll('[data-trio-group]'));
       this.fragranceFields = Array.from(this.querySelectorAll('[data-trio-fragrance-field]'));
-      this.buyWarning = this.createBuyWarning();
+      this.buyHint = this.createBuyHint();
 
       this.addEventListener('change', () => {
         this.revealNextGroup();
@@ -45,22 +51,22 @@ if (!customElements.get('customize-trio-picker')) {
       }
     }
 
-    // See assets/product-gift-picker.js's own createBuyWarning() — same
-    // reasoning, placed as the previous sibling of .product-form__buttons
-    // so it reads before the buy buttons rather than between them.
-    createBuyWarning() {
+    // Placed as the previous sibling of .product-form__buttons so it reads
+    // right above the buttons rather than between them — a plain nudge, not
+    // a warning, so no red/error styling (see component-customize-trio-picker.css).
+    createBuyHint() {
       const form = document.getElementById(this.productFormId);
       const buttons = form ? form.querySelector('.product-form__buttons') : null;
       if (!buttons) return null;
-      const existing = buttons.parentElement.querySelector('[data-trio-buy-warning]');
+      const existing = buttons.parentElement.querySelector('[data-trio-buy-hint]');
       if (existing) return existing;
-      const warning = document.createElement('p');
-      warning.className = 'customize-trio-picker__buy-warning';
-      warning.setAttribute('data-trio-buy-warning', '');
-      warning.textContent = '*Choose all 3 fragrances above before you can buy this gift set.';
-      warning.hidden = true;
-      buttons.parentElement.insertBefore(warning, buttons);
-      return warning;
+      const hint = document.createElement('p');
+      hint.className = 'customize-trio-picker__buy-hint';
+      hint.setAttribute('data-trio-buy-hint', '');
+      hint.textContent = 'Select your fragrances below';
+      hint.hidden = true;
+      buttons.parentElement.insertBefore(hint, buttons);
+      return hint;
     }
 
     allChosen() {
@@ -104,8 +110,7 @@ if (!customElements.get('customize-trio-picker')) {
         }
       });
 
-      if (this.requiredHint) this.requiredHint.hidden = ready;
-      if (this.buyWarning) this.buyWarning.hidden = ready;
+      if (this.buyHint) this.buyHint.hidden = ready;
     }
   }
 
