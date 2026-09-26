@@ -20,15 +20,32 @@
       {%- assign has_fragrance_option = true -%}
     {%- endif -%}
   {%- endfor -%}
+  {%- comment -%}
+    Customize Trio gift sets — Customize Gift Set 35ml/65ml/100ml. Each is a
+    single fixed-price, single-variant product with no Fragrance option of
+    its own (Burhan, 2026-09-25: "one price no discounts etc") — the handle
+    list is the only way to identify them, same as the customize-perfume-1
+    exception below. See snippets/customize-trio-picker.liquid.
+  {%- endcomment -%}
+  {%- assign customize_trio_handles = 'blended-35-ml,blended-65-ml,blended-100-ml' | split: ',' -%}
+  {%- assign is_customize_trio = false -%}
+  {%- if customize_trio_handles contains product.handle -%}
+    {%- assign is_customize_trio = true -%}
+  {%- endif -%}
   {% comment %}
     Also loaded for the Customize Perfume free-gift picker (see
-    snippets/product-gift-picker.liquid), which reuses <fragrance-picker>'s
-    search UI — redundant on this product today since it already sets
-    has_fragrance_option, but keeps the gift picker working if it's ever
-    reused on a product without its own Fragrance option.
+    snippets/product-gift-picker.liquid) and the Customize Trio picker (see
+    snippets/customize-trio-picker.liquid), both of which reuse
+    <fragrance-picker>'s search UI — redundant on this product today since it
+    already sets has_fragrance_option, but keeps those pickers working if
+    they're ever reused on a product without its own Fragrance option.
   {% endcomment %}
-  {% if has_fragrance_option or product.handle == 'customize-perfume-1' %}
+  {% if has_fragrance_option or product.handle == 'customize-perfume-1' or is_customize_trio %}
     {{ 'component-fragrance-picker.css' | asset_url | stylesheet_tag }}
+  {% endif %}
+  {% if is_customize_trio %}
+    {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
+    {{ 'component-customize-trio-picker.css' | asset_url | stylesheet_tag }}
   {% endif %}
   {%- if product.quantity_price_breaks_configured? -%}
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
@@ -72,11 +89,14 @@
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
   <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
-  {% if has_fragrance_option or product.handle == 'customize-perfume-1' %}
+  {% if has_fragrance_option or product.handle == 'customize-perfume-1' or is_customize_trio %}
     <script src="{{ 'fragrance-picker.js' | asset_url }}" defer="defer"></script>
   {% endif %}
   {% if settings.free_gift_enabled and product_gift_eligible %}
     <script src="{{ 'product-gift-picker.js' | asset_url }}" defer="defer"></script>
+  {% endif %}
+  {% if is_customize_trio %}
+    <script src="{{ 'customize-trio-picker.js' | asset_url }}" defer="defer"></script>
   {% endif %}
   {%- if product.quantity_price_breaks_configured? -%}
     <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
@@ -710,6 +730,9 @@
                 {% render 'icon-with-text', block: block %}
             {%- endcase -%}
           {%- endfor -%}
+          {% if is_customize_trio %}
+            {% render 'customize-trio-picker', section_id: section.id %}
+          {% endif %}
           {% render 'product-gift-picker', product: product, section_id: section.id %}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}

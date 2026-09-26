@@ -1,0 +1,95 @@
+{% comment %}
+  "Build your own gift set" picker for the Customize Trio gift-set products
+  — Customize Gift Set 35ml/65ml/100ml (handles blended-35-ml / blended-65-ml
+  / blended-100-ml). Burhan, 2026-09-25: "there are 2 perfumes and 1 attar
+  roll on ... it will be one price no discounts etc."
+
+  Each gift-set product is a single fixed-price, single-variant ("Default
+  Title") product — the price never changes no matter which fragrances are
+  picked. So unlike Customize Perfume (which drives a real 594-variant
+  product), the customer's 3 choices here (2 perfume fragrances and 1
+  roll-on fragrance) are captured as line-item properties on that one
+  variant, submitted through the page's own <product-form> exactly like any
+  other named field in that form — no separate /cart/add call, no
+  bundle/discount-function machinery, nothing for
+  assets/customize-trio-picker.js to add to the cart itself. It only gates
+  the buy buttons until all 3 are chosen (Burhan asked picking be required,
+  same as product-gift-picker.liquid's own required gate) — see that file's
+  getBuyButtons()/updateBuyButtons() pattern, mirrored here.
+
+  Burhan, 2026-09-26: removed the per-perfume Type (Alcoholic/Non-Alcoholic)
+  field entirely, and made the three fragrance fields reveal one at a time —
+  Perfume 2 only appears once Perfume 1 has a fragrance picked, and the
+  Attar Roll-On field only appears once Perfume 2 does. Each
+  `.customize-trio-picker__field-group` after the first renders with
+  `hidden` and a `data-trio-group` index; assets/customize-trio-picker.js's
+  `revealNextGroup()` clears `hidden` on the next group once the current
+  group's fragrance field has a checked radio.
+
+  Deliberately NOT rendering the free-gift picker's offer on these products:
+  a gift set already contains 2 full perfumes and a roll-on, so an extra
+  free 35ml perfume on top doesn't make sense (Burhan, 2026-09-25: "i need
+  no complementary 35ml bottle of free roll on"). No special-case was needed
+  to suppress it — these products were never in the free-gift qualifying
+  collection or added to the handle-exception list used elsewhere (see
+  sections/main-product.liquid's product_gift_eligible), so
+  snippets/product-gift-picker.liquid's own eligibility check already
+  no-ops here on its own. This comment exists so a future session doesn't
+  "fix" that as an oversight and add the exception by mistake.
+
+  Accepts:
+  - section_id: {String}
+
+  Usage:
+  {% render 'customize-trio-picker', section_id: section.id %}
+{% endcomment %}
+{%- liquid
+  assign perfume_source = all_products['customize-perfume-1']
+  assign rollon_source = all_products['customize-attar']
+  assign product_form_id = 'product-form-' | append: section_id
+-%}
+<customize-trio-picker
+  class="customize-trio-picker"
+  data-section="{{ section_id }}"
+  data-product-form-id="{{ product_form_id }}"
+>
+  <p class="customize-trio-picker__heading">Build Your Gift Set</p>
+  <p class="customize-trio-picker__subtext">Choose 2 perfumes and 1 attar roll-on to include.</p>
+
+  <div class="customize-trio-picker__field-group" data-trio-group="1">
+    <p class="customize-trio-picker__field-group-heading">Perfume 1</p>
+    {% render 'customize-trio-fragrance-field',
+      source_product: perfume_source,
+      field_key: 'Perfume 1 Fragrance',
+      field_label: 'Fragrance',
+      product_form_id: product_form_id,
+      section_id: section_id
+    %}
+  </div>
+
+  <div class="customize-trio-picker__field-group" data-trio-group="2" hidden>
+    <p class="customize-trio-picker__field-group-heading">Perfume 2</p>
+    {% render 'customize-trio-fragrance-field',
+      source_product: perfume_source,
+      field_key: 'Perfume 2 Fragrance',
+      field_label: 'Fragrance',
+      product_form_id: product_form_id,
+      section_id: section_id
+    %}
+  </div>
+
+  <div class="customize-trio-picker__field-group" data-trio-group="3" hidden>
+    <p class="customize-trio-picker__field-group-heading">Attar Roll-On</p>
+    {% render 'customize-trio-fragrance-field',
+      source_product: rollon_source,
+      field_key: 'Attar Roll-On Fragrance',
+      field_label: 'Fragrance',
+      product_form_id: product_form_id,
+      section_id: section_id
+    %}
+  </div>
+
+  <p class="customize-trio-picker__required-hint" data-trio-required-hint hidden>
+    *Choose all 3 fragrances above before you can add this gift set to your cart.
+  </p>
+</customize-trio-picker>

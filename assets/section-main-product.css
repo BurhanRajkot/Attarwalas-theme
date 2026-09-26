@@ -933,7 +933,12 @@ a.product__text {
   .product--small .thumbnail-list,
   .product--medium .thumbnail-list,
   .product--large .thumbnail-list {
-    grid-template-columns: repeat(auto-fit, minmax(5.2rem, 1fr));
+    /* Capped at 8rem so a product with only 2-3 photos (gift sets) doesn't
+       stretch each thumbnail to fill the row - auto-fit + an uncapped 1fr
+       column blows up to divide the whole row width between however few
+       items exist. Products with enough photos to need more than one row
+       are unaffected either way. */
+    grid-template-columns: repeat(auto-fit, minmax(5.2rem, 8rem));
   }
 }
 

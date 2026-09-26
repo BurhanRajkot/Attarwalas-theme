@@ -447,19 +447,26 @@
    link to the product page. */
 .quick-add-overlay {
   position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 1.25rem;
   z-index: 3;
-  /* Wipes up from its own bottom edge rather than fading in, so the bar
-     reads as rising out of the image. */
-  clip-path: inset(100% 0 0 0);
-  transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Centers the (now auto-width, not full-bleed) pill rather than stretching
+     it edge to edge — text-align so it centers regardless of whether the
+     custom elements wrapping the button (modal-opener/product-form) end up
+     block or inline in the cascade. */
+  text-align: center;
+  /* Pops in with a slight overshoot rather than wiping up as a hard-edged
+     block — reads as the pill springing up out of the image. */
+  opacity: 0;
+  transform: translateY(0.6rem) scale(0.8);
+  transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
 }
 
 /*
-  The bar's colours are captured on .card-wrapper, not lower down, because
+  The pill's colours are captured on .card-wrapper, not lower down, because
   --color-button gets redefined twice between here and the button:
 
   - `.card` carries its own color-scheme class (scheme-2 on these grids), which
@@ -467,19 +474,25 @@
   - the button carries `.button--secondary`, which re-points it again at the
     pale secondary colour.
 
-  .card-wrapper sits above both, so it still sees the *section's* scheme — the
-  brand gold. Aliasing into --quick-add-* here means neither of those rules can
-  shadow it on the way down. Don't move these onto .quick-add-overlay or the
-  button: the bar renders near-black from there.
+  .card-wrapper sits above both, so aliasing here is what lets these survive
+  either rule. Don't move these onto .quick-add-overlay or the button.
+
+  Deliberately hardcoded rather than reading --color-button: first pass used
+  the section's flat gold, then the brand's ink/gold two-tone — both read as
+  a heavy dark/gold block ("please no black"). Now a warm cream glass pill
+  (--color-scheme-1's own background, #fcfaf5) with ink text and a thin gold
+  rim, so it reads as light and floating rather than a solid tile.
 */
 .card-wrapper {
-  --quick-add-bg: var(--color-button);
-  --quick-add-fg: var(--color-button-text);
+  --quick-add-bg: 252, 250, 245;
+  --quick-add-fg: 43, 36, 24;
+  --quick-add-border: 184, 138, 42;
 }
 
 .card-wrapper:hover .quick-add-overlay,
 .card-wrapper:focus-within .quick-add-overlay {
-  clip-path: inset(0 0 0 0);
+  opacity: 1;
+  transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
@@ -509,36 +522,68 @@
 
 .quick-add-overlay .quick-add__submit {
   position: relative;
-  display: flex;
-  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
   min-width: 0;
   overflow: hidden;
-  border-radius: 0.3rem;
-  padding: 1.1rem;
-  font-size: 1.05rem;
-  letter-spacing: 0.12rem;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--quick-add-border), 0.55);
+  padding: 0.7rem 1.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.13rem;
   text-transform: uppercase;
-  background: rgb(var(--quick-add-bg));
+  background: rgba(var(--quick-add-bg), 0.94);
+  backdrop-filter: blur(6px) saturate(160%);
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
   color: rgb(var(--quick-add-fg));
-  box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.12);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0.3rem 0.9rem rgba(var(--quick-add-border), 0.2);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+/* A gold ring pulses out once, each time the pill is revealed — a small bit
+   of sparkle rather than a static appearance. Sits on top of the resting
+   box-shadow above; the 0%/100% keyframes restate it so the shadow doesn't
+   flash away the instant the animation ends. */
+@keyframes quick-add-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--quick-add-border), 0.45), 0 0.3rem 0.9rem rgba(var(--quick-add-border), 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 0.65rem rgba(var(--quick-add-border), 0), 0 0.3rem 0.9rem rgba(var(--quick-add-border), 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--quick-add-border), 0), 0 0.3rem 0.9rem rgba(var(--quick-add-border), 0.2);
+  }
+}
+
+.card-wrapper:hover .quick-add-overlay .quick-add__submit,
+.card-wrapper:focus-within .quick-add-overlay .quick-add__submit {
+  animation: quick-add-pulse 1s ease-out 0.1s;
 }
 
 .quick-add-overlay .quick-add__submit:hover {
-  background: rgba(var(--quick-add-bg), 0.9);
-  box-shadow: 0 0.5rem 1.4rem rgba(0, 0, 0, 0.18);
+  border-color: rgba(var(--quick-add-border), 1);
+  box-shadow: 0 0.5rem 1.3rem rgba(var(--quick-add-border), 0.32);
+  transform: translateY(-0.15rem) scale(1.02);
 }
 
-/* Shine sweep on hover — a soft diagonal band of light glides across the bar
-   once. This also replaces Dawn's own .button::after, which draws the border
-   ring; the bar is a solid fill, so the ring isn't wanted. */
+/* Shine sweep on hover — a soft diagonal band of warm gold light glides
+   across the pill once. This also replaces Dawn's own .button::after, which
+   draws the border ring; the pill already has its own gold border. */
 .quick-add-overlay .quick-add__submit::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background-image: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, 0.55) 50%, transparent 58%);
+  background-image: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(var(--quick-add-border), 0.45) 50%,
+    transparent 58%
+  );
   background-size: 260% 100%;
   background-position: 150% 0;
   background-repeat: no-repeat;
@@ -576,6 +621,10 @@
   .quick-add-overlay,
   .quick-add-overlay .quick-add__submit::after {
     transition: none;
+  }
+
+  .quick-add-overlay .quick-add__submit {
+    animation: none;
   }
 }
 

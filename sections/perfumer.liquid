@@ -4,11 +4,47 @@
     --aw-perfumer-fg: {{ section.settings.text_color }};
     --aw-perfumer-muted: {{ section.settings.muted_text_color }};
     --aw-perfumer-accent: rgb(var(--color-button));
+    position: relative;
     background: var(--aw-perfumer-bg);
     color: var(--aw-perfumer-fg);
     /* clip, not hidden — hidden would freeze the photo's scroll-linked
        parallax in aw-motion.css (it becomes the photo's scroll container) */
     overflow: clip;
+  }
+
+  /* A flat solid-colour fill (the --no-photo state especially) read as an
+     empty black slab with nothing behind the text. These two layers add
+     depth without needing any photography: a soft gold glow seated behind
+     the copy, and a faint diagonal hairline weave for a little tactile
+     "material" quality — like the fabric lining of a gift box rather than a
+     flat website background. Both sit behind .aw-perfumer__grid (z-index 1
+     below). */
+  .aw-perfumer-{{ section.id }}::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 55% at 50% 8%, rgba(184, 138, 42, 0.22), transparent 72%);
+    pointer-events: none;
+  }
+
+  .aw-perfumer-{{ section.id }}::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgb(var(--color-background)) 0,
+      rgb(var(--color-background)) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+    pointer-events: none;
+  }
+
+  .aw-perfumer-{{ section.id }} .aw-perfumer__grid {
+    position: relative;
+    z-index: 1;
   }
 
   /* ---- With a photo: photo and quote side by side, photo bleeds to the edge ---- */
@@ -70,10 +106,24 @@
 
   /* ---- Type ---- */
 
+  .aw-perfumer-{{ section.id }} .aw-perfumer__ornament {
+    display: block;
+    width: 0.8rem;
+    height: 0.8rem;
+    margin: 0 0 1.8rem;
+    background: var(--aw-perfumer-accent);
+    transform: rotate(45deg);
+  }
+
+  .aw-perfumer-{{ section.id }}.aw-perfumer--no-photo .aw-perfumer__ornament {
+    margin-inline: auto;
+  }
+
   .aw-perfumer-{{ section.id }} .aw-perfumer__eyebrow {
     display: block;
     margin: 0 0 1.4rem;
     font-size: 1.4rem;
+    letter-spacing: 0.08em;
     color: var(--aw-perfumer-accent);
   }
 
@@ -205,7 +255,8 @@
 {%- if pf_bio != blank or pf_name != blank -%}
   <div class="aw-perfumer-{{ section.id }}{% unless has_media %} aw-perfumer--no-photo{% endunless %}">
     <div class="aw-perfumer__grid">
-      <div class="aw-perfumer__text">
+      <div class="aw-perfumer__text{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
+        <span class="aw-perfumer__ornament" aria-hidden="true"></span>
         {%- if section.settings.eyebrow != blank -%}
           <span class="aw-perfumer__eyebrow">{{ section.settings.eyebrow }}</span>
         {%- endif -%}

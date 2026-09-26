@@ -303,15 +303,26 @@
   object-fit: contain;
 }
 
-/* Gallery frame */
+/* Gallery frame — frameless, matching every other product page's media
+   (assets/section-main-product.css's "frameless media" rule: border: 0, no
+   card background, no shadow). Was a rounded gradient-and-shadow card;
+   Burhan, 2026-09-25: "remove the boxes and stuff make it match my website
+   like all the other product pages." overflow: hidden is kept — it's what
+   clips the horizontal snap-scroll to one slide at a time, not decorative.
+
+   background-color matches the page (not transparent): .duo-hero__gallery is
+   a real horizontal flex scroller (each .duo-hero__slide is flex: 0 0 100%),
+   not a transform-driven single-image swap, so a fractional-pixel rounding
+   of the container width times 4 slides can leave the snap position a
+   hair off-boundary. Without a background here that gap exposed the raw
+   white canvas underneath instead of the section's cream — reported as
+   "white lines crossing" the photo, worst on the last slide (rounding
+   error compounds across slides) — see memory. Cream here means any such
+   gap blends into the page instead of flashing white. */
 .duo-hero__frame {
   position: relative;
-  border-radius: 2rem;
   overflow: hidden;
-  background: linear-gradient(160deg, rgb(252, 248, 242) 0%, rgb(245, 238, 225) 100%);
-  box-shadow:
-    0 0.8rem 2.4rem rgba(var(--offer-ink), 0.06),
-    0 2rem 4.8rem rgba(var(--offer-ink), 0.08);
+  background: rgb(var(--color-background));
 }
 
 .duo-hero__gallery {
@@ -484,31 +495,39 @@
 }
 
 /* ==========================================================================
-   STICKY BAR — rich dark bar with gold accent
+   STICKY BAR — matches the real product page's own sticky bar
+   (assets/section-main-product.css .product__sticky-bar: the site's cream
+   background, dark ink text), not the bespoke dark bar the offer pages use.
+   Burhan, 2026-09-25: "remove the boxes and stuff make it match my website
+   like all the other product pages." The offer pages (offer-for-2/3/5) keep
+   their own dark .offer-builder__bar untouched — this only re-themes the
+   duo page's copy of the shared component, since a duo (two fixed products,
+   just pick sizes) reads much closer to an ordinary product page than the
+   offer pages' pick-from-many bundle builder does. Every rule below exists
+   only because the base component styles text as light-on-dark
+   (rgba(var(--color-background), N)) — same properties, just flipped to
+   rgba(var(--color-foreground), N) for a light bar.
    ========================================================================== */
 
-/*
-  Override the shared bar to a deeper, richer dark with a warm undertone.
-*/
 .duo-pairs .offer-builder__bar {
-  background: linear-gradient(
-    90deg,
-    rgb(22, 18, 10) 0%,
-    rgb(35, 28, 15) 50%,
-    rgb(22, 18, 10) 100%
-  );
-  box-shadow:
-    0 -0.4rem 2rem rgba(0, 0, 0, 0.25),
-    0 -1px 0 rgba(var(--offer-gold), 0.2);
+  background: rgb(var(--color-background));
+  color: rgb(var(--color-foreground));
+  border-top: 1px solid rgba(var(--color-foreground), 0.1);
+  box-shadow: 0 -0.2rem 1.2rem rgba(var(--color-foreground), 0.08);
 }
 
-/* Gold progress line */
 .duo-pairs .offer-builder__bar-track {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--color-foreground), 0.1);
 }
 
 .duo-pairs .offer-builder__bar-fill {
   background: rgb(var(--offer-gold));
+}
+
+.duo-pairs .offer-builder__bar-label,
+.duo-pairs .offer-builder__bar-picks,
+.duo-pairs .offer-builder__bar-worth {
+  color: rgba(var(--color-foreground), 0.6);
 }
 
 /* Bar selected name — large and prominent */
@@ -516,6 +535,21 @@
   font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.duo-pairs .offer-builder__bar-add[disabled] {
+  border-color: rgba(var(--color-foreground), 0.3);
+  color: rgba(var(--color-foreground), 0.5);
+}
+
+.duo-pairs .offer-builder__bar-add:hover:not([disabled]) {
+  background: rgb(var(--color-foreground));
+  border-color: rgb(var(--color-foreground));
+  color: rgb(var(--color-background));
+}
+
+.duo-pairs .offer-builder__bar-add:focus-visible {
+  outline-color: rgb(var(--color-foreground));
 }
 
 /* Mobile bar cap for duo button */

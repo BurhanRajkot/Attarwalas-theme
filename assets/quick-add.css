@@ -105,6 +105,40 @@
   }
 }
 
+/* The theme-wide "Popover" settings (Settings > corner radius/border/shadow)
+   are all effectively 0 — a deliberate flat look for the header/search
+   submenus, but on this modal it read as a bare, hard-edged white box with
+   no depth ("hollow ... square box"). Scoped to the two-class selector so it
+   beats the plain .global-settings-popup rule in base.css without touching
+   those shared settings or any other popup on the site. */
+.quick-add-modal__content.global-settings-popup {
+  border: none;
+  border-top: 0.3rem solid rgb(184, 138, 42);
+  border-radius: 1.75rem;
+  box-shadow: 0 2rem 5rem rgba(43, 36, 24, 0.22), 0 0.5rem 1.2rem rgba(43, 36, 24, 0.1);
+}
+
+@media screen and (max-width: 749px) {
+  .quick-add-modal__content.global-settings-popup {
+    border-radius: 1.25rem;
+  }
+}
+
+.quick-add-modal__toggle {
+  border-radius: 50%;
+  border-color: rgba(184, 138, 42, 0.35);
+  background-color: rgba(252, 250, 245, 0.95);
+  box-shadow: 0 0.3rem 0.9rem rgba(43, 36, 24, 0.15);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.quick-add-modal__toggle:hover {
+  color: rgba(var(--color-foreground), 0.75);
+  border-color: rgba(184, 138, 42, 0.8);
+  box-shadow: 0 0.4rem 1.1rem rgba(184, 138, 42, 0.28);
+  transform: scale(1.06);
+}
+
 .quick-add-modal__content img {
   max-width: 100%;
 }

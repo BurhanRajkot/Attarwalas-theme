@@ -2,6 +2,8 @@
 
 # shopify theme dev --store=attarwalas-4203.myshopify.com --theme=190519771424
 
+# shopify theme push --store=attarwalas-4203.myshopify.com --theme=190519771424 --allow-live
+
 Guidance for working in this repo. Read this before making changes.
 
 ## Before submitting / launching this site

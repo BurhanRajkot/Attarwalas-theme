@@ -1,0 +1,132 @@
+{% comment %}
+  Renders one searchable fragrance picker for the Customize Trio gift-set
+  pages (Customize Gift Set 35ml/65ml/100ml). Reuses <fragrance-picker>'s
+  search UI (assets/fragrance-picker.js, component-fragrance-picker.css) but,
+  unlike snippets/fragrance-option-picker.liquid, is NOT tied to the current
+  page's own product — the gift-set product has only one "Default Title"
+  variant, nothing to pick a real variant for. Instead this reads the
+  fragrance names straight off `source_product`'s own Fragrance option
+  (customize-perfume-1 for the two perfume slots, customize-attar for the
+  roll-on slot, passed in by snippets/customize-trio-picker.liquid) and
+  records the choice as a cart line-item property on the gift-set's own
+  single variant — see that snippet's own comment for why.
+
+  Every fragrance renders unchecked and none is ever marked unavailable —
+  unlike the real variant picker, there's no Size/Type combination to be out
+  of stock for here, so there's nothing to disable.
+
+  Accepts:
+  - source_product: {Object} product to read the Fragrance option values from
+  - field_key: {String} the properties[] key this radio group submits under
+    (also becomes the order's line-item property label)
+  - field_label: {String} visible legend text — kept separate from field_key
+    so the legend can just say "Fragrance" under a group heading that already
+    says "Perfume 1", instead of repeating it as "Perfume 1 Fragrance"
+  - product_form_id: {String} id of the <form> these radios submit into via
+    their own `form` attribute (they don't need to live inside it)
+  - section_id: {String} used to build unique element ids across the 3 fields
+
+  Usage:
+  {% render 'customize-trio-fragrance-field',
+    source_product: all_products['customize-perfume-1'],
+    field_key: 'Perfume 1 Fragrance',
+    field_label: 'Fragrance',
+    product_form_id: product_form_id,
+    section_id: section_id
+  %}
+{% endcomment %}
+{%- liquid
+  assign fragrance_option = null
+  for opt in source_product.options_with_values
+    if opt.name contains 'Fragrance'
+      assign fragrance_option = opt
+      break
+    endif
+  endfor
+-%}
+{%- if fragrance_option -%}
+  {%- comment -%}
+    shop.metaobjects.fragrance.values defaults to a 50-item page - see the
+    identical comment in snippets/fragrance-option-picker.liquid, the same
+    fix applies here.
+  {%- endcomment -%}
+  {%- paginate shop.metaobjects.fragrance.values by 250 -%}
+    {%- assign fragrances = shop.metaobjects.fragrance.values -%}
+    <fieldset
+      class="js product-form__input product-form__input--fragrance"
+      data-trio-fragrance-field
+      data-field-key="{{ field_key }}"
+    >
+      <legend class="form__label">{{ field_label | default: field_key }}</legend>
+
+      <fragrance-picker class="fragrance-picker">
+        <div class="fragrance-picker__search">
+          <svg class="icon icon-search fragrance-picker__search-icon" aria-hidden="true" focusable="false">
+            <use href="#icon-search">
+          </svg>
+          <input
+            type="search"
+            class="fragrance-picker__search-input"
+            placeholder="Search by name or brand…"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-label="Search fragrances for {{ field_key }}"
+            data-fragrance-search
+          >
+          <button type="button" class="fragrance-picker__search-clear" data-fragrance-clear hidden>
+            <svg class="icon icon-close" aria-hidden="true" focusable="false">
+              <use xlink:href="#icon-reset">
+            </svg>
+            <span class="visually-hidden">Clear search</span>
+          </button>
+        </div>
+
+        <div class="fragrance-picker__list" data-fragrance-list role="listbox" tabindex="0" hidden>
+          {%- for value in fragrance_option.values -%}
+            {%- liquid
+              assign fragrance_entry = null
+              for f in fragrances
+                if f.display_name.value == value
+                  assign fragrance_entry = f
+                  break
+                endif
+              endfor
+
+              assign clean_name = value | remove_first: 'ATTARWALAS '
+              assign family = fragrance_entry.fragrance_family.value
+              assign gender_list = fragrance_entry.gender.value | join: ' / '
+              assign alias_list = fragrance_entry.aliases.value | join: ' '
+              assign reference_name = fragrance_entry.reference_name.value
+              assign search_text = value | append: ' ' | append: alias_list | append: ' ' | append: reference_name | downcase | strip | escape
+            -%}
+            {%- capture input_id -%}{{ section_id }}-{{ field_key | handleize }}-{{ forloop.index0 }}{%- endcapture -%}
+            <div class="fragrance-picker__item" data-fragrance-item data-search="{{ search_text }}">
+              <input
+                type="radio"
+                id="{{ input_id }}"
+                name="properties[{{ field_key }}]"
+                value="{{ value | escape }}"
+                form="{{ product_form_id }}"
+                class="fragrance-picker__radio visually-hidden"
+              >
+              <label for="{{ input_id }}" class="fragrance-picker__label">
+                <span class="fragrance-picker__name">{{ clean_name }}</span>
+                {%- if family != blank or gender_list != blank -%}
+                  <span class="fragrance-picker__meta">
+                    {{- family -}}
+                    {%- if family != blank and gender_list != blank %} · {% endif -%}
+                    {{- gender_list -}}
+                  </span>
+                {%- endif -%}
+                <span class="fragrance-picker__check" aria-hidden="true">{% render 'icon-checkmark' %}</span>
+              </label>
+            </div>
+          {%- endfor -%}
+          <p class="fragrance-picker__empty" data-fragrance-empty hidden>No fragrances match your search.</p>
+        </div>
+      </fragrance-picker>
+    </fieldset>
+  {%- endpaginate -%}
+{%- endif -%}

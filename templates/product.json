@@ -85,14 +85,15 @@
         "padding_bottom": 12
       }
     },
-    "custom_liquid_W8Qik3": {
-      "type": "custom-liquid",
-      "name": "offers",
+    "offer_teaser": {
+      "type": "offer-teaser",
       "settings": {
-        "custom_liquid": "{% render 'perfume-offers' %}",
-        "color_scheme": "",
-        "padding_top": 40,
-        "padding_bottom": 52
+        "eyebrow": "",
+        "title": "Bundle offers",
+        "subtext": "The more you pick, the more you save.",
+        "color_scheme": "scheme-1",
+        "padding_top": 64,
+        "padding_bottom": 64
       }
     },
     "from-collection": {
@@ -143,7 +144,7 @@
   },
   "order": [
     "main",
-    "custom_liquid_W8Qik3",
+    "offer_teaser",
     "from-collection",
     "perfumer",
     "related-products"

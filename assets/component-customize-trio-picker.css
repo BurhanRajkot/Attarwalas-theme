@@ -1,0 +1,100 @@
+/* ==========================================================================
+   Customize Trio gift-set "build your gift set" picker — same rounded,
+   flat-tint card language as .product-gift-picker
+   (assets/component-product-gift-picker.css) and .free-gift
+   (assets/component-free-gift.css), so it reads as the same kind of feature.
+   Rendered by snippets/customize-trio-picker.liquid.
+   ========================================================================== */
+
+.customize-trio-picker {
+  --trio-gold: var(--color-button);
+  --trio-ink: var(--color-foreground);
+  display: block;
+  margin: 2rem 0;
+  padding: 1.8rem 2rem;
+  border: 1px solid rgba(var(--trio-ink), 0.08);
+  border-radius: 1.6rem;
+  background: rgba(var(--trio-gold), 0.045);
+}
+
+.customize-trio-picker__heading {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--trio-gold));
+}
+
+.customize-trio-picker__subtext {
+  margin: 0.4rem 0 1.8rem;
+  font-size: 1.3rem;
+  line-height: 1.45;
+  color: rgba(var(--trio-ink), 0.68);
+}
+
+.customize-trio-picker__field-group {
+  margin-bottom: 1.8rem;
+}
+
+.customize-trio-picker__field-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.customize-trio-picker__field-group-heading {
+  margin: 0 0 0.8rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: rgb(var(--trio-ink));
+}
+
+/* The fragrance/Type fields render with a bottom margin already (they're
+   ordinary .product-form__input fieldsets), so the second field in a group
+   doesn't need this container to add its own gap on top of that. */
+.customize-trio-picker__field-group .product-form__input {
+  margin-bottom: 1.2rem;
+}
+
+.customize-trio-picker__field-group .product-form__input:last-child {
+  margin-bottom: 0;
+}
+
+.customize-trio-picker__required-hint,
+.customize-trio-picker__buy-warning {
+  --trio-warning: 196, 47, 47;
+  margin: 1.4rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--trio-warning));
+}
+
+.customize-trio-picker__required-hint[hidden],
+.customize-trio-picker__buy-warning[hidden] {
+  display: none;
+}
+
+/* Sits above the Add to cart / Buy Now buttons (injected by
+   assets/customize-trio-picker.js) — the picker itself can be scrolled out
+   of view by the time a customer reaches the buttons, so the same warning
+   repeats right where they're about to click. Matches
+   .product-gift-picker__buy-warning: plain text, no card around it. */
+.customize-trio-picker__buy-warning {
+  margin: 0 0 1.2rem;
+  font-size: 1.3rem;
+}
+
+@media screen and (max-width: 749px) {
+  .customize-trio-picker {
+    padding: 1.6rem 1.6rem;
+    border-radius: 1.4rem;
+  }
+
+  .customize-trio-picker__heading {
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+  }
+
+  .customize-trio-picker__subtext {
+    font-size: 1.2rem;
+  }
+}
