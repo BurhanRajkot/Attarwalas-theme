@@ -43,17 +43,6 @@
     },
     "1722359848307a4548": {
       "type": "apps",
-      "blocks": {
-        "seoant_trust_badges_star_rating_VrdV9G": {
-          "type": "shopify://apps/seowill-trust-badges/blocks/star_rating/f42f2346-5d14-4b41-a8b9-4b6ee352262e",
-          "settings": {
-            "badge_id": ""
-          }
-        }
-      },
-      "block_order": [
-        "seoant_trust_badges_star_rating_VrdV9G"
-      ],
       "settings": {
         "include_margins": true
       }

@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "video_AeBGJd": {
@@ -23,7 +32,7 @@
         "heading": "",
         "heading_size": "h2",
         "enable_video_looping": false,
-        "video": "shopify://files/videos/MPEG-4 movie.mp4",
+        "video": "shopify://files/videos/copy_ABFCE849-7C42-42EB-96FB-9E80185CBCA9.MOV",
         "video_url": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
         "description": "",
         "full_width": true,
@@ -149,9 +158,13 @@
     "offer_teaser": {
       "type": "offer-teaser",
       "settings": {
+        "offer_products": [],
+        "collection": "",
         "eyebrow": "",
         "title": "Bundle offers",
         "subtext": "The more you pick, the more you save.",
+        "card_pill_label": "",
+        "card_cta_label": "",
         "color_scheme": "scheme-1",
         "padding_top": 64,
         "padding_bottom": 64
@@ -163,32 +176,34 @@
         "cat_1": {
           "type": "category_card",
           "settings": {
-            "collection": "men-3",
-            "custom_title": "Discovery sets",
-            "custom_link": ""
+            "collection": "customize",
+            "custom_title": "Customize Perfume",
+            "custom_link": "shopify://products/customize-perfume-1"
           }
         },
         "cat_2": {
           "type": "category_card",
           "settings": {
-            "collection": "",
-            "custom_title": "Fresh creations",
+            "collection": "65ml-gift-set",
+            "custom_title": "Gift Set",
+            "custom_image": "shopify://shop_images/2_f71a4291-1d60-47ea-ae43-4d336ebcd379.png",
             "custom_link": ""
           }
         },
         "cat_3": {
           "type": "category_card",
           "settings": {
-            "collection": "",
-            "custom_title": "Bath & Body",
+            "collection": "attar-roll-ons",
+            "custom_title": "Attar Roll-Ons",
+            "custom_image": "shopify://shop_images/attar_box_transparent_bg.png",
             "custom_link": ""
           }
         },
         "cat_4": {
           "type": "category_card",
           "settings": {
-            "collection": "",
-            "custom_title": "Baccarat Rouge 540",
+            "collection": "discovery-set",
+            "custom_title": "Discovery Set",
             "custom_link": ""
           }
         }
@@ -217,6 +232,7 @@
       "settings": {
         "full_width": true,
         "title": "Duo",
+        "products": [],
         "collection": "duo",
         "link_to_duo_pages": true,
         "products_to_show": 8,
@@ -270,6 +286,7 @@
         "tone": "dark",
         "image": "shopify://shop_images/jio_world_drive_1.jpg",
         "image_caption": "Attarwalas at Jio World Drive, BKC, Mumbai",
+        "show_icons": false,
         "color_scheme": "scheme-1",
         "padding_top": 60,
         "padding_bottom": 60
@@ -281,8 +298,9 @@
         "review_1": {
           "type": "video_review",
           "settings": {
+            "video": "shopify://files/videos/A01D545A-6589-4D67-AAC3-A925EEE36A6D.MP4",
             "product": "ambre-intense-100ml",
-            "customer_name": "Aisha Khan",
+            "customer_name": "Hussain Attarwala",
             "note_1": "Amber",
             "note_2": "Vanilla",
             "note_3": "Sandalwood"
@@ -291,9 +309,9 @@
         "review_2": {
           "type": "video_review",
           "settings": {
-            "video": "shopify://files/videos/editedvideo-MadewithClipchamp.mp4",
-            "product": "ambre-intense-100ml",
-            "customer_name": "Rohan Mehta",
+            "video": "shopify://files/videos/copy_77E1F5B5-8747-47EE-A51F-D22B4937B997.MOV",
+            "product": "fresh-woodscape-100ml",
+            "customer_name": "Hrithik Chaudhary",
             "note_1": "Amber",
             "note_2": "Vanilla",
             "note_3": "Sandalwood"
@@ -302,8 +320,9 @@
         "review_3": {
           "type": "video_review",
           "settings": {
-            "product": "florence-orchidia-100ml",
-            "customer_name": "Sara Ali",
+            "video": "shopify://files/videos/copy_7C6F8C18-6166-4FA5-993B-70927D41C8C3.MOV",
+            "product": "customize-attar",
+            "customer_name": "Ben",
             "note_1": "Orchid",
             "note_2": "Jasmine",
             "note_3": "Musk"
@@ -312,8 +331,9 @@
         "review_4": {
           "type": "video_review",
           "settings": {
-            "product": "mystique-island-100ml",
-            "customer_name": "Priya Sharma",
+            "video": "shopify://files/videos/copy_B844051B-4FD2-4F4B-8344-64625215B38B.MOV",
+            "product": "fresh-woodscape-100ml",
+            "customer_name": "Gaurav Shah",
             "note_1": "Bergamot",
             "note_2": "Sea Salt",
             "note_3": "Coconut"
@@ -322,8 +342,9 @@
         "review_5": {
           "type": "video_review",
           "settings": {
-            "product": "fresh-woodscape-100ml",
-            "customer_name": "Arjun Patel",
+            "video": "shopify://files/videos/copy_5493A048-0644-4E46-A0B2-356E3E0B3239.MOV",
+            "product": "customize-perfume-1",
+            "customer_name": "",
             "note_1": "Citrus",
             "note_2": "Vetiver",
             "note_3": "Cedarwood"
@@ -372,7 +393,7 @@
       ],
       "settings": {
         "full_width": true,
-        "title": "What Our Customers Say",
+        "title": "Reviews",
         "subheading": "",
         "columns_desktop": 4,
         "color_scheme": "scheme-1",

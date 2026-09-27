@@ -1,1 +1,93 @@
-{"name":"t:sections.header.name","type":"header","sections":{"announcement-bar":{"type":"announcement-bar","blocks":{"announcement-bar-0":{"type":"announcement","settings":{"text":"Buy 1 Perfume • Get a FREE Perfume Gift","link":"shopify:\/\/collections\/signature-series"}},"announcement_WDFKMW":{"type":"announcement","settings":{"text":"Extra 10% OFF with Code: PREPAID","link":""}},"announcement_scent01":{"type":"announcement","settings":{"text":"100% Non-Alcoholic • Long-Lasting Attars","link":""}},"announcement_scent02":{"type":"announcement","settings":{"text":"Handcrafted with the Finest Natural Oils","link":""}},"announcement_scent03":{"type":"announcement","settings":{"text":"Discover Your Signature Scent","link":"shopify:\/\/collections\/signature-series"}}},"block_order":["announcement-bar-0","announcement_WDFKMW","announcement_scent01","announcement_scent02","announcement_scent03"],"custom_css":[],"settings":{"color_scheme":"scheme-1","show_line_separator":true,"show_social":false,"auto_rotate":true,"change_slides_speed":6,"enable_country_selector":false,"enable_language_selector":false}},"header":{"type":"header","settings":{"logo_position":"top-center","menu":"main-menu","menu_type_desktop":"dropdown","sticky_header_type":"always","show_line_separator":true,"color_scheme":"scheme-1","menu_color_scheme":"scheme-1","enable_country_selector":true,"enable_language_selector":true,"mobile_logo_position":"center","margin_bottom":0,"padding_top":8,"padding_bottom":8}}},"order":["announcement-bar","header"]}
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "name": "t:sections.header.name",
+  "type": "header",
+  "sections": {
+    "announcement-bar": {
+      "type": "announcement-bar",
+      "blocks": {
+        "announcement-bar-0": {
+          "type": "announcement",
+          "settings": {
+            "text": "Buy 1 Perfume • Get a FREE Perfume Gift",
+            "link": "shopify://collections/signature-series"
+          }
+        },
+        "announcement_WDFKMW": {
+          "type": "announcement",
+          "settings": {
+            "text": "Extra 10% OFF with Code: PREPAID",
+            "link": ""
+          }
+        },
+        "announcement_scent01": {
+          "type": "announcement",
+          "settings": {
+            "text": "100% Non-Alcoholic • Long-Lasting Attars",
+            "link": ""
+          }
+        },
+        "announcement_scent02": {
+          "type": "announcement",
+          "settings": {
+            "text": "Handcrafted with the Finest Natural Oils",
+            "link": ""
+          }
+        },
+        "announcement_scent03": {
+          "type": "announcement",
+          "settings": {
+            "text": "Discover Your Signature Scent",
+            "link": "shopify://collections/signature-series"
+          }
+        }
+      },
+      "block_order": [
+        "announcement-bar-0",
+        "announcement_WDFKMW",
+        "announcement_scent01",
+        "announcement_scent02",
+        "announcement_scent03"
+      ],
+      "custom_css": [],
+      "settings": {
+        "color_scheme": "scheme-1",
+        "show_line_separator": true,
+        "show_social": false,
+        "change_slides_speed": 6,
+        "enable_country_selector": false,
+        "enable_language_selector": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "logo_position": "top-center",
+        "menu": "main-menu",
+        "menu_type_desktop": "dropdown",
+        "sticky_header_type": "always",
+        "show_line_separator": true,
+        "color_scheme": "scheme-1",
+        "menu_color_scheme": "scheme-1",
+        "enable_country_selector": true,
+        "enable_language_selector": true,
+        "mobile_logo_position": "center",
+        "margin_bottom": 0,
+        "padding_top": 8,
+        "padding_bottom": 8
+      }
+    }
+  },
+  "order": [
+    "announcement-bar",
+    "header"
+  ]
+}
