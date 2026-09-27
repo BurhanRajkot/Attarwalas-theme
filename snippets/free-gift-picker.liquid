@@ -207,24 +207,33 @@
     {%- endcomment -%}
     {%- if qualifies == false and claimed_units == 0 %} hidden{% endif %}
   >
-    <div class="free-gift__head">
-      <span class="free-gift__icon" aria-hidden="true">{% render 'icon-discount' %}</span>
-      <div class="free-gift__head-text">
-        <p class="free-gift__heading">
-          {{- settings.free_gift_heading | default: 'Your free perfume' -}}
-          {%- if qualifying_units > 1 %} &times; {{ qualifying_units }}{% endif -%}
-        </p>
-        <p class="free-gift__subtext">
-          {%- if qualifies == false -%}
-            {{ settings.free_gift_locked_text | default: 'Add any perfume to unlock a free perfume.' }}
-          {%- elsif remaining_slots == 0 -%}
-            {{ settings.free_gift_subtext | default: 'Pick one on us — no code needed.' }}
-          {%- else -%}
-            Pick {{ remaining_slots }} more — on us, no code needed.
-          {%- endif -%}
-        </p>
+    {%- comment -%}
+      Once every earned slot is claimed (qualifies and nothing left to pick),
+      the "Your free perfume / Pick one on us" heading has nothing left to
+      say — the claimed row(s) below speak for themselves. Reported by
+      Burhan: the heading kept showing after picking, reading as dead promo
+      copy. Still shown while there's a slot left to fill (remaining_slots >
+      0) and in the locked/orphaned state (qualifies == false), where it's
+      the only messaging in the block — don't fold that case into this check.
+    {%- endcomment -%}
+    {%- unless qualifies and remaining_slots == 0 -%}
+      <div class="free-gift__head">
+        <span class="free-gift__icon" aria-hidden="true">{% render 'icon-discount' %}</span>
+        <div class="free-gift__head-text">
+          <p class="free-gift__heading">
+            {{- settings.free_gift_heading | default: 'Your free perfume' -}}
+            {%- if qualifying_units > 1 %} &times; {{ qualifying_units }}{% endif -%}
+          </p>
+          <p class="free-gift__subtext">
+            {%- if qualifies == false -%}
+              {{ settings.free_gift_locked_text | default: 'Add any perfume to unlock a free perfume.' }}
+            {%- else -%}
+              Pick {{ remaining_slots }} more — on us, no code needed.
+            {%- endif -%}
+          </p>
+        </div>
       </div>
-    </div>
+    {%- endunless -%}
 
     {%- comment -%}
       Claimed rows render whenever a gift line exists, even if the cart no
@@ -260,14 +269,19 @@
               data-line-quantity="{{ item.quantity }}"
               data-gift-bucket="{{ row_bucket }}"
             >
-              <span class="free-gift__claimed-name">{{ item.product.title | escape }}</span>
-              {%- if item.final_price == 0 -%}
-                <span class="free-gift__claimed-tag">Free gift</span>
-              {%- endif -%}
-              <span class="free-gift__claimed-price">{{ item.final_price | money }}</span>
-              <button type="button" class="free-gift__change" data-free-gift-change>
-                {{- 'Change' -}}
-              </button>
+              <div class="free-gift__claimed-top">
+                <span class="free-gift__claimed-icon" aria-hidden="true">{% render 'icon-discount' %}</span>
+                <span class="free-gift__claimed-name">{{ item.product.title | escape }}</span>
+                {%- if item.final_price == 0 -%}
+                  <span class="free-gift__claimed-tag">Free gift</span>
+                {%- endif -%}
+              </div>
+              <div class="free-gift__claimed-bottom">
+                <span class="free-gift__claimed-price">{{ item.final_price | money }}</span>
+                <button type="button" class="free-gift__change" data-free-gift-change>
+                  {{- 'Change' -}}
+                </button>
+              </div>
             </div>
           {%- endfor -%}
         {%- endif -%}

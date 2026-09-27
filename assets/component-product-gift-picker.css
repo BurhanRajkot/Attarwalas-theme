@@ -87,11 +87,10 @@
 
 .product-gift-picker__required-hint,
 .product-gift-picker__buy-warning {
-  --gift-warning: 196, 47, 47;
   margin: 1.4rem 0 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: rgb(var(--gift-warning));
+  color: rgba(var(--gift-ink), 0.8);
 }
 
 .product-gift-picker__required-hint[hidden],

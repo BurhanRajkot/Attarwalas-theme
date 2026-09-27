@@ -67,6 +67,7 @@ if (!customElements.get('duo-pairs')) {
 
         this.cards.forEach((card) => {
           card.querySelector('[data-duo-select-btn]')?.addEventListener('click', () => this.selectCard(card));
+          card.querySelector('[data-duo-add-inline]')?.addEventListener('click', () => this.addToCart());
           card.querySelectorAll('[data-duo-perfume-group] input, [data-duo-rollon-group] input').forEach((input) => {
             input.addEventListener('change', () => this.renderCard(card));
           });
@@ -154,6 +155,51 @@ if (!customElements.get('duo-pairs')) {
           card.hidden = card !== match;
         });
         this.selectCard(match);
+        this.observeBarTrigger(match);
+      }
+
+      /*
+        Keeps the fixed bar off screen until the hero's own inline "Add to
+        cart" button (added right under its price) scrolls out of view —
+        the same trigger assets/product-sticky-bar.js uses on every other
+        product page. Without this the bar used to sit permanently visible
+        the moment a duo's hero loaded, stacked directly under the gallery
+        before the customer had scrolled at all (reported by Burhan as
+        "cluttered"). Scoped to the duo page only via the .duo-pairs
+        ancestor in component-duo-pairs.css — offer-builder.js's own pages
+        (offer-for-2/3/5) have no separate inline button, so their bar
+        stays permanently visible, untouched by this.
+      */
+      observeBarTrigger(card) {
+        if (this.barObserver) {
+          this.barObserver.disconnect();
+          this.barObserver = null;
+        }
+        if (!this.bar) return;
+
+        const trigger = card?.querySelector('[data-duo-add-inline]');
+        this.bar.classList.remove('is-visible');
+        if (!trigger) return;
+
+        // The duo hero (gallery + title + tagline + two size rows + gift
+        // picker + price) is tall enough that the inline button starts
+        // below the fold on a phone — so IntersectionObserver's very first
+        // callback reports isIntersecting:false and the bar showed
+        // immediately on load, same as before this existed (Burhan: "the
+        // sticky needs to appear a little below"). hasBeenVisible gates the
+        // bar on having actually seen the button once first, so it only
+        // ever appears after a genuine scroll past it, never on load.
+        let hasBeenVisible = false;
+        this.barObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) hasBeenVisible = true;
+              this.bar.classList.toggle('is-visible', hasBeenVisible && !entry.isIntersecting);
+            });
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0 }
+        );
+        this.barObserver.observe(trigger);
       }
 
       /* ------------------------------- pricing -------------------------------- */
@@ -232,6 +278,14 @@ if (!customElements.get('duo-pairs')) {
           } else {
             retailElement.hidden = true;
           }
+        }
+
+        const inlineAdd = card.querySelector('[data-duo-add-inline]');
+        if (inlineAdd) {
+          const isSelected = card === this.selectedCard;
+          inlineAdd.disabled = !isSelected;
+          const inlineLabel = inlineAdd.querySelector('[data-duo-add-inline-label]');
+          if (inlineLabel) inlineLabel.textContent = isSelected ? this.readyLabel : 'Select a duo';
         }
 
         if (card === this.selectedCard) this.renderBar();
@@ -382,6 +436,13 @@ if (!customElements.get('duo-pairs')) {
         this.addButton.classList.toggle('loading', loading);
         this.addButton.setAttribute('aria-busy', String(loading));
         if (this.spinner) this.spinner.classList.toggle('hidden', !loading);
+
+        const inlineAdd = this.selectedCard?.querySelector('[data-duo-add-inline]');
+        if (inlineAdd) {
+          inlineAdd.classList.toggle('loading', loading);
+          inlineAdd.setAttribute('aria-busy', String(loading));
+          inlineAdd.querySelector('.loading__spinner')?.classList.toggle('hidden', !loading);
+        }
       }
 
       showError(message) {

@@ -19,6 +19,11 @@
 
   Add `data-floating-clear` to any future bottom-pinned bar to opt it in.
 
+  On mobile, the Shopify Inbox chat bubble is also hidden outright while the
+  cart drawer is open (`html.aw-cart-open`, below) — the drawer already
+  covers most of the screen at that width, so the bubble has nowhere to sit
+  that isn't on top of cart content.
+
   Usage:
   {% render 'floating-stack' %}
 {% endcomment %}
@@ -36,6 +41,12 @@
   @media (prefers-reduced-motion: reduce) {
     shopify-chat {
       transition: none !important;
+    }
+  }
+
+  @media (max-width: 749px) {
+    html.aw-cart-open shopify-chat {
+      display: none !important;
     }
   }
 </style>
@@ -100,6 +111,21 @@
     // Sections re-render (cart updates, variant changes) can add or remove a bar.
     if (document.body) {
       new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Hide the Inbox chat bubble outright on mobile while the cart drawer is
+    // open (see the CSS above) — mirrors how the WhatsApp button already
+    // reacts to the same `active` class in snippets/whatsapp-floating.liquid.
+    var cartDrawer = document.querySelector('cart-drawer');
+    if (cartDrawer) {
+      var syncCartOpenClass = function () {
+        root.classList.toggle('aw-cart-open', cartDrawer.classList.contains('active'));
+      };
+      syncCartOpenClass();
+      new MutationObserver(syncCartOpenClass).observe(cartDrawer, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
     }
 
     // Measure directly (not via schedule) on the paths that must be correct

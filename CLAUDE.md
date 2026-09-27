@@ -1902,6 +1902,53 @@ exist, but the **Theme template is still unassigned** in
 admin → Products → [duo product] → Theme template. Nothing in the theme can
 fix this; it is one dropdown per product.
 
+## Duo grid = Signature Series grid (2026-09-27)
+
+Burhan: the duo grid (`/products/signature-duo?view=duo`) must look and feel
+exactly like `/collections/signature-series`. It had drifted: a hand-rolled
+`.duo-browse-card` tile, white page, and a hover that snapped to a second
+photo. Now:
+
+- **Tiles are card-product's markup, class for class** (`card-wrapper` →
+  `card__inner` → `card__media` → `card__heading h5` → `price`) inside the same
+  `ul.grid.product-grid.grid--2-col-tablet-down.grid--4-col-desktop`, so
+  `component-card.css` / `base.css` size and style them identically (verified:
+  269px tiles, 8px gap, same type at 1496px on both pages). Not rendered through
+  `card-product` itself: it would link without `?view=duo&duo=` and print the
+  duo product's placeholder price instead of the perfume 50ML + roll-on 6ML
+  "From" total. **Don't add tile styles to `component-duo-pairs.css`** — any
+  override makes the two pages drift again.
+- **One photo per tile.** Every duo product's second photo sits on a grey
+  studio backdrop that showed as a hard box on hover. A single image gets the
+  same slow zoom a Signature card gets.
+- **Cream page, not white.** `.offer-builder` forces white for the Buy 2/3/5
+  pages; `.offer-builder.duo-pairs { --color-background: inherit }` gives the
+  duo page the site's own ground back. The duo photos are shot on white, so
+  both the tiles (`card__media--recolor-backdrop`) and `.duo-hero__image` use
+  `mix-blend-mode: multiply` to melt that into the cream.
+- **`.duo-pairs > .page-width { width: 100% }` is load-bearing.** `<duo-pairs>`
+  is a flex column and `.page-width` is `margin: 0 auto`; auto cross-axis
+  margins stop a flex child stretching, so each view shrank to its content.
+  That's what collapsed the grid to ~865px with 176px tiles.
+
+## 3 across on desktop + active header underline (2026-09-27)
+
+- **Signature Series, Attar Roll-Ons and the Duo grid are 3 across at ≥990px**
+  (6 products read as 3 + 3, 361px tiles instead of 269px). Mobile/tablet
+  stay 2 across. Collections: `main-collection-product-grid.liquid` overrides
+  `columns_desktop` to 3 for handles `signature-series` / `attar-roll-ons`
+  only — every other collection (gift sets etc.) keeps the template's 4.
+  Duo: `grid--3-col-desktop` in `sections/duo-pairs.liquid`.
+- **Desktop header underlines the current page's item.** The underline CSS
+  existed but never showed: `.header__inline-menu .header__active-menu-item::after`
+  was out-ranked by the longer `scaleX(0)` selector. Fixed with a
+  full-chain selector in `section-header-attarwalas.css`. Which item is active
+  is computed in `snippets/header-dropdown-menu.liquid`: `link.current` for
+  plain links, `child_active` for dropdown parents (never `link.current` —
+  Gift Set's own URL is `/`, so it would underline on the homepage), Duo on
+  any `template.suffix == 'duo'` page, and on a product page the collection
+  link (or dropdown parent of one) the product belongs to.
+
 ## Homepage "Duo & Trio" carousel: bottles looked like they were floating (fixed 2026-09-22)
 
 Burhan: the duo bottle images on the homepage (desktop and mobile both) have

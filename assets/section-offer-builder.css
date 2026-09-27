@@ -123,6 +123,14 @@
   color: rgba(var(--offer-ink), 0.62);
 }
 
+/* Duo page's tagline only (templates/product.duo.json) — kept short enough
+   on purpose to fit one line, unlike the offer pages' own longer tagline
+   text sharing this same class, which is left free to wrap. See the mobile
+   override below for why this needs its own font-size too. */
+.duo-pairs .offer-builder__tagline {
+  white-space: nowrap;
+}
+
 /* --------------------------------- Pricing -------------------------------- */
 
 .offer-builder__price {
@@ -943,6 +951,18 @@ body.offer-page {
     font-size: 1.35rem;
   }
 
+  /* Duo page only — see the desktop rule above. Shrinks with viewport width
+     so the (short, fixed) duo tagline never wraps to a second line on a
+     phone, instead of relying on the flat 1.35rem above: sized off the
+     current copy in templates/product.duo.json (43 chars * ~0.56em average
+     char width) needing to fit inside the page-width padding (2 * 1.5rem/
+     24px). Update the divisor below if that copy ever changes meaningfully
+     in length. Left off the offer pages' own (longer) tagline above on
+     purpose — shrinking to fit would make theirs unreadably small. */
+  .duo-pairs .offer-builder__tagline {
+    font-size: clamp(0.85rem, calc((100vw - 48px) / 26), 1.35rem);
+  }
+
   .offer-builder__perks {
     margin-top: 1.6rem;
     padding-top: 1.2rem;
@@ -1189,6 +1209,23 @@ body.offer-page {
    button (`.product__sticky-bar__button`, already 999px). */
 .offer-builder__bar-add {
   border-radius: 999px;
+}
+
+/* Duo hero's own inline "Add to cart" (added 2026-09-27, alongside the bar's
+   scroll-triggered reveal below) uses the shared `.button.button--primary`
+   base, which follows the site's global (square) corner-radius setting —
+   the real product page's own buy button only becomes a pill via the scoped
+   `[id^="MainProduct-"] .product-form__buttons .button` override in
+   section-main-product.css, which doesn't reach this markup. Repointed here
+   the same way as every other control in this block. */
+.duo-hero__add,
+.duo-hero__add::before,
+.duo-hero__add::after {
+  border-radius: 999px;
+}
+
+.duo-hero__add {
+  min-height: 4.6rem;
 }
 
 

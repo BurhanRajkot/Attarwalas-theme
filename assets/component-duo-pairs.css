@@ -22,11 +22,30 @@
    SECTION WRAPPER
    ========================================================================== */
 
+/* The site's cream ground, not the offer pages' white: .offer-builder
+   (section-offer-builder.css) forces --color-background to white for the
+   Buy 2/3/5 pages, and the duo page inherited it — so it read as a different
+   site next to Signature Series. `inherit` takes the value back from the
+   page's own colour scheme. */
+.offer-builder.duo-pairs {
+  --color-background: inherit;
+  background: transparent;
+}
+
 .duo-pairs {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - var(--header-height, 100px));
   padding-bottom: 0 !important;
+}
+
+/* A flex column only stretches children whose cross-axis margins aren't
+   auto, and .page-width is `margin: 0 auto` — so without this each view
+   shrank to its own content width. That's what collapsed the duo grid to
+   ~865px with ~176px tiles once the tile images stopped having an intrinsic
+   width. */
+.duo-pairs > .page-width {
+  width: 100%;
 }
 
 /*
@@ -50,73 +69,18 @@
 }
 
 /* ==========================================================================
-   GRID — plain browse tiles (added 2026-09-22)
+   GRID — browse tiles
 
-   Burhan asked for the duo grid to drop the size pickers/add-to-cart card
-   entirely and just read like every other product grid on the site (named
-   Signature Series specifically) — a photo, a title, a "from" price, the
-   whole tile a link. Sizing and adding to cart still happen, unchanged, on
-   the single-fragrance hero view a click lands on (?duo=<handle>).
-
-   Typography values below were read directly off the live Signature Series
-   grid (getComputedStyle on .card__heading / .price) rather than guessed, so
-   this reads as the same page family rather than an approximation of it.
+   Burhan: the duo grid should look and feel exactly like Signature Series.
+   The tiles are now the same markup as snippets/card-product.liquid inside
+   the same ul.product-grid (see sections/duo-pairs.liquid), so their size,
+   type, price and hover all come from component-card.css / base.css — the
+   same rules the Signature Series grid uses. Don't restyle the tiles here;
+   anything added would make the two pages drift apart again.
    ========================================================================== */
 
-.duo-browse-card {
-  display: flex;
-  flex-direction: column;
-  color: inherit;
-  text-decoration: none;
-}
-
-.duo-browse-card__media {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  background: rgb(var(--color-background));
-}
-
-.duo-browse-card__media img,
-.duo-browse-card__media .placeholder-svg {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-@media (hover: hover) {
-  .duo-browse-card:hover .duo-browse-card__media img {
-    transform: scale(1.04);
-  }
-}
-
-.duo-browse-card__info {
-  margin-top: 1.4rem;
-}
-
-.duo-browse-card__title {
-  margin: 0;
-  font-family: var(--font-heading-family);
-  font-weight: 500;
-  font-size: 2rem;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: rgb(var(--offer-ink));
-  transition: color 0.15s ease;
-}
-
-.duo-browse-card:hover .duo-browse-card__title {
-  color: rgb(var(--offer-gold));
-}
-
-.duo-browse-card__price {
-  margin: 0.7rem 0 0;
-  font-family: var(--font-body-family);
-  font-size: 1.5rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: rgba(var(--offer-ink), 0.65);
+.duo-browse-grid {
+  padding-top: 2.4rem;
 }
 
 /* ==========================================================================
@@ -353,10 +317,17 @@
   justify-content: center;
 }
 
+/* The duo photos are shot on white; multiply blends that backdrop into the
+   page's cream, same as card__media--recolor-backdrop on the grid tiles. */
+.duo-hero__image,
+.duo-hero__thumb-image {
+  mix-blend-mode: multiply;
+}
+
 .duo-hero__image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 /* Floating photo counter pill */
@@ -489,6 +460,11 @@
   font-size: 1.5rem;
 }
 
+.duo-hero__add {
+  width: 100%;
+  margin-top: 1.6rem;
+}
+
 .duo-hero__perks {
   margin-top: 1.6rem;
 }
@@ -513,6 +489,19 @@
   color: rgb(var(--color-foreground));
   border-top: 1px solid rgba(var(--color-foreground), 0.1);
   box-shadow: 0 -0.2rem 1.2rem rgba(var(--color-foreground), 0.08);
+  /* Off screen until duo-pairs.js's observeBarTrigger sees the hero's own
+     .duo-hero__add button scroll out of view — same idea as the real
+     product page's .product__sticky-bar (section-main-product.css), which
+     only appears once its own buy button leaves the viewport. Before this
+     the bar was permanently visible the instant a duo's hero loaded,
+     stacked right under the gallery with nothing to trigger it — reported
+     by Burhan as cluttered. */
+  transform: translateY(105%);
+  transition: transform var(--duration-default) ease;
+}
+
+.duo-pairs .offer-builder__bar.is-visible {
+  transform: translateY(0);
 }
 
 .duo-pairs .offer-builder__bar-track {
@@ -709,16 +698,9 @@
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
-  .duo-browse-card,
-  .duo-browse-card__media img,
-  .duo-browse-card__title,
   .duo-hero__thumb,
   .duo-size-label {
     transition: none;
-  }
-
-  .duo-browse-card:hover .duo-browse-card__media img {
-    transform: none !important;
   }
 }
 

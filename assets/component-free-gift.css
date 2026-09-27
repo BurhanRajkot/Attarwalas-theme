@@ -146,26 +146,62 @@
   pointer-events: none;
 }
 
-/* ------------------------------ Claimed state ----------------------------- */
+/* ------------------------------ Claimed state -----------------------------
+   Was a single full-pill (999px) row — fine as a small chip under the "Pick
+   one on us" heading, but that heading is now hidden once every slot is
+   claimed (see the `unless qualifies and remaining_slots == 0` guard above),
+   which left this as the block's only content: an oversized stadium shape
+   with nothing to give it context, and "Change" wrapping onto its own line
+   whenever name + tag + price didn't fit one row (routine at cart-drawer
+   width). Reported by Burhan as looking broken.
+
+   Rebuilt as a two-row card — icon + name + tag on top, price + Change
+   underneath — sized like the other rounded cart surfaces
+   (component-cart-redesign.css) rather than a chip, so it reads as a small
+   receipt of what was claimed instead of a giant pill. Two fixed rows never
+   wrap unpredictably regardless of product-name length or container width.
+   ---------------------------------------------------------------------- */
 
 .free-gift__claimed {
+  margin-top: 1.6rem;
+  padding: 1.4rem 1.6rem;
+  border: 1px solid rgba(var(--gift-gold), 0.22);
+  border-radius: 1.4rem;
+  background: rgba(var(--gift-gold), 0.06);
+}
+
+.free-gift__claimed-top {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.6rem 1.2rem;
-  margin-top: 1.6rem;
-  padding: 1.2rem 1.8rem;
-  border: 1px solid rgba(var(--gift-gold), 0.25);
-  border-radius: 999px;
-  background: rgba(var(--gift-gold), 0.06);
+  gap: 0.9rem;
+}
+
+.free-gift__claimed-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: rgba(var(--gift-gold), 0.14);
+  color: rgb(var(--gift-gold));
+}
+
+.free-gift__claimed-icon svg {
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
 .free-gift__claimed-name {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 1.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.4rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.3;
   color: rgb(var(--gift-ink));
 }
 
@@ -181,8 +217,16 @@
   color: rgb(var(--gift-gold));
 }
 
+.free-gift__claimed-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  margin-top: 1rem;
+  padding-left: 3.7rem; /* clears the icon above so price lines up under the name */
+}
+
 .free-gift__claimed-price {
-  flex-shrink: 0;
   font-size: 1.5rem;
   font-weight: 700;
   color: rgb(var(--gift-gold));
@@ -190,7 +234,6 @@
 
 .free-gift__change {
   flex-shrink: 0;
-  margin-left: auto;
   padding: 0.7rem 1.4rem;
   background: transparent;
   border: 1px solid rgba(var(--gift-gold), 0.5);
@@ -273,7 +316,25 @@
   }
 
   .free-gift__claimed {
-    padding: 1rem 1.4rem;
+    padding: 1.2rem 1.4rem;
+  }
+
+  .free-gift__claimed-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .free-gift__claimed-icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .free-gift__claimed-name {
+    font-size: 1.3rem;
+  }
+
+  .free-gift__claimed-bottom {
+    padding-left: 3.3rem;
   }
 
   .free-gift__change {

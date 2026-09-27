@@ -8,6 +8,45 @@
 <nav class="header__inline-menu">
   <ul class="list-menu list-menu--inline" role="list">
     {%- for link in section.settings.menu.links -%}
+      {%- liquid
+        comment
+          Which top-level item gets the underline. Shopify's own link.current /
+          child_active only fire on the exact linked URL, so on top of that:
+          every duo page (grid and single duo, both render template suffix
+          "duo") lights up the Duo link, and a product page lights up the
+          collection link (or parent of a collection link) it belongs to —
+          e.g. a signature perfume -> Signature Series, a roll-on -> Attar
+          Roll-On, a gift set -> Gift Set.
+        endcomment
+        assign link_active = false
+        if link.links != blank
+          comment
+            Dropdown parents go by their children only: Gift Set's own URL is
+            the homepage, so link.current would underline it on "/".
+          endcomment
+          if link.child_active
+            assign link_active = true
+          endif
+        elsif link.current
+          assign link_active = true
+        endif
+        if template.suffix == 'duo'
+          if link.url contains 'view=duo'
+            assign link_active = true
+          endif
+        elsif template.name == 'product' and product
+          for c in product.collections
+            if link.type == 'collection_link' and link.object.id == c.id
+              assign link_active = true
+            endif
+            for childlink in link.links
+              if childlink.type == 'collection_link' and childlink.object.id == c.id
+                assign link_active = true
+              endif
+            endfor
+          endfor
+        endif
+      -%}
       <li>
         {%- if link.links != blank -%}
           <header-menu>
@@ -17,7 +56,7 @@
                 class="header__menu-item list-menu__item link focus-inset"
               >
                 <span
-                  {%- if link.child_active %}
+                  {%- if link_active %}
                     class="header__active-menu-item"
                   {% endif %}
                 >
@@ -89,7 +128,7 @@
             {% endif %}
           >
             <span
-              {%- if link.current %}
+              {%- if link_active %}
                 class="header__active-menu-item"
               {% endif %}
             >

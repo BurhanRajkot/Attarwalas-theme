@@ -141,12 +141,23 @@
             class="collection{% if section.settings.filter_type != 'vertical' %} page-width{% endif %}"
           >
             <div class="loading-overlay gradient"></div>
+            {%- liquid
+              comment
+                Burhan wants these two at 3 across on desktop (bigger bottles,
+                6 products reading as 3 + 3). Mobile keeps columns_mobile.
+                Every other collection keeps the template's column setting.
+              endcomment
+              assign grid_columns_desktop = section.settings.columns_desktop
+              if collection.handle == 'signature-series' or collection.handle == 'attar-roll-ons'
+                assign grid_columns_desktop = 3
+              endif
+            -%}
             <ul
               id="product-grid"
               data-id="{{ section.id }}"
               class="
                 grid product-grid grid--{{ section.settings.columns_mobile }}-col-tablet-down
-                grid--{{ section.settings.columns_desktop }}-col-desktop
+                grid--{{ grid_columns_desktop }}-col-desktop
                 {% if section.settings.quick_add == 'bulk' %} collection-quick-add-bulk{% endif %}
               "
             >

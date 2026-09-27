@@ -129,8 +129,7 @@
    background, for products whose source photo wasn't shot on the site's
    cream backdrop like the rest of the catalog. See card-product.liquid. */
 .card__media--recolor-backdrop {
-  background-color: rgb(var(--color-background));
-  isolation: isolate;
+  background-color: transparent;
 }
 
 .card__media--recolor-backdrop img {

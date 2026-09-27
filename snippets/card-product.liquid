@@ -51,6 +51,12 @@
       assign card_media_class = ' card__media--recolor-backdrop'
     endif
   -%}
+  {%- liquid
+    assign trio_handles = 'blended-35-ml,blended-65-ml,blended-100-ml' | split: ','
+    if trio_handles contains card_product.handle
+      assign quick_add = 'none'
+    endif
+  -%}
   {%- capture card_quick_add -%}
         {% if quick_add == 'standard' %}
           <div class="quick-add no-js-hidden">

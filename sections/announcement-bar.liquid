@@ -30,6 +30,29 @@
     .announcement-bar--marquee {
       overflow: hidden;
       justify-content: flex-start;
+      /* A continuously-scrolling ticker is, by design, never at rest — it's
+         always mid-transition between two messages somewhere in its loop,
+         and the trailing/leading text at each edge gets hard-clipped by
+         `overflow: hidden`, mid-word, whenever that's caught. Fading it out
+         instead of clipping it is what makes that transient moment read as
+         calm and intentional rather than "cluttered" or broken — reported by
+         Burhan as looking messy compared to a page caught at a clean resting
+         frame. The clip still happens at the same place; only the alpha
+         ramps down first, so nothing is ever chopped off sharply. */
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 6%,
+        black 94%,
+        transparent
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 6%,
+        black 94%,
+        transparent
+      );
     }
 
     .announcement-bar__track {
@@ -80,19 +103,23 @@
       align-items: center;
       flex-shrink: 0;
       white-space: nowrap;
-      padding: 1.4rem 2.4rem;
+      padding: 1.4rem 2.8rem;
     }
 
     /* A small muted dot between every item, including the last of each
        set — that's what makes the set-1-to-set-2 join in the loop read as
        one continuous sequence instead of a visible seam. Was a gold diamond;
-       toned down 2026-09-13 because the ornament read as template decoration. */
+       toned down 2026-09-13 because the ornament read as template decoration.
+       Margin widened slightly (2.4rem → 2.8rem, alongside the item padding
+       above) for more breathing room between messages — a tighter cadence
+       read as busier/more cluttered, especially combined with the edge fade
+       above. */
     .announcement-bar__item:after {
       content: '';
       display: inline-block;
       width: 0.4rem;
       height: 0.4rem;
-      margin-left: 2.4rem;
+      margin-left: 2.8rem;
       flex-shrink: 0;
       border-radius: 50%;
       background: rgba(var(--color-foreground), 0.35);

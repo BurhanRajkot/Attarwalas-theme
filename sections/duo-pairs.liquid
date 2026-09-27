@@ -1,4 +1,6 @@
 {{ 'section-offer-builder.css' | asset_url | stylesheet_tag }}
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'component-price.css' | asset_url | stylesheet_tag }}
 {{ 'component-duo-pairs.css' | asset_url | stylesheet_tag }}
 {{ 'component-product-gift-picker.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'duo-pairs.js' | asset_url }}" defer="defer"></script>
@@ -157,8 +159,13 @@
       {%- endif -%}
     </header>
 
-    <div class="offer-grid-wrap">
-      <div class="offer-grid" data-offer-grid>
+    {%- comment -%}
+      Same list markup as the Signature Series grid
+      (sections/main-collection-product-grid.liquid: ul.product-grid,
+      2 up below 990px, 3 up above), so the two pages lay out identically.
+    {%- endcomment -%}
+    <div class="duo-browse-grid">
+      <ul class="grid product-grid grid--2-col-tablet-down grid--3-col-desktop" role="list">
         {%- assign rendered_count = 0 -%}
         {%- for perfume in perfume_collection.products -%}
           {%- comment -%}
@@ -241,6 +248,13 @@
               {%- break -%}
             {%- endif -%}
           {%- endfor -%}
+          {%- comment -%}
+            One photo per tile, no hover swap to a second one: every duo
+            product's second photo is on a grey studio backdrop that shows as
+            a hard box against the cream page (Burhan hated the hover). With
+            a single image, component-card.css gives the same slow zoom a
+            Signature Series card gets.
+          {%- endcomment -%}
           {%- assign card_image = perfume.featured_image -%}
           {%- if duo_product != blank and duo_product.featured_image != blank -%}
             {%- assign card_image = duo_product.featured_image -%}
@@ -283,33 +297,107 @@
             {%- assign duo_from_price = duo_from_price | plus: duo_rollon_variant.price -%}
           {%- endif -%}
 
-          <a href="{{ duo_href }}" class="duo-browse-card">
-            <div class="duo-browse-card__media">
-              {%- if card_image -%}
-                {{
-                  card_image
-                  | image_url: width: 600
-                  | image_tag:
-                    loading: 'lazy',
-                    widths: '240, 360, 480, 600',
-                    sizes: '(min-width: 990px) 22vw, (min-width: 750px) 30vw, 45vw',
-                    class: 'duo-browse-card__image',
-                    alt: perfume.title | escape
-                }}
-              {%- else -%}
-                {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg duo-browse-card__image' }}
-              {%- endif -%}
-            </div>
+          {%- comment -%}
+            Mirrors snippets/card-product.liquid's markup class-for-class
+            (card-wrapper / card__inner / card__media / media--hover-effect /
+            card__heading h5 / price), so component-card.css styles this tile
+            exactly like a Signature Series card: same size, same serif
+            uppercase title, same "From" price, same slow hover zoom. Not
+            rendered through card-product itself
+            because that would link to the duo product without ?view=duo and
+            print the duo product's own placeholder price rather than the real
+            perfume + roll-on total computed above. No quick-add pill: adding
+            the duo product directly would skip the bundle entirely.
 
-            <div class="duo-browse-card__info">
-              <h3 class="duo-browse-card__title">{{ perfume.title | escape }} Duo</h3>
-              {%- if duo_from_price > 0 -%}
-                <p class="duo-browse-card__price">From {{ duo_from_price | money }}</p>
-              {%- endif -%}
+            card__media--recolor-backdrop: the duo photos are shot on white;
+            multiply blends that into the page's cream, same fix card-product
+            applies to Ambre Intense / Yameni Yakud.
+          {%- endcomment -%}
+          {%- liquid
+            assign tile_ratio = 1
+            if card_image != blank and card_image.aspect_ratio > 0
+              assign tile_ratio = card_image.aspect_ratio
+            endif
+            assign tile_ratio_percent = 1 | divided_by: tile_ratio | times: 100
+            assign tile_col_px = settings.page_width | minus: 120 | divided_by: 3
+            assign tile_sizes = '(min-width: ' | append: settings.page_width | append: 'px) ' | append: tile_col_px | append: 'px, (min-width: 990px) calc((100vw - 120px) / 3), (min-width: 750px) calc((100vw - 120px) / 3), calc((100vw - 35px) / 2)'
+            assign tile_title = perfume.title | append: ' Duo' | escape
+            assign duo_from_money = duo_from_price | money
+          -%}
+          <li
+            class="grid__item{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+            {% if settings.animations_reveal_on_scroll %}
+              data-cascade
+              style="--animation-order: {{ rendered_count }};"
+            {% endif %}
+          >
+            <div class="card-wrapper product-card-wrapper underline-links-hover">
+              <div
+                class="card card--{{ settings.card_style }} card--media{% if settings.card_style == 'card' %} color-{{ settings.card_color_scheme }} gradient{% endif %}"
+                style="--ratio-percent: {{ tile_ratio_percent }}%;"
+              >
+                <div
+                  class="card__inner {% if settings.card_style == 'standard' %}color-{{ settings.card_color_scheme }} gradient{% endif %} ratio"
+                  style="--ratio-percent: {{ tile_ratio_percent }}%;"
+                >
+                  <div class="card__media">
+                    <div class="media media--transparent media--hover-effect card__media--recolor-backdrop">
+                      {%- if card_image != blank -%}
+                        {{
+                          card_image
+                          | image_url: width: 1066
+                          | image_tag:
+                            loading: 'lazy',
+                            widths: '165, 360, 533, 720, 940, 1066',
+                            sizes: tile_sizes,
+                            class: 'motion-reduce',
+                            alt: tile_title
+                        }}
+                      {%- else -%}
+                        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                      {%- endif -%}
+                    </div>
+                  </div>
+                  <div class="card__content">
+                    <div class="card__information">
+                      <h3 class="card__heading">
+                        <a href="{{ duo_href }}" class="full-unstyled-link" tabindex="-1" aria-hidden="true">
+                          {{- tile_title -}}
+                        </a>
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="card__content">
+                  <div class="card__information">
+                    <h3 class="card__heading h5">
+                      <a href="{{ duo_href }}" class="full-unstyled-link">
+                        {{- tile_title -}}
+                      </a>
+                    </h3>
+                    {%- if duo_from_price > 0 -%}
+                      <div class="card-information">
+                        <div class="price">
+                          <div class="price__container">
+                            <div class="price__regular">
+                              <span class="visually-hidden visually-hidden--inline">
+                                {{- 'products.product.price.regular_price' | t -}}
+                              </span>
+                              <span class="price-item price-item--regular">
+                                {{- 'products.product.price.from_price_html' | t: price: duo_from_money -}}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {%- endif -%}
+                  </div>
+                </div>
+              </div>
             </div>
-          </a>
+          </li>
         {%- endfor -%}
-      </div>
+      </ul>
     </div>
 
     {%- if rendered_count == 0 -%}
@@ -431,6 +519,10 @@
       {%- if duo_product != blank and duo_product.images.size > 0 -%}
         {%- assign gallery_images = duo_product.images -%}
       {%- endif -%}
+      {%- comment -%}
+        The full image set is shown below. Size > 1 triggers the thumb/dots
+        and counter rendering below, mimicking the main product gallery.
+      {%- endcomment -%}
 
       {%- comment -%}
         Carries the same data-duo-card / data-duo-*-select / data-duo-price /
@@ -593,6 +685,26 @@
             </div>
           </div>
 
+          <div class="duo-card__breakdown duo-hero__price">
+            <span class="duo-card__retail" data-duo-retail hidden></span>
+            <span class="offer-card__price" data-duo-price></span>
+          </div>
+
+          {%- comment -%}
+            Inline "Add to cart", matching a real product page's own buy
+            button — the fixed offer-builder__bar below no longer shows
+            immediately on page load (see its is-visible gating in
+            component-duo-pairs.css / duo-pairs.js's observeBarTrigger); it
+            only slides up once this button scrolls out of view, exactly
+            like assets/product-sticky-bar.js does on every other product
+            page. Without a real button here, hiding the bar at load would
+            leave no way to buy at all.
+          {%- endcomment -%}
+          <button type="button" class="button button--primary duo-hero__add" data-duo-add-inline>
+            <span data-duo-add-inline-label>{{ section.settings.button_label | default: 'Add duo to cart' }}</span>
+            {% render 'loading-spinner' %}
+          </button>
+
           {%- if hero_gift_eligible -%}
             {%- comment -%}
               Optional, not required — skipping just leaves the slot
@@ -651,11 +763,6 @@
               <p class="product-gift-picker__confirm" data-duo-gift-confirm hidden></p>
             </div>
           {%- endif -%}
-
-          <div class="duo-card__breakdown duo-hero__price">
-            <span class="duo-card__retail" data-duo-retail hidden></span>
-            <span class="offer-card__price" data-duo-price></span>
-          </div>
 
           {%- if section.settings.perks != blank -%}
             <ul class="offer-builder__perks duo-hero__perks">

@@ -93,6 +93,21 @@
     transform: scaleX(1);
   }
 
+  /* The current page's item keeps its underline, so you can tell where you
+     are. Needs the full child-combinator chain: the plain
+     `.header__active-menu-item::after` above is out-ranked by the scaleX(0)
+     rule's longer selector, which is why the active line never showed. */
+  .header__inline-menu > .list-menu > li > .header__menu-item > span.header__active-menu-item::after,
+  .header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item > span.header__active-menu-item::after {
+    transform: scaleX(1);
+    height: 1.5px;
+  }
+
+  .header__inline-menu > .list-menu > li > .header__menu-item:has(> .header__active-menu-item),
+  .header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item:has(> .header__active-menu-item) {
+    color: rgb(var(--color-foreground));
+  }
+
   .header__inline-menu .header__menu-item:hover {
     color: rgb(var(--color-foreground));
   }

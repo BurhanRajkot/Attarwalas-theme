@@ -4,8 +4,8 @@
       "type": "duo-pairs",
       "settings": {
         "heading": "Signature Duos",
-        "tagline": "Your signature scent, in perfume and attar — pick your sizes below.",
-        "perks": "Free shipping on duos\nMix any sizes you like",
+        "tagline": "Your signature scent, in perfume and attar.",
+        "perks": "",
         "discount_type": "percent",
         "discount_amount": 10,
         "select_label": "Select this duo",
