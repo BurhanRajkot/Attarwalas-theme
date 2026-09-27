@@ -101,23 +101,12 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  background-color: #f7f7f7;
+  /* Transparent on purpose: the category images are cut-out PNGs and should
+     sit straight on the section background. No grey frame, and no hover
+     gradient either, since that would paint a dark box over the tile. */
+  background-color: transparent;
   border-radius: 0;
   margin-bottom: 1rem;
-}
-
-.shop-by-category__image-wrapper::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0) 45%);
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-}
-
-.shop-by-category__card:hover .shop-by-category__image-wrapper::after {
-  opacity: 1;
 }
 
 /* Aspect Ratio presets */

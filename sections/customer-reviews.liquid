@@ -46,6 +46,52 @@
             {%- if block.settings.product != blank -%}
               {%- assign featured_product = block.settings.product -%}
             {%- endif -%}
+            {%- comment -%}
+              The 10ML/35ML variants on signature-series products exist only
+              to back the free-gift pickers, priced far below the real sizes
+              (see snippets/price.liquid's identical comment) — Shopify's own
+              product.price / selected_or_first_available_variant pick the
+              cheapest/first variant regardless, which is one of those two.
+              That's what showed "Rs. 300" here for Ambre Intense instead of
+              its real price, and would have added that gift-size variant to
+              the cart via Add to Cart/Buy Now. Recomputed the same way price
+              .liquid does, scoped to the qualifying collection so roll-ons
+              (which have real, purchasable 10ML/35ML sizes) are unaffected.
+            {%- endcomment -%}
+            {%- assign featured_variant = featured_product.selected_or_first_available_variant -%}
+            {%- assign hide_gift_only_sizes = false -%}
+            {%- if featured_product != blank and settings.free_gift_enabled -%}
+              {%- assign qualifying_collection = settings.free_gift_qualifying_collection -%}
+              {%- if qualifying_collection == blank -%}
+                {%- assign qualifying_collection = collections['signature-series'] -%}
+              {%- endif -%}
+              {%- for c in featured_product.collections -%}
+                {%- if c.handle == qualifying_collection.handle -%}
+                  {%- assign hide_gift_only_sizes = true -%}
+                  {%- break -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+            {%- assign is_gift_only_variant = false -%}
+            {%- if featured_variant.option1 == '10ML' or featured_variant.option1 == '35ML' -%}
+              {%- assign is_gift_only_variant = true -%}
+            {%- endif -%}
+            {%- if hide_gift_only_sizes and is_gift_only_variant -%}
+              {%- assign real_variant = null -%}
+              {%- for variant in featured_product.variants -%}
+                {%- unless variant.option1 == '10ML' or variant.option1 == '35ML' -%}
+                  {%- if real_variant == null or variant.available -%}
+                    {%- assign real_variant = variant -%}
+                    {%- if variant.available -%}
+                      {%- break -%}
+                    {%- endif -%}
+                  {%- endif -%}
+                {%- endunless -%}
+              {%- endfor -%}
+              {%- if real_variant != null -%}
+                {%- assign featured_variant = real_variant -%}
+              {%- endif -%}
+            {%- endif -%}
             <button
               type="button"
               class="customer-reviews__card"
@@ -55,10 +101,10 @@
               data-name="{{ block.settings.customer_name | default: 'Happy Customer' | escape }}"
               data-product-url="{{ featured_product.url | default: '' | escape }}"
               data-product-title="{{ featured_product.title | default: '' | escape }}"
-              data-product-price="{{ featured_product.price | money | default: '' | escape }}"
+              data-product-price="{{ featured_variant.price | money | default: '' | escape }}"
               data-product-image="{{ featured_product.featured_image | image_url: width: 300 | default: '' }}"
-              data-variant-id="{{ featured_product.selected_or_first_available_variant.id | default: '' }}"
-              data-available="{{ featured_product.selected_or_first_available_variant.available | default: false }}"
+              data-variant-id="{{ featured_variant.id | default: '' }}"
+              data-available="{{ featured_variant.available | default: false }}"
               data-note-1="{{ block.settings.note_1 | default: '' | escape }}"
               data-note-2="{{ block.settings.note_2 | default: '' | escape }}"
               data-note-3="{{ block.settings.note_3 | default: '' | escape }}"

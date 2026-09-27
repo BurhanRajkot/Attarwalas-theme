@@ -577,6 +577,14 @@ body.customer-reviews__modal-locked {
     width: calc((100% - 1.2rem) / 2);
   }
 
+  /* Burhan: remove the mute/unmute pill from the card grid on mobile only —
+     desktop keeps it. The video itself is unaffected (still starts muted,
+     autoplays on scroll into view); tapping a card still opens the modal,
+     where tapping the media toggles sound same as before. */
+  .customer-reviews__mute-toggle {
+    display: none;
+  }
+
   .customer-reviews__modal {
     padding: 0;
     align-items: flex-end;

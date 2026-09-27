@@ -1931,6 +1931,32 @@ photo. Now:
   margins stop a flex child stretching, so each view shrank to its content.
   That's what collapsed the grid to ~865px with 176px tiles.
 
+## Customer Reviews section: mobile mute pill + wrong price (2026-09-27)
+
+`sections/customer-reviews.liquid` (homepage "What Our Customers Say" video
+grid + its Add-to-cart/Buy Now popup).
+
+- **Mute/unmute pill removed from the card grid on mobile only** — Burhan
+  disliked it there; desktop keeps it. `.customer-reviews__mute-toggle {
+  display: none }` inside the existing 749px-down media query in
+  `assets/section-customer-reviews.css`. The video itself (autoplay-muted on
+  scroll, tap-to-open-modal, tap-media-to-unmute inside the modal) is
+  unchanged.
+- **A featured product in the qualifying collection (e.g. Ambre Intense)
+  showed its 10ml gift-size price (₹300) instead of its real price (₹2,999),
+  and Add to Cart / Buy Now would have added that gift-only variant.** Same
+  root cause as "the 10ml/35ml placeholder price leaked into collection
+  cards" above: `data-product-price`/`data-variant-id` were built from
+  `featured_product.price` / `.selected_or_first_available_variant`, which
+  pick the cheapest/first variant with no awareness of the 10ML/35ML
+  gift-only sizes. Fixed by recomputing the real variant the same way
+  `snippets/price.liquid` recomputes price — scoped to the free-gift
+  qualifying collection so roll-ons (which have real, purchasable 10ML/35ML)
+  are untouched. If a similar "featured product" card is ever added
+  elsewhere, copy this pattern rather than reading `product.price` /
+  `selected_or_first_available_variant` directly for a signature-series
+  product.
+
 ## 3 across on desktop + active header underline (2026-09-27)
 
 - **Signature Series, Attar Roll-Ons and the Duo grid are 3 across at ≥990px**
