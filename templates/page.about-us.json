@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "hero": {
@@ -56,7 +65,7 @@
         "text": {
           "type": "text",
           "settings": {
-            "text": "<p>ATTARWALAS began not in a factory, but in the quiet ritual of distillation — flowers, woods, and resins slow-cooked into oil the way it has been done for generations. We carried that same restraint into every bottle we make today: no alcohol, no shortcuts, nothing rushed.</p>",
+            "text": "<p>ATTARWALAS began not in a factory, but in the quiet ritual of distillation — flowers, woods, and resins slow-cooked into oil the way it has been done for generations. We carried that same restraint into every bottle we make today: &nbsp;no shortcuts, nothing rushed.</p>",
             "text_style": "body"
           }
         }
@@ -67,12 +76,13 @@
         "text"
       ],
       "settings": {
+        "image": "shopify://shop_images/IMG-8190.png",
         "height": "medium",
         "desktop_image_width": "medium",
         "layout": "image_first",
         "desktop_content_position": "middle",
         "desktop_content_alignment": "left",
-        "content_layout": "no-overlap",
+        "content_layout": "overlap",
         "section_color_scheme": "scheme-1",
         "color_scheme": "scheme-1",
         "image_behavior": "none",
@@ -165,6 +175,9 @@
         "title": "What We Stand For",
         "subheading": "",
         "columns_desktop": 3,
+        "tone": "light",
+        "image_caption": "",
+        "show_icons": false,
         "color_scheme": "scheme-1",
         "padding_top": 72,
         "padding_bottom": 72
@@ -181,6 +194,24 @@
         "background_color": "#0a0a0a",
         "text_color": "#f5f5f5",
         "muted_text_color": "#a8a8a8"
+      }
+    },
+    "store_location": {
+      "type": "store-location",
+      "settings": {
+        "heading": "Visit us",
+        "intro": "<p>Come and try the collection on your skin before you choose.</p>",
+        "address": "<p>Shop No. 4, M.K. Heights, Opposite BMC L Ward, Kurla West, Mumbai, Maharashtra 400070</p>",
+        "map_query": "M.K. Heights, Opposite BMC L Ward, Kurla West, Mumbai, Maharashtra 400070",
+        "map_zoom": 16,
+        "hours": "<p>Mon – Sat: 10:00 AM – 8:00 PM</p>",
+        "phone": "",
+        "directions_label": "Get directions",
+        "map_position": "right",
+        "soften_map": true,
+        "color_scheme": "scheme-1",
+        "padding_top": 72,
+        "padding_bottom": 72
       }
     },
     "cta": {
@@ -204,7 +235,10 @@
           "settings": {
             "button_label": "Shop the Collection",
             "button_link": "/collections/all",
-            "button_style_secondary": false
+            "button_style_secondary": false,
+            "button_label_2": "",
+            "button_link_2": "",
+            "button_style_secondary_2": false
           }
         }
       },
@@ -220,24 +254,6 @@
         "full_width": true,
         "padding_top": 72,
         "padding_bottom": 96
-      }
-    },
-    "store_location": {
-      "type": "store-location",
-      "settings": {
-        "heading": "Visit us",
-        "intro": "<p>Come and try the collection on your skin before you choose.</p>",
-        "address": "<p>Shop No. 4, M.K. Heights, Opposite BMC L Ward, Kurla West, Mumbai, Maharashtra 400070</p>",
-        "map_query": "M.K. Heights, Opposite BMC L Ward, Kurla West, Mumbai, Maharashtra 400070",
-        "map_zoom": 16,
-        "hours": "<p>Mon – Sat: 10:00 AM – 8:00 PM</p>",
-        "phone": "",
-        "directions_label": "Get directions",
-        "map_position": "right",
-        "soften_map": true,
-        "color_scheme": "scheme-1",
-        "padding_top": 72,
-        "padding_bottom": 72
       }
     }
   },

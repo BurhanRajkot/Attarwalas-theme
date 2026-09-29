@@ -1,6 +1,6 @@
 {% comment %}
-  Renders the offer deals row — one card per offer product ("Get any 2 for
-  ₹1,999", "Get any 3 …"), each linking through to that product's offer page.
+  Renders the offer deals row — one card per offer product ("Buy 2 — 10% off",
+  "Buy 3 …"), each linking through to that product's offer page.
   Same coupon visual language as snippets/perfume-offers.liquid.
 
   Accepts:
@@ -100,14 +100,9 @@
             endif
           endif
 
-          # Tagline copy: Clean up any stale "and pay just ₹..." text
+          # Numbered offer cards (Buy 2/3/5) show no tagline; only duo-style cards use it
           if tagline_text contains 'and pay just' or tagline_text contains 'and pay only' or tagline_text == blank
-            if pick_count > 0
-              # offer-2/3/5 pages pick perfumes or attar roll-ons (choice mode)
-              assign tagline_text = 'Any ' | append: pick_count | append: ' perfumes or attar roll-ons'
-            else
-              assign tagline_text = offer.title
-            endif
+            assign tagline_text = offer.title
           endif
         -%}
         <li class="offer-deals__item">
@@ -123,6 +118,7 @@
 
               {%- if pick_count > 0 -%}
                 <span class="offer-deal__count">
+                  <span class="offer-deal__count-label">Buy</span>
                   <span class="offer-deal__count-num">{{ pick_count }}</span>
                 </span>
               {%- elsif badge_text != blank -%}
@@ -146,7 +142,9 @@
                 </span>
               {%- endif -%}
 
-              <span class="offer-deal__tagline">{{ tagline_text }}</span>
+              {%- if pick_count == 0 -%}
+                <span class="offer-deal__tagline">{{ tagline_text }}</span>
+              {%- endif -%}
 
               <span class="offer-deal__perf" aria-hidden="true"></span>
 

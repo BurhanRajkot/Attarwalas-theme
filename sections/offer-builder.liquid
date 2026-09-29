@@ -151,13 +151,13 @@
       if has_range_group
         assign badge_text = discount_display
       else
-        assign badge_text = 'Get any ' | append: total_pick_count | append: ' — ' | append: discount_display
+        assign badge_text = 'Buy ' | append: total_pick_count | append: ' — ' | append: discount_display
       endif
     elsif product.price > 0
       assign formatted_price = product.price | money_without_trailing_zeros | replace: 'Rs.', '₹' | replace: '₹ ', '₹'
-      assign badge_text = 'Get any ' | append: total_pick_count | append: ' for ' | append: formatted_price
+      assign badge_text = 'Buy ' | append: total_pick_count | append: ' for ' | append: formatted_price
     else
-      assign badge_text = 'Get any ' | append: total_pick_count
+      assign badge_text = 'Buy ' | append: total_pick_count
     endif
   endif
 -%}

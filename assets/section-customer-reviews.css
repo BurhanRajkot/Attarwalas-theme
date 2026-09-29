@@ -322,7 +322,11 @@ button.customer-reviews__card:hover .customer-reviews__product {
   visibility: visible;
 }
 
-.customer-reviews__modal-overlay {
+/* `div.` prefix is load-bearing: the overlay is an empty div, and base.css
+   hides every `div:empty` — (0,1,1) beats a bare class, so without it the
+   backdrop never rendered and tapping outside the popup did nothing. */
+div.customer-reviews__modal-overlay {
+  display: block;
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -590,9 +594,20 @@ body.customer-reviews__modal-locked {
     align-items: flex-end;
   }
 
+  /* dvh, not vh: on a phone 100vh is the viewport with the browser bars
+     hidden, so a 92vh sheet was taller than the visible screen whenever the
+     address bar / bottom toolbar showed — the top of the sheet (and its
+     close button) sat off-screen with no way out. The vh lines are the
+     fallback for browsers without dvh. */
+  .customer-reviews__modal {
+    height: 100vh;
+    height: 100dvh;
+  }
+
   .customer-reviews__modal-dialog {
     flex-direction: column;
-    max-height: 92vh;
+    max-height: 90vh;
+    max-height: 90dvh;
     max-width: 100%;
     width: 100%;
     aspect-ratio: auto;
@@ -603,11 +618,27 @@ body.customer-reviews__modal-locked {
     flex: none;
     width: 100%;
     aspect-ratio: 9 / 16;
-    max-height: 46vh;
     background: #000;
   }
 
-  .customer-reviews__modal-media video {
+  /* Sticky, so the close button stays on screen even when the sheet's
+     content scrolls. The negative bottom margin (its own height + top
+     margin) lets it float over the video instead of taking a row. */
+  .customer-reviews__modal-close {
+    position: sticky;
+    top: 1.2rem;
+    right: auto;
+    align-self: flex-end;
+    flex: none;
+    margin: 1.2rem 1.2rem -4.8rem 0;
+  }
+
+  /* The review videos are 9:16 portrait (606×1080).
+     We removed the max-height limit on the container above, so it will 
+     now display as a full-width portrait video. `cover` ensures no 
+     letterboxing is visible. */
+  .customer-reviews__modal-media video,
+  .customer-reviews__modal-media.is-image img {
     height: 100%;
     object-fit: cover;
   }
@@ -618,5 +649,88 @@ body.customer-reviews__modal-locked {
 
   .customer-reviews__modal-product-head {
     margin-bottom: 2rem;
+  }
+}
+
+/* ---------- Desktop: drag-to-scroll + draggable scrollbar ---------- */
+.customer-reviews__scrollbar {
+  display: none;
+}
+
+@media screen and (min-width: 750px) {
+  .customer-reviews__grid.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  .customer-reviews__grid.is-dragging .customer-reviews__card {
+    pointer-events: none;
+  }
+
+  .customer-reviews__scrollbar {
+    display: block;
+    position: relative;
+    height: 0.4rem;
+    margin: 2rem auto 0;
+    width: min(60rem, calc(100% - 4rem));
+    border-radius: 999px;
+    background: rgba(var(--color-foreground), 0.12);
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .customer-reviews__scrollbar[hidden] {
+    display: none;
+  }
+
+  /* Taller invisible hit area so the thin rail is easy to grab */
+  .customer-reviews__scrollbar::before {
+    content: '';
+    position: absolute;
+    inset: -0.8rem 0;
+  }
+
+  .customer-reviews__scrollbar-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: rgba(var(--color-foreground), 0.55);
+    cursor: grab;
+    touch-action: none;
+    transition: background 0.2s ease;
+  }
+
+  .customer-reviews__scrollbar-thumb:hover,
+  .customer-reviews__scrollbar-thumb:active {
+    background: rgb(var(--color-foreground));
+  }
+}
+
+/* Grab cursor only where a real mouse exists (not touch tablets) */
+@media screen and (min-width: 750px) and (hover: hover) and (pointer: fine) {
+  .customer-reviews__grid {
+    cursor: grab;
+  }
+
+  .customer-reviews__grid.is-dragging {
+    cursor: grabbing;
+  }
+}
+
+/* Tablet: slimmer bar, tighter to the row */
+@media screen and (min-width: 750px) and (max-width: 989px) {
+  .customer-reviews__scrollbar {
+    margin-top: 1.4rem;
+    width: calc(100% - 3.2rem);
+  }
+}
+
+/* Big screens: a touch thicker and wider so it stays easy to hit */
+@media screen and (min-width: 1400px) {
+  .customer-reviews__scrollbar {
+    height: 0.5rem;
+    width: min(72rem, calc(100% - 8rem));
   }
 }

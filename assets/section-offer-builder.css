@@ -326,14 +326,9 @@
   margin-top: 1.6rem;
 }
 
+/* Unboxed on purpose: the group sits flush with the tabs, no frame around it */
 .offer-group__details {
-  border: 1px solid var(--offer-line);
   background: rgb(var(--color-background));
-}
-
-/* A finished group picks up the gold edge so progress is obvious at a glance */
-.offer-group--complete .offer-group__details {
-  border-color: rgb(var(--offer-gold));
 }
 
 .offer-group__summary {
@@ -341,19 +336,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.6rem;
-  padding: 2rem 2.4rem;
+  padding: 2rem 0;
   cursor: pointer;
   list-style: none;
   user-select: none;
-  transition: background 0.15s ease;
 }
 
 .offer-group__summary::-webkit-details-marker {
   display: none;
-}
-
-.offer-group__summary:hover {
-  background: rgba(var(--offer-gold), 0.05);
 }
 
 .offer-group__summary-main {
@@ -438,8 +428,7 @@
 }
 
 .offer-group__content {
-  padding: 0 2.4rem 2.8rem;
-  border-top: 1px solid var(--offer-line);
+  padding: 0 0 2.8rem;
 }
 
 .offer-group__empty {
@@ -1001,7 +990,7 @@ body.offer-page {
 
   /* ---- groups ---- */
   .offer-group__summary {
-    padding: 1.6rem 1.4rem;
+    padding: 1.6rem 0;
   }
 
   .offer-group__summary-text {
@@ -1013,7 +1002,7 @@ body.offer-page {
   }
 
   .offer-group__content {
-    padding-inline: 1.2rem;
+    padding-inline: 0;
   }
 
   /* ---- cards: two per row, so everything inside gets tighter ---- */

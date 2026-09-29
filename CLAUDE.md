@@ -10,68 +10,6 @@ Guidance for working in this repo. Read this before making changes.
 
 Outstanding items to resolve before this theme goes live — check this list before submitting.
 
-- [ ] **Decide real pricing for the 10ml/35ml gift-size perfume variants.** As
-      of 2026-08-29 the free-gift picker gives away a 10ml/35ml **perfume**
-      (from `signature-series`) instead of a roll-on — see "Free gift" below.
-      The 10ML/35ML variants added to each signature-series product to make
-      this possible use computed placeholder pricing (10ml = 10% of the
-      100ml price, 35ml = 35%), same kind of ad-hoc placeholder as the 50ml
-      size before it. Since these are never actually charged (the discount
-      function zeroes them), the pricing mostly matters for the order record
-      and for what these variants would cost if a customer bought one
-      directly rather than as a gift — worth a real pricing decision from
-      Burhan rather than leaving the formula in place indefinitely. See
-      memory (`dummy-gift-variants-pending-collection-redo`) for details.
-- [ ] **Add matching product variants for the new Fragrance metaobject entries.** As of
-      2026-08-22, Burhan is bulk-importing fragrance entries into the `fragrance`
-      metaobject via Matrixify (50+ entries added in one session, more expected — see
-      "Customize Perfume — fragrance search picker" below). The metaobjects are just
-      reference data; the "Customize Perfume" product (`customize-perfume-1`) still only
-      has 5 fragrances wired up as real option values/variants (30 variants total: 5
-      fragrances × 3 sizes × 2 types), each with its own price. A fragrance only appears
-      in the storefront picker once it has a matching variant + price for every Size ×
-      Type combo on that product — adding the metaobject alone does nothing on its own.
-      Closing this gap means either Burhan keeps adding variants/pricing by hand in
-      admin, a Matrixify variant import, or an Admin API bulk-create — in all cases the
-      price per fragrance (or which pricing tier it falls into) has to come from Burhan.
-- [ ] **Normalise the attar roll-on Size option values in admin.** Five roll-ons
-      use `6ML`/`12ML` and four use `6ml`/`12ml` (Persian Rose, Florence
-      Orchidia, Arabian Jasmine, Pure Kashmiri Rose). The offer pages' group
-      size lock now compares case-insensitively so this doesn't break anything
-      today, but the two spellings also show up verbatim in the picker's size
-      dropdown and on the cart line, which looks like a mistake to a customer.
-      Only fixable in admin (Products → [product] → Variants → Size). See
-      "Gotcha: roll-on Size values aren't cased consistently in admin" below.
-- [ ] **Create the duo product(s) and the `duo` collection.** The duo page
-      (`templates/product.duo.json`) is built and verified, but nothing points at
-      it yet. To go live: create a product per duo, set its Theme template to
-      `duo`, tag it and add it to a new manual collection with handle `duo`
-      (that handle is what the "More duos" strip and any Offer Teaser section
-      pointed at duos read from). The duo product's own price is never charged —
-      like the offer products, it only supplies the page — but give it one
-      anyway so it can be published. Then confirm the perfume/attar groups in the
-      theme editor: they currently default to `men-3, women-1, unisex-3` for
-      bottles and `attar-roll-ons` for attars. See "Duo — perfume + attar" below.
-- [ ] **Set the store's currency format to `₹{{amount_no_decimals}}`.** Admin →
-      Settings → Store details → Currency formatting, both HTML fields. Today
-      the storefront reads two ways: `Rs. 2,999.00` from the `money` filter and
-      `₹2,999` on the offer pages, which force it with a `replace:`. This is the
-      only place the two can be reconciled — the theme can't override
-      `money_format`, and patching its 126 `| money` calls would still leave
-      checkout and order emails disagreeing. See "Not fixed: prices read two
-      different ways" below.
-- [ ] **Set a per-product perfumer photo/bio on each perfume product.** The "Perfumer
-      bio" section (`sections/perfumer.liquid`) already supports a different photo, bio,
-      name, and role per product — via that product's own metafields
-      (`custom.perfumer_photo`, `custom.perfumer_bio`, `custom.perfumer_name`,
-      `custom.perfumer_role`), set in admin under Products → [product] → Metafields.
-      Nothing to build here, this already works and was verified live (2026-08-23). What's
-      missing is the data: no product currently has these filled in, so every product page
-      falls back to the one shared photo/bio set in the section's own settings in the
-      Theme Customizer (Perfumer bio section → Photo/Bio text/Name fields) — which is
-      why every product looked identical. Burhan needs to go through each perfume
-      product and fill in its own Perfumer photo + bio to make them distinct.
-
 ## What this is
 
 A Shopify **Online Store 2.0 Liquid theme** (Dawn-family architecture: JSON templates,
@@ -1956,6 +1894,17 @@ grid + its Add-to-cart/Buy Now popup).
   elsewhere, copy this pattern rather than reading `product.price` /
   `selected_or_first_available_variant` directly for a signature-series
   product.
+- **Mobile popup: no way out, video cropped (fixed 2026-09-27).** Four causes:
+  (1) the dark overlay is an empty `<div>`, and base.css's `div:empty
+  { display: none }` hid it on every width, so there was no backdrop and no
+  tap-outside-to-close. It's styled as `div.customer-reviews__modal-overlay`
+  to out-rank that rule; keep the `div.` prefix. (2) The sheet was sized in
+  `vh`, which on a phone ignores the browser bars, so its top and the ✕ sat
+  off-screen. It now uses `dvh`. (3) The ✕ is `position: sticky` on mobile so
+  it can't scroll away. (4) The videos are 9:16 (606×1080) and were
+  `object-fit: cover` in a near-square box, which cut off ~45% of the height.
+  Now `contain` at `max-height: 45dvh`. The popup also pushes a history entry,
+  so the phone's Back button/gesture closes it instead of leaving the page.
 
 ## 3 across on desktop + active header underline (2026-09-27)
 

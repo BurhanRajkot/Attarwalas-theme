@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Offer deals — "Get any 2 / 3 / 5" coupon cards
+   Offer deals — "Buy 2 / 3 / 5" coupon cards
    Used on product pages (main-product "Offers" block, below the buy button),
    at the bottom of an offer page, and anywhere the Offer Teaser section is
    placed. Kept deliberately plain: square edges, one gold hairline border,
@@ -109,13 +109,28 @@
   line-height: 1;
 }
 
+.offer-deal__count-label {
+  margin-bottom: 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(var(--offer-gold));
+}
+
 .offer-deal__count-num {
   font-family: var(--font-heading-family);
   font-weight: 400;
   font-size: clamp(5.6rem, 7vw, 7.6rem);
   line-height: 0.9;
   letter-spacing: -0.03em;
+  font-variant-numeric: lining-nums;
   color: rgb(var(--offer-gold));
+}
+
+/* numbered cards carry no tagline, so the discount line closes the card body */
+.offer-deal__count ~ .offer-deal__price {
+  padding-bottom: 2.2rem;
 }
 
 .offer-deal__headline {

@@ -179,6 +179,9 @@
             </button>
           {%- endfor -%}
         </div>
+        <div class="customer-reviews__scrollbar" data-reviews-scrollbar hidden aria-hidden="true">
+          <span class="customer-reviews__scrollbar-thumb" data-reviews-thumb></span>
+        </div>
       </div>
     {%- endif -%}
   </div>
@@ -269,6 +272,80 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    var root = document.getElementById('CustomerReviews-{{ section.id }}');
+    if (!root) return;
+    var track = root.querySelector('.customer-reviews__grid');
+    var bar = root.querySelector('[data-reviews-scrollbar]');
+    var thumb = root.querySelector('[data-reviews-thumb]');
+    if (!track || !bar || !thumb) return;
+
+    // Draggable scrollbar under the row (desktop / mouse). Hidden by CSS below 750px.
+    function update() {
+      var max = track.scrollWidth - track.clientWidth;
+      if (max <= 2) { bar.hidden = true; return; }
+      bar.hidden = false;
+      var ratio = track.clientWidth / track.scrollWidth;
+      var thumbW = Math.max(ratio * bar.clientWidth, 48);
+      thumb.style.width = thumbW + 'px';
+      thumb.style.transform = 'translateX(' + (track.scrollLeft / max) * (bar.clientWidth - thumbW) + 'px)';
+    }
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    update();
+
+    function noSmooth(on) { track.style.scrollBehavior = on ? 'auto' : ''; }
+
+    // Click-and-drag the cards themselves with a mouse.
+    var dragging = false, moved = false, startX = 0, startLeft = 0;
+    track.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      dragging = true; moved = false; startX = e.clientX; startLeft = track.scrollLeft;
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - startX;
+      if (!moved && Math.abs(dx) > 5) { moved = true; noSmooth(true); track.classList.add('is-dragging'); }
+      if (moved) track.scrollLeft = startLeft - dx;
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false; noSmooth(false); track.classList.remove('is-dragging');
+    }
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    // A drag must not count as a click on the card underneath (it opens the popup).
+    track.addEventListener('click', function (e) {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+    }, true);
+    track.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+    // Drag the thumb, or click the rail to jump.
+    var thumbDrag = false, tStartX = 0, tStartLeft = 0;
+    thumb.addEventListener('pointerdown', function (e) {
+      thumbDrag = true; tStartX = e.clientX; tStartLeft = track.scrollLeft;
+      noSmooth(true); thumb.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation();
+    });
+    thumb.addEventListener('pointermove', function (e) {
+      if (!thumbDrag) return;
+      var travel = bar.clientWidth - thumb.offsetWidth;
+      var max = track.scrollWidth - track.clientWidth;
+      if (travel > 0) track.scrollLeft = tStartLeft + ((e.clientX - tStartX) / travel) * max;
+    });
+    function endThumb() { thumbDrag = false; noSmooth(false); }
+    thumb.addEventListener('pointerup', endThumb);
+    thumb.addEventListener('pointercancel', endThumb);
+    bar.addEventListener('pointerdown', function (e) {
+      if (e.target !== bar) return;
+      var rect = bar.getBoundingClientRect();
+      var frac = (e.clientX - rect.left - thumb.offsetWidth / 2) / (bar.clientWidth - thumb.offsetWidth);
+      track.scrollTo({ left: Math.min(Math.max(frac, 0), 1) * (track.scrollWidth - track.clientWidth), behavior: 'smooth' });
+    });
+  })();
+</script>
 
 <script>
   (function () {
@@ -386,6 +463,7 @@
     var lastFocused = null;
     var modalVideo = null;
     var currentAvailable = true;
+    var historyPushed = false;
 
     var addButtonDefault = '{{ 'products.product.add_to_cart' | t | escape }}';
 
@@ -481,9 +559,22 @@
       modal.classList.add('is-open');
       document.body.classList.add('customer-reviews__modal-locked');
       if (modalClose) modalClose.focus();
+
+      // Give the popup its own history entry so the phone's Back button /
+      // back gesture closes it instead of leaving the page.
+      if (!historyPushed) {
+        try {
+          history.pushState({ awReviewModal: true }, '');
+          historyPushed = true;
+        } catch (e) {}
+      }
     };
 
-    var closeModal = function () {
+    var closeModal = function (fromPopstate) {
+      if (historyPushed) {
+        historyPushed = false;
+        if (fromPopstate !== true) history.back();
+      }
       modal.classList.remove('is-open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('customer-reviews__modal-locked');
@@ -515,6 +606,14 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && modal.classList.contains('is-open')) {
         closeModal();
+      }
+    });
+
+    window.addEventListener('popstate', function () {
+      if (modal.classList.contains('is-open')) {
+        closeModal(true);
+      } else {
+        historyPushed = false;
       }
     });
 

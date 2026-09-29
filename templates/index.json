@@ -306,6 +306,17 @@
             "note_3": "Sandalwood"
           }
         },
+        "review_8": {
+          "type": "video_review",
+          "settings": {
+            "video": "shopify://files/videos/copy_D28629C3-46AE-4F9B-9796-C9B917C00BC4.MOV",
+            "product": "florence-orchidia-100ml",
+            "customer_name": "Tasneem Hunaid",
+            "note_1": "Orchid",
+            "note_2": "Jasmine",
+            "note_3": "Musk"
+          }
+        },
         "review_2": {
           "type": "video_review",
           "settings": {
@@ -342,7 +353,7 @@
         "review_5": {
           "type": "video_review",
           "settings": {
-            "video": "shopify://files/videos/copy_5493A048-0644-4E46-A0B2-356E3E0B3239.MOV",
+            "video": "shopify://files/videos/copy_01274354-E7C2-44AD-8E67-1F128057AB81.MOV",
             "product": "customize-perfume-1",
             "customer_name": "",
             "note_1": "Citrus",
@@ -353,8 +364,9 @@
         "review_6": {
           "type": "video_review",
           "settings": {
-            "product": "yameni-yakud-non-alcoholic-perfume-100ml",
-            "customer_name": "Meera Nair",
+            "video": "shopify://files/videos/IMG_6842_54cb1e7f-a54d-4911-bbba-84ca06b1ba18.MOV",
+            "product": "fresh-woodscape-100ml",
+            "customer_name": "Jagen",
             "note_1": "Saffron",
             "note_2": "Oud",
             "note_3": "Amber"
@@ -363,33 +375,24 @@
         "review_7": {
           "type": "video_review",
           "settings": {
-            "product": "ambre-intense-100ml",
-            "customer_name": "Karan Malhotra",
+            "video": "shopify://files/videos/copy_5493A048-0644-4E46-A0B2-356E3E0B3239.MOV",
+            "product": "customize-perfume-1",
+            "customer_name": "",
             "note_1": "Amber",
             "note_2": "Vanilla",
             "note_3": "Sandalwood"
-          }
-        },
-        "review_8": {
-          "type": "video_review",
-          "settings": {
-            "product": "florence-orchidia-100ml",
-            "customer_name": "Zara Sheikh",
-            "note_1": "Orchid",
-            "note_2": "Jasmine",
-            "note_3": "Musk"
           }
         }
       },
       "block_order": [
         "review_1",
+        "review_8",
         "review_2",
         "review_3",
         "review_4",
         "review_5",
         "review_6",
-        "review_7",
-        "review_8"
+        "review_7"
       ],
       "settings": {
         "full_width": true,
@@ -633,10 +636,10 @@
         "eyebrow": "",
         "heading": "Get in touch",
         "heading_size": "h2",
-        "description": "<p>Questions about our non-alcoholic perfumes, an order you've placed, or a bespoke scent consultation? Send us a message.</p>",
+        "description": "<p>Questions about our perfumes, an order you've placed, or a bespoke scent consultation? Send us a message.</p>",
         "contact_phone": "",
-        "contact_email": "care@attarwalas.com",
-        "contact_hours": "Mon – Sat: 10:00 AM – 8:00 PM",
+        "contact_email": "attarwalas110@gmail.com",
+        "contact_hours": "Mon – Sat: 11:00 AM – 8:00 PM",
         "color_scheme": "scheme-1",
         "padding_top": 64,
         "padding_bottom": 64
