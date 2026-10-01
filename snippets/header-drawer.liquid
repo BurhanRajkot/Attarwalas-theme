@@ -233,7 +233,7 @@
               {%- endif -%}
               {%- if settings.social_youtube_link != blank -%}
                 <li class="list-social__item">
-                  <a href="{{ settings.social_youtube_link }}" class="list-social__link link">
+                  <a href="{{ settings.social_youtube_link | split: '?si=' | first }}" class="list-social__link link">
                     {%- render 'icon-youtube' -%}
                     <span class="visually-hidden">{{ 'general.social.links.youtube' | t }}</span>
                   </a>
@@ -244,6 +244,14 @@
                   <a href="{{ settings.social_vimeo_link }}" class="list-social__link link">
                     {%- render 'icon-vimeo' -%}
                     <span class="visually-hidden">{{ 'general.social.links.vimeo' | t }}</span>
+                  </a>
+                </li>
+              {%- endif -%}
+              {%- if settings.social_linkedin_link != blank -%}
+                <li class="list-social__item">
+                  <a href="{{ settings.social_linkedin_link }}" class="list-social__link link" rel="noopener" target="_blank">
+                    {%- render 'icon-linkedin' -%}
+                    <span class="visually-hidden">LinkedIn</span>
                   </a>
                 </li>
               {%- endif -%}

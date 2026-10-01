@@ -248,6 +248,9 @@ class PredictiveSearch extends SearchForm {
     this.predictiveSearchResults.style.maxHeight = this.resultsMaxHeight || `${this.getResultsMaxHeight()}px`;
     this.setAttribute('open', true);
     this.input.setAttribute('aria-expanded', true);
+    // Only point at the results listbox while it exists — set here rather than in
+    // the markup, where it was a dangling ARIA reference until results loaded.
+    this.input.setAttribute('aria-controls', 'predictive-search-results');
     this.isOpen = true;
   }
 
@@ -269,6 +272,7 @@ class PredictiveSearch extends SearchForm {
     this.removeAttribute('loading');
     this.removeAttribute('open');
     this.input.setAttribute('aria-expanded', false);
+    this.input.removeAttribute('aria-controls');
     this.resultsMaxHeight = false;
     this.predictiveSearchResults.removeAttribute('style');
   }

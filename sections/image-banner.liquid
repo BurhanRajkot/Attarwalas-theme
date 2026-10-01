@@ -84,7 +84,15 @@
     </div>
   {%- elsif section.settings.image_2 == blank -%}
     <div class="banner__media media{% if section.settings.image == blank and section.settings.image_2 == blank %} placeholder{% endif %}{% if section.settings.image_2 != blank %} banner__media-half{% endif %}{% if section.settings.image_behavior != 'none' %} animate--{{ section.settings.image_behavior }}{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
-      {{ 'hero-apparel-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      {%- comment -%}
+        Stock line-art placeholder only in the theme editor, where it marks an
+        empty image slot. On the storefront it was an 18 KB inline SVG of
+        clothing on the About page; without it the banner is a plain colour
+        block behind its text.
+      {%- endcomment -%}
+      {%- if request.design_mode -%}
+        {{ 'hero-apparel-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      {%- endif -%}
     </div>
   {%- endif -%}
   {%- if section.settings.image_2 != blank -%}
@@ -120,12 +128,17 @@
       {%- for block in section.blocks -%}
         {%- case block.type -%}
           {%- when 'heading' -%}
-            <h2
+            {%- comment -%}
+              heading_tag: h1 when this banner opens a page that has no other
+              page title (About Us), so the page still gets its one h1.
+            {%- endcomment -%}
+            {%- assign banner_heading_tag = block.settings.heading_tag | default: 'h2' -%}
+            <{{ banner_heading_tag }}
               class="banner__heading inline-richtext {{ block.settings.heading_size }}"
               {{ block.shopify_attributes }}
             >
               {{ block.settings.heading }}
-            </h2>
+            </{{ banner_heading_tag }}>
           {%- when 'text' -%}
             <div class="banner__text rte {{ block.settings.text_style }}" {{ block.shopify_attributes }}>
               <p>{{ block.settings.text }}</p>
@@ -392,6 +405,17 @@
           ],
           "default": "h1",
           "label": "t:sections.all.heading_size.label"
+        },
+        {
+          "type": "select",
+          "id": "heading_tag",
+          "label": "Heading tag (SEO)",
+          "options": [
+            { "value": "h2", "label": "H2 – section heading" },
+            { "value": "h1", "label": "H1 – page title" }
+          ],
+          "default": "h2",
+          "info": "Use H1 only when this banner opens a page with no other title (each page should have exactly one H1)."
         }
       ]
     },

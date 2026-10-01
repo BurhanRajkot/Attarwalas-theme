@@ -118,13 +118,33 @@
                     muted
                     loop
                     playsinline
-                    preload="metadata"
+                    preload="none"
                     {%- if block.settings.video.preview_image -%}
-                      poster="{{ block.settings.video.preview_image | image_url: width: 700 }}"
+                      data-poster="{{ block.settings.video.preview_image | image_url: width: 700 }}"
                     {%- endif -%}
                   >
+                    {%- comment -%}
+                      data-src, not src: the script below swaps these in when the
+                      card nears the screen. These are 1080p MP4s of 15–33 MB
+                      each; with plain src every one was fetched with the page
+                      (crawlers measured the homepage at ~44 MB). The poster
+                      stands in until then.
+
+                      The poster is data-poster for the same reason: a <video>
+                      poster never lazy-loads, so all eight (~600 KB) downloaded
+                      with the page, competing with the hero image for bandwidth
+                      far above this section. The 9:16 wrap holds the space
+                      meanwhile.
+
+                      Both go live for every card as soon as the page has loaded
+                      (or earlier, if the section is scrolled near first), so by
+                      the time anyone reaches the strip each video has its first
+                      frames and starts playing on its own. Hydrating only on
+                      approach was tried and was too late on phones: cards sat on
+                      a still poster while 1080p video buffered (2026-10-02).
+                    {%- endcomment -%}
                     {%- for source in block.settings.video.sources -%}
-                      <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                      <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
                     {%- endfor -%}
                   </video>
 
@@ -204,14 +224,14 @@
 
     <div class="customer-reviews__modal-content">
       <div class="customer-reviews__modal-product-head" data-modal-product>
-        <a class="customer-reviews__modal-product-link" data-modal-product-link aria-label="" href="#">
+        <a class="customer-reviews__modal-product-link" data-modal-product-link aria-label="View product details" href="#">
           {%- comment -%}
             No `src` attribute at all until JS fills it in below. `src=""`
             resolves to the current page URL, so every page load fired a
             second request for the whole document and left a broken image in
             the modal until a review was opened.
           {%- endcomment -%}
-          <img alt="" width="72" height="72" loading="lazy" class="customer-reviews__modal-product-image" data-modal-product-image>
+          <img alt="Reviewed product" width="72" height="72" loading="lazy" class="customer-reviews__modal-product-image" data-modal-product-image>
           <span class="customer-reviews__modal-product-info">
             <span class="customer-reviews__modal-product-title" data-modal-product-title></span>
             <span class="customer-reviews__modal-product-price" data-modal-product-price></span>
@@ -295,7 +315,8 @@
     track.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
     window.addEventListener('load', update);
-    update();
+    // A frame later, not mid-parse, where it forced a layout of the page so far.
+    requestAnimationFrame(update);
 
     function noSmooth(on) { track.style.scrollBehavior = on ? 'auto' : ''; }
 
@@ -387,8 +408,75 @@
       }
     }
 
-    /* ---------- Mute toggles ---------- */
+    /* ---------- Lazy posters (see the comment on the markup) ---------- */
     var videos = Array.from(section.querySelectorAll('[data-reviews-video]'));
+    var showPoster = function (video) {
+      if (!video.dataset.poster) return;
+      video.poster = video.dataset.poster;
+      video.removeAttribute('data-poster');
+    };
+    if ('IntersectionObserver' in window) {
+      var posterObserver = new IntersectionObserver(
+        function (entries) {
+          if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+          videos.forEach(showPoster);
+          posterObserver.disconnect();
+        },
+        { rootMargin: '900px 0px' }
+      );
+      posterObserver.observe(section);
+    } else {
+      videos.forEach(showPoster);
+    }
+
+    /* ---------- Video sources (see the comment on the markup) ---------- */
+    var hydrateVideo = function (video) {
+      if (!video || video.dataset.hydrated) return;
+      video.dataset.hydrated = 'true';
+      showPoster(video);
+      video.querySelectorAll('source[data-src]').forEach(function (source) {
+        source.src = source.dataset.src;
+        source.removeAttribute('data-src');
+      });
+      video.preload = 'metadata';
+      video.load();
+    };
+    if ('IntersectionObserver' in window) {
+      var hydrateObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            hydrateVideo(entry.target);
+            hydrateObserver.unobserve(entry.target);
+          });
+        },
+        { rootMargin: '400px 400px' }
+      );
+      videos.forEach(function (video) {
+        hydrateObserver.observe(video);
+      });
+    } else {
+      videos.forEach(hydrateVideo);
+    }
+
+    var hydrateAll = function () {
+      videos.forEach(showPoster);
+      videos.forEach(hydrateVideo);
+    };
+    var afterLoad = function () {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(hydrateAll, { timeout: 1500 });
+      } else {
+        setTimeout(hydrateAll, 200);
+      }
+    };
+    if (document.readyState === 'complete') {
+      afterLoad();
+    } else {
+      window.addEventListener('load', afterLoad, { once: true });
+    }
+
+    /* ---------- Mute toggles ---------- */
     videos.forEach(function (video) {
       var wrap = video.closest('.customer-reviews__video-wrap');
       var toggle = wrap ? wrap.querySelector('[data-mute-toggle]') : null;
@@ -420,13 +508,16 @@
           entries.forEach(function (entry) {
             var video = entry.target;
             if (entry.isIntersecting) {
+              hydrateVideo(video);
               video.play().catch(function () {});
             } else {
               video.pause();
             }
           });
         },
-        { threshold: 0.5 }
+        // A quarter visible is enough to play, so cards peeking in at the
+        // edge of the strip move too instead of sitting still.
+        { threshold: 0.25 }
       );
 
       videos.forEach(function (video) {
@@ -477,6 +568,7 @@
 
       media.innerHTML = '';
       if (src) {
+        hydrateVideo(src);
         var clone = src.cloneNode(true);
         clone.removeAttribute('autoplay');
         clone.removeAttribute('muted');
@@ -495,7 +587,7 @@
         media.classList.add('is-image');
         var img = document.createElement('img');
         img.src = card.dataset.productImage;
-        img.alt = card.dataset.productTitle || '';
+        img.alt = card.dataset.productTitle || 'Reviewed product';
         img.loading = 'lazy';
         media.appendChild(img);
       } else {
@@ -518,7 +610,7 @@
         } else {
           productImage.removeAttribute('src');
         }
-        productImage.alt = card.dataset.productTitle || '';
+        productImage.alt = card.dataset.productTitle || 'Reviewed product';
         productTitle.textContent = card.dataset.productTitle || '';
         productPrice.textContent = card.dataset.productPrice || '';
       variantInput.value = card.dataset.variantId || '';

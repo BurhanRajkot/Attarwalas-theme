@@ -26,21 +26,6 @@
         "include_margins": true
       }
     },
-    "172245101284a34f83": {
-      "type": "apps",
-      "blocks": {
-        "judge_me_reviews_verified_badge_QTADAz": {
-          "type": "shopify://apps/judge-me-reviews/blocks/verified_badge/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8",
-          "settings": {}
-        }
-      },
-      "block_order": [
-        "judge_me_reviews_verified_badge_QTADAz"
-      ],
-      "settings": {
-        "include_margins": true
-      }
-    },
     "1722359848307a4548": {
       "type": "apps",
       "settings": {
@@ -95,7 +80,6 @@
   },
   "order": [
     "1722451045920183fa",
-    "172245101284a34f83",
     "1722359848307a4548",
     "footer"
   ]

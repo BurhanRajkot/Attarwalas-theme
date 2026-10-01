@@ -1364,6 +1364,13 @@
         "placeholder": "t:settings_schema.social-media.settings.social_vimeo_link.info"
       },
       {
+        "type": "text",
+        "id": "social_linkedin_link",
+        "label": "LinkedIn",
+        "placeholder": "https://www.linkedin.com/company/…",
+        "default": "https://www.linkedin.com/in/burhanuddin-rajkotwala-84722b326/"
+      },
+      {
         "type": "header",
         "content": "WhatsApp"
       },
@@ -1525,6 +1532,98 @@
         "id": "free_gift_choose_label",
         "label": "Choose button label",
         "default": "Choose"
+      }
+    ]
+  },
+  {
+    "name": "SEO",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Search-engine fallbacks. Anything set in Shopify admin (Online Store → Preferences, or a product/collection/page's own \"Search engine listing\") always wins over these."
+      },
+      {
+        "type": "text",
+        "id": "seo_home_title",
+        "label": "Homepage title",
+        "default": "ATTARWALAS – Handcrafted Attars & Perfumes, Mumbai",
+        "info": "Used when the admin homepage title is empty or is just the store name. Aim for 50–60 characters."
+      },
+      {
+        "type": "textarea",
+        "id": "seo_home_description",
+        "label": "Homepage meta description",
+        "default": "Long-lasting non-alcoholic perfumes and handcrafted attar roll-ons from ATTARWALAS, Mumbai, since 1998. Delivered across India.",
+        "info": "Used when the admin homepage description is empty. Aim for 100–130 characters; longer text is cut at 130."
+      },
+      {
+        "type": "header",
+        "content": "Business details (Google local listing)"
+      },
+      {
+        "type": "paragraph",
+        "content": "Published as LocalBusiness structured data so Google can show the shop's address, hours and phone. Leave the street blank to turn it off."
+      },
+      {
+        "type": "text",
+        "id": "seo_business_phone",
+        "label": "Phone",
+        "default": "+91-9137644617"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_email",
+        "label": "Email",
+        "default": "attarwalas110@gmail.com"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_street",
+        "label": "Street address",
+        "default": "Shop No. 4, M.K. Heights, Opposite BMC L Ward, Kurla West"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_city",
+        "label": "City",
+        "default": "Mumbai"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_region",
+        "label": "State",
+        "default": "Maharashtra"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_postcode",
+        "label": "PIN code",
+        "default": "400070"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_opening_days",
+        "label": "Open days",
+        "default": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday",
+        "info": "Full English day names, comma-separated."
+      },
+      {
+        "type": "text",
+        "id": "seo_business_opens",
+        "label": "Opens at (24h)",
+        "default": "10:00"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_closes",
+        "label": "Closes at (24h)",
+        "default": "20:00"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_founded",
+        "label": "Founded (year)",
+        "default": "1998"
       }
     ]
   }

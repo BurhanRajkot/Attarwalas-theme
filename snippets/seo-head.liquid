@@ -1,0 +1,155 @@
+{%- comment -%}
+  SEO head tags: title, meta description, robots, hreflang, favicon, and the
+  Open Graph / X tags (via meta-tags). Rendered once from layout/theme.liquid.
+
+  Admin values always win. The fallbacks below only fill gaps:
+  - Homepage title: used when Online Store → Preferences → Title is blank or is
+    just the store name (it was "Attarwalas", which rendered as the 24-char
+    "Attarwalas – ATTARWALAS"). Edit it in Theme settings → SEO.
+  - Meta description: when Shopify has none for the page (no SEO description,
+    no product/collection/page body), a page-specific one is built here so no
+    two pages share an empty or identical description.
+{%- endcomment -%}
+{%- liquid
+  assign shop_down = shop.name | downcase | strip
+  assign seo_title = page_title | strip
+  assign seo_description = page_description | strip_html | newline_to_br | replace: '<br />', ' ' | strip_newlines | strip
+  assign seo_noindex = false
+
+  if request.page_type == 'index'
+    assign title_down = seo_title | downcase
+    if seo_title == blank or title_down == shop_down
+      assign seo_title = settings.seo_home_title | default: seo_title
+    endif
+    if seo_description == blank
+      assign seo_description = settings.seo_home_description
+    endif
+  elsif request.page_type == 'collection' and collection.handle == 'all'
+    if seo_title == 'Products' or seo_title == blank
+      assign seo_title = 'Shop All Perfumes & Attars'
+    endif
+  endif
+
+  if seo_description == blank
+    case request.page_type
+      when 'product'
+        if template.suffix == 'duo'
+          assign seo_description = product.title | append: ': the perfume and its matching attar roll-on, paired at a better price. Handcrafted by ATTARWALAS in Mumbai, delivered across India.'
+        elsif product.tags contains 'offer'
+          assign seo_description = product.title | append: ' at ATTARWALAS: build your own bundle of perfumes or attar roll-ons and save. Handcrafted in Mumbai, delivered across India.'
+        else
+          assign seo_description = 'Shop ' | append: product.title | append: ' at ATTARWALAS: long-lasting perfumes and attars handcrafted in Mumbai, delivered across India.'
+        endif
+      when 'collection'
+        if collection.handle == 'all'
+          assign seo_description = 'Shop every ATTARWALAS fragrance: signature perfumes, attar roll-ons, gift sets and bundle offers, handcrafted in Mumbai and delivered across India.'
+        else
+          assign seo_description = 'Shop ' | append: collection.title | append: ' at ATTARWALAS: long-lasting perfumes and attars handcrafted in Mumbai, delivered across India.'
+        endif
+      when 'list-collections'
+        assign seo_description = 'Browse every ATTARWALAS collection: signature perfumes, attar roll-ons, gift sets and discovery sets, delivered across India.'
+      when 'page'
+        assign seo_description = page.title | append: ' – ATTARWALAS, handcrafted perfumes and attars from Mumbai since 1998.'
+      when 'blog'
+        assign seo_description = blog.title | append: ' – stories and fragrance notes from ATTARWALAS.'
+      when 'article'
+        assign seo_description = article.excerpt_or_content | strip_html | newline_to_br | replace: '<br />', ' ' | strip_newlines | strip
+      when 'cart'
+        assign seo_description = 'Review the perfumes and attars in your ATTARWALAS cart and check out securely.'
+      when 'search'
+        if search.performed
+          assign seo_description = 'Search results for "' | append: search.terms | append: '" at ATTARWALAS perfumes and attars.'
+        else
+          assign seo_description = 'Search ATTARWALAS perfumes, attar roll-ons and gift sets.'
+        endif
+      when '404'
+        assign seo_description = 'This page could not be found. Browse ATTARWALAS perfumes, attar roll-ons and gift sets instead.'
+      when 'policy'
+        assign seo_description = seo_title | append: ' for ATTARWALAS: how we handle your orders, delivery, returns and data.'
+      else
+        assign seo_description = seo_title | append: ' – ATTARWALAS, handcrafted perfumes and attars from Mumbai.'
+    endcase
+  endif
+
+  # A very short description (e.g. a product whose body is one line) reads as
+  # thin to search engines; top it up with the brand line.
+  if seo_description.size < 50
+    assign seo_description = seo_description | append: ' Handcrafted by ATTARWALAS in Mumbai, delivered across India.' | strip
+  endif
+
+  assign seo_suffix = ''
+  if current_tags
+    assign seo_tags = current_tags | join: ', '
+    assign seo_suffix = seo_suffix | append: ' Tagged: ' | append: seo_tags | append: '.'
+  endif
+  if current_page > 1
+    assign seo_suffix = seo_suffix | append: ' Page ' | append: current_page | append: '.'
+  endif
+
+  # Keep descriptions within 130 characters (what mobile results show, and
+  # the ceiling SEO auditors such as Semrush check for), cutting at a word
+  # boundary. The tag/page suffix is kept whole so paginated and tagged
+  # pages still get distinct descriptions.
+  assign seo_max = 130 | minus: seo_suffix.size | at_least: 60
+  if seo_description.size > seo_max
+    assign seo_cut = seo_max | minus: 1
+    assign seo_description = seo_description | truncate: seo_cut, ''
+    assign seo_last_word = seo_description | split: ' ' | last
+    assign seo_description = seo_description | remove_last: seo_last_word | strip | append: '…'
+  endif
+  assign seo_description = seo_description | append: seo_suffix
+
+  # Never indexed: internal search results, the cart, and the hidden helper
+  # products the Globo Product Options app creates to price its add-ons
+  # (published, but never meant to be browsed).
+  if request.page_type == 'search' or request.page_type == 'cart'
+    assign seo_noindex = true
+  elsif request.page_type == 'product' and product.tags contains 'globo-product-options'
+    assign seo_noindex = true
+  endif
+-%}
+
+<title>
+  {{- seo_title -}}
+  {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+  {%- if current_page > 1 %} &ndash; Page {{ current_page }}{% endif -%}
+  {%- assign title_down = seo_title | downcase -%}
+  {%- unless title_down contains shop_down %} &ndash; {{ shop.name }}{% endunless -%}
+</title>
+<meta name="description" content="{{ seo_description | escape }}">
+{%- comment -%}
+  Shopify doesn't let a theme set HTTP response headers, so the referrer
+  policy is declared here instead (browsers honour the meta form). Header-only
+  checks such as SiteOne's still won't see it.
+{%- endcomment %}
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+{%- if seo_noindex %}
+  <meta name="robots" content="noindex, follow">
+{%- endif %}
+
+{%- comment -%}
+  Single-language, single-country store: a self-referencing hreflang pair.
+  Skipped automatically if more languages/markets are ever added, since
+  Shopify then manages hreflang itself.
+{%- endcomment -%}
+{%- unless localization.available_languages.size > 1 or localization.available_countries.size > 1 %}
+  <link rel="alternate" hreflang="{{ request.locale.iso_code }}-{{ localization.country.iso_code }}" href="{{ canonical_url }}">
+  <link rel="alternate" hreflang="x-default" href="{{ canonical_url }}">
+{%- endunless %}
+
+{%- comment -%}
+  Favicon: the Theme settings image when one is uploaded, otherwise the
+  bundled gold "A" monogram (Cormorant Garamond, same face as the wordmark).
+{%- endcomment -%}
+{%- if settings.favicon != blank %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ settings.favicon | image_url: width: 192, height: 192 }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ settings.favicon | image_url: width: 180, height: 180 }}">
+{%- else %}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ 'aw-favicon-32.png' | asset_url }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ 'aw-favicon-192.png' | asset_url }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ 'aw-apple-touch-icon.png' | asset_url }}">
+{%- endif %}
+
+{% render 'meta-tags', title: seo_title, description: seo_description %}

@@ -487,8 +487,8 @@ div.customer-reviews__modal-overlay {
 
 .customer-reviews__modal-notes-label {
   margin: 0 0 1rem;
-  font-size: 1.1rem;
-  letter-spacing: 0.18em;
+  font-size: 1.2rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(var(--color-foreground), 0.55);
 }

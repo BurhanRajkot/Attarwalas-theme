@@ -16,7 +16,8 @@
           "type": "heading",
           "settings": {
             "heading": "Where Heritage Becomes Fragrance",
-            "heading_size": "h0"
+            "heading_size": "h0",
+            "heading_tag": "h1"
           }
         },
         "text": {

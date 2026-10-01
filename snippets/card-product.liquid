@@ -39,6 +39,18 @@
       assign ratio = 1
     endif
     comment
+      Same conditions the sold-out / sale badges below render under. The card
+      link only points aria-labelledby at a badge id that actually exists —
+      Dawn referenced it unconditionally, a broken ARIA reference on every
+      card without a badge (i.e. almost all of them).
+    endcomment
+    assign card_has_badge = false
+    if card_product.available == false
+      assign card_has_badge = true
+    elsif card_product.compare_at_price > card_product.price and card_product.available
+      assign card_has_badge = true
+    endif
+    comment
       Ambre Intense and Yameni Yakud's product photos were shot/exported on a
       plain white backdrop, unlike the rest of the catalog which uses a warm
       cream backdrop matching the site background. Recolor just these two via
@@ -382,7 +394,7 @@
                 href="{{ card_product.url }}"
                 id="StandardCardNoMediaLink-{{ section_id }}-{{ card_product.id }}"
                 class="full-unstyled-link"
-                aria-labelledby="StandardCardNoMediaLink-{{ section_id }}-{{ card_product.id }} NoMediaStandardBadge-{{ section_id }}-{{ card_product.id }}"
+                aria-labelledby="StandardCardNoMediaLink-{{ section_id }}-{{ card_product.id }}{% if card_has_badge %} NoMediaStandardBadge-{{ section_id }}-{{ card_product.id }}{% endif %}"
               >
                 {{ card_product.title | escape }}
               </a>
@@ -419,7 +431,7 @@
               href="{{ card_product.url }}"
               id="CardLink-{{ section_id }}-{{ card_product.id }}"
               class="full-unstyled-link"
-              aria-labelledby="CardLink-{{ section_id }}-{{ card_product.id }} Badge-{{ section_id }}-{{ card_product.id }}"
+              aria-labelledby="CardLink-{{ section_id }}-{{ card_product.id }}{% if card_has_badge %} Badge-{{ section_id }}-{{ card_product.id }}{% endif %}"
             >
               {{ card_product.title | escape }}
             </a>

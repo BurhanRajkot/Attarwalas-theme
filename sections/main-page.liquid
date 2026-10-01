@@ -18,8 +18,13 @@
   <h1 class="main-page-title page-title h0{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
     {{ page.title | escape }}
   </h1>
+  {%- comment -%}
+    The page title above is the page's one h1. Body HTML pasted in admin can
+    carry its own h1 (the Contact page had an empty one), which gave the page
+    two — so any h1 in the body is shifted down to h2.
+  {%- endcomment -%}
   <div class="rte{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
-    {{ page.content }}
+    {{ page.content | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' }}
   </div>
 </div>
 

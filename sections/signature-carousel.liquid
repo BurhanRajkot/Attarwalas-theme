@@ -89,15 +89,20 @@
                     <h3>{{ card_title | default: 'Select a product' }}</h3>
                   </a>
                   {%- if block.settings.note_1 != blank or block.settings.note_2 != blank or block.settings.note_3 != blank -%}
+                    {%- comment -%}
+                      Downcased so the casing is up to CSS: uppercase on desktop,
+                      capitalised on phones. Some notes are typed in capitals in
+                      the editor ("OUDH") and others not ("Amber").
+                    {%- endcomment -%}
                     <div class="signature-carousel__notes" aria-label="Fragrance notes">
                       {%- if block.settings.note_1 != blank -%}
-                        <span class="signature-carousel__note">{{ block.settings.note_1 }}</span>
+                        <span class="signature-carousel__note">{{ block.settings.note_1 | downcase }}</span>
                       {%- endif -%}
                       {%- if block.settings.note_2 != blank -%}
-                        <span class="signature-carousel__note">{{ block.settings.note_2 }}</span>
+                        <span class="signature-carousel__note">{{ block.settings.note_2 | downcase }}</span>
                       {%- endif -%}
                       {%- if block.settings.note_3 != blank -%}
-                        <span class="signature-carousel__note">{{ block.settings.note_3 }}</span>
+                        <span class="signature-carousel__note">{{ block.settings.note_3 | downcase }}</span>
                       {%- endif -%}
                     </div>
                   {%- endif -%}
@@ -175,8 +180,14 @@
         this.bindKeyboard();
         this.bindResize();
 
-        this.measure();
-        this.render();
+        /* Measured in the first frame rather than here: this constructor runs
+           while the page is still parsing, and measuring then forced a layout
+           of everything parsed so far. The frame callback still runs before
+           that frame paints, so the track never shows unpositioned. */
+        requestAnimationFrame(() => {
+          this.measure();
+          this.render();
+        });
         this.start();
 
         window.addEventListener('load', () => {

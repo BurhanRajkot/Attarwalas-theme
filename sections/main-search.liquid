@@ -90,8 +90,6 @@
                 {%- if settings.predictive_search_enabled -%}
                   role="combobox"
                   aria-expanded="false"
-                  aria-owns="predictive-search-results"
-                  aria-controls="predictive-search-results"
                   aria-haspopup="listbox"
                   aria-autocomplete="list"
                   autocorrect="off"
@@ -116,13 +114,13 @@
                 class="reset__button field__button{% if search.terms == blank %} hidden{% endif %}"
                 aria-label="{{ 'general.search.reset' | t }}"
               >
-                <svg class="icon icon-close" aria-hidden="true" focusable="false">
-                  <use xlink:href="#icon-reset">
+                <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="icon icon-close" aria-hidden="true" focusable="false">
+                  <use xlink:href="#icon-reset" />
                 </svg>
               </button>
               <button type="submit" class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
-                <svg class="icon icon-search" aria-hidden="true" focusable="false">
-                  <use xlink:href="#icon-search">
+                <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="icon icon-search" aria-hidden="true" focusable="false">
+                  <use xlink:href="#icon-search" />
                 </svg>
               </button>
             </div>

@@ -21,8 +21,8 @@
 
 .signature-carousel__eyebrow {
   font-family: Arial, sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.32em;
+  font-size: 12px;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: #8a7a5c;
   margin-bottom: 12px;
@@ -162,10 +162,10 @@
 
 .signature-carousel__note {
   font-family: Arial, sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 1;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #8a7a5c;
   white-space: nowrap;
@@ -218,9 +218,9 @@
   border: 1px solid var(--sig-button);
   border-radius: 999px;
   font-family: var(--font-body-family, Arial, sans-serif);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
@@ -322,8 +322,8 @@
   }
 
   .signature-carousel__eyebrow {
-    font-size: 9px;
-    letter-spacing: 0.3em;
+    font-size: 12px;
+    letter-spacing: 0.22em;
     margin-bottom: 8px;
   }
 
@@ -376,28 +376,34 @@
     text-overflow: unset;
   }
 
+  /* Notes were squeezed onto one line at 8px, which phones (and Google's
+     mobile-friendly checks) count as illegible: anything under 12px. At 12px
+     they're set in title case at regular weight, which keeps them reading
+     as secondary to the product name (12px capitals outweighed it) and fits
+     most lists on one line of a 46vw card. Longer lists wrap to a second
+     centred line; the dot separators are dropped here because a wrapped line
+     would start with one, and the gap does their job. Two lines of height are
+     always reserved so cards with short and long lists stay aligned. */
   .signature-carousel__notes {
-    display: block;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex-wrap: wrap;
+    column-gap: 8px;
+    row-gap: 3px;
+    align-content: flex-start;
+    min-height: 33px;
     margin-top: 6px;
     margin-bottom: 8px;
   }
 
   .signature-carousel__note {
-    font-size: 8px;
-    /* Tracking and separator gutters are trimmed here purely to buy horizontal
-       room; a typical 3-note list needs ~123px at the desktop values but only
-       ~108px is available inside a 40vw card. Longer note sets still ellipse
-       gracefully rather than wrapping to a second line. */
-    letter-spacing: 0.03em;
+    font-size: 12px;
+    line-height: 15px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
   }
 
   .signature-carousel__note + .signature-carousel__note::before {
-    margin: 0 2px;
-    font-size: 9px;
+    content: none;
   }
 
   .signature-carousel__arrow {

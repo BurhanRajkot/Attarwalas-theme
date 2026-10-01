@@ -18,9 +18,7 @@
             "heading": "Choose any 3 perfumes",
             "tab_label": "Perfumes",
             "collections": [
-              "men-3",
-              "women-1",
-              "unisex-3"
+              "signature-series"
             ],
             "pick_count": 3,
             "include": "bottles",

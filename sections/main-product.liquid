@@ -788,6 +788,22 @@
       else
         assign seo_media = product.featured_media
       endif
+
+      # The 10ML/35ML variants on free-gift qualifying products are gift-only
+      # sizes priced at 10%/35% as placeholders (see snippets/price.liquid).
+      # Listing them as Offers would let Google show "from Rs. 300" for a
+      # perfume nobody can buy at that price, so they're left out here too.
+      assign seo_hide_gift_sizes = false
+      if settings.free_gift_enabled
+        assign seo_qualifying = settings.free_gift_qualifying_collection | default: collections['signature-series']
+        for c in product.collections
+          if c.handle == seo_qualifying.handle
+            assign seo_hide_gift_sizes = true
+            break
+          endif
+        endfor
+      endif
+      assign seo_first_offer = true
     -%}
 
     <script type="application/ld+json">
@@ -811,6 +827,13 @@
         },
         "offers": [
           {%- for variant in product.variants -%}
+            {%- if seo_hide_gift_sizes -%}
+              {%- if variant.option1 == '10ML' or variant.option1 == '35ML' -%}
+                {%- continue -%}
+              {%- endif -%}
+            {%- endif -%}
+            {%- unless seo_first_offer %},{% endunless -%}
+            {%- assign seo_first_offer = false -%}
             {
               "@type" : "Offer",
               {%- if variant.sku != blank -%}
@@ -829,7 +852,7 @@
               "price" : {{ variant.price | divided_by: 100.00 | json }},
               "priceCurrency" : {{ cart.currency.iso_code | json }},
               "url" : {{ request.origin | append: variant.url | json }}
-            }{% unless forloop.last %},{% endunless %}
+            }
           {%- endfor -%}
         ]
       }

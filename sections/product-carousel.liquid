@@ -201,7 +201,9 @@
           this.nextButton.addEventListener('click', () => this.step(1));
           this.track.addEventListener('scroll', () => this.update(), { passive: true });
           window.addEventListener('resize', () => this.update());
-          this.update();
+          /* First read waits a frame: run while the page is still being
+             parsed, it forced a layout of everything above it each time. */
+          requestAnimationFrame(() => this.update());
         }
       }
 

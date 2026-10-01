@@ -111,9 +111,9 @@
 
 .offer-deal__count-label {
   margin-bottom: 0.6rem;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgb(var(--offer-gold));
 }

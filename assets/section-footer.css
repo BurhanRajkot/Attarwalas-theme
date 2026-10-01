@@ -675,6 +675,18 @@
   transform: translateX(0.3rem);
 }
 
+/* 48px tap targets. The submit arrow was 44px wide inside a 45px-tall field,
+   which mobile-friendliness checks flag as a tap target too small and too
+   close to the field around it. */
+.footer__newsletter .newsletter-form__field-wrapper .field__input {
+  height: 4.8rem;
+  padding-right: 5.6rem;
+}
+
+.footer__newsletter .newsletter-form__button {
+  width: 4.8rem;
+}
+
 /* Social icons */
 .footer__list-social {
   margin-top: 1.6rem;
@@ -720,7 +732,7 @@
 }
 
 .copyright__content {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   letter-spacing: 0.02em;
 }
 
@@ -1023,9 +1035,10 @@
 /* The policy links were 14px uppercase — the same size as the primary nav
    links above them — while the copyright beside them was 11.5px. Two
    sizes for the same tier of information. Both are legal/tertiary, so
-   they now match each other and sit quieter than the menus. */
+   they now match each other and sit quieter than the menus. 12px is the
+   floor: mobile-friendliness checks flag anything smaller as illegible. */
 .footer .policies li a {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   letter-spacing: 0.06em;
   color: rgba(var(--color-foreground), 0.6);
 }

@@ -2067,6 +2067,113 @@ and invents text wrapping that won't happen on a real phone. Use
 `transform: scale()`, which scales the paint and leaves layout alone — or just
 read the numbers and skip the screenshot.
 
+## SEO / PageSpeed pass for Semrush (2026-10-01, pushed live)
+
+Burhan ran Semrush's free SEO Checker on the homepage (score 61) and asked for
+everything but off-page above 95%. Results on the live site afterwards, from
+pagespeed.web.dev: **desktop 92 → 98** (FCP 0.6s, LCP 0.9s, TBT 100ms, SI
+0.8s), **mobile 61 → 77** (LCP 11.3s → 4.3s).
+
+**What Semrush is actually reading** (worth knowing before chasing its flags):
+
+- Its speed numbers are **PageSpeed Insights, desktop strategy**. Its FCP/LCP
+  matched PSI desktop exactly. Its TBT (564ms vs PSI's 140ms) is just a
+  noisy run, and that one swing is what took its performance score to 69.
+- PSI shows **"No Data" for real-user (CrUX) metrics** on this site, so
+  Semrush's "INP 3.16s" can't be field data. It must be derived from a lab
+  metric, most likely Time to Interactive. Lower main-thread work moves it.
+  Most of what's left is Meta Pixel, Shopify's pixel manager and Shiprocket,
+  which aren't in the theme.
+- **"DOM Size: unable to retrieve"** is Semrush's bug: Lighthouse 13 (what
+  PSI runs) replaced the `dom-size` audit with `dom-size-insight` (this page
+  passes it: about 1,680 elements). Nothing in the theme can change that row.
+- **"Mobile Friendliness x/3"** = text ≥ 12px, tap targets ≥ 48px, no
+  content wider than the screen. Lighthouse 13 dropped the font-size and
+  tap-target audits too, so measure them with **Lighthouse 11**
+  (`npx lighthouse@11`, SEO category) or a Puppeteer pass over text nodes
+  flagging computed `font-size` under 12px at a 412px viewport. If
+  Semrush still shows 1/3 with those passing, that's the same missing-audit
+  problem as DOM size.
+- Meta description must be **100–130 characters** for this checker.
+- Social wants an X link. **Burhan has no X account, so it was deliberately
+  left out.** Don't add a guessed handle.
+
+**Changes:**
+
+| Area | Change | Files |
+| --- | --- | --- |
+| Meta description | Homepage default shortened to 127 chars; site-wide cap 160 → 130, cut at a word, with the "Page N"/"Tagged" suffix kept whole | `snippets/seo-head.liquid`, `config/settings_schema.json` |
+| Alt text | Hero poster falls back to "ATTARWALAS handcrafted perfumes and attars" (video has no alt or description set); reviews modal image defaults to "Reviewed product" | `sections/video.liquid`, `sections/customer-reviews.liquid` |
+| 12px floor | Signature notes (8px on phones), eyebrow, Buy Now, "10% OFF" tag, footer policies/copyright, offer count label, reviews notes label | section CSS files |
+| Tap targets | Footer newsletter field + arrow button 48px (were 45px / 44px) | `assets/section-footer.css` |
+| Hero video | Sources held in `data-src` until `window` load, still the 1080p MP4. Eager loading put 5 MB in front of the LCP poster (mobile LCP 10s+) | `sections/video.liquid` |
+| Hero poster | Requested at `&quality=70` (CDN honours it; `image_url` can't set it): 217 → 136 KB at 750w, no visible difference | `sections/video.liquid` |
+| Review posters | `data-poster`, all set at once when the section is ~900px away. A `<video poster>` never lazy-loads; the eight were ~600 KB competing with the hero | `sections/customer-reviews.liquid` |
+| Fonts | Self-hosted Cormorant Garamond + DM Sans (`assets/aw-font-*.woff2`, latin + latin-ext, both variable fonts, OFL), replacing the render-blocking Google Fonts stylesheet; unused `fonts.shopifycdn.com` preconnect removed | `layout/theme.liquid` |
+| Render-blocking CSS | Drawer-internal sheets (cart, totals, price, discounts) load async; `component-cart-drawer.css` stays blocking. `component-deferred-media.css` skipped for the hero | `sections/header.liquid`, `sections/video.liquid` |
+| Forced layouts | First measurement moved into `requestAnimationFrame` (still before first paint) in the header height script, hero offset, signature carousel, product carousel and reviews scrollbar. Run mid-parse, each one laid out the half-built page | those sections |
+
+**Bug fixed along the way (was live):** `cart-drawer.js` was loaded from the
+header, but `CartDrawerItems extends CartItems` needs `cart.js`, which moved
+below the footer with the cart drawer (heading-outline fix). Every page threw
+`CartItems is not defined`, `<cart-drawer-items>` never upgraded, and the
+drawer's +/− and remove buttons did nothing. `cart-drawer.js` now loads from
+`snippets/cart-drawer.liquid` right after `cart.js`. Verified live: "+" took
+a cart from 1 to 2.
+
+**Design change to know about:** on phones the Signature notes are 12px title
+case at regular weight, wrapping to a second centred line when needed, with no
+dot separators. 12px capitals outweighed the product name. Notes are
+`downcase`d in the markup so CSS owns the casing (some were typed "OUDH",
+others "Amber"); desktop is unchanged apart from 10.5 → 12px.
+
+**How it was measured (reuse this):**
+
+- PSI's keyless API quota is usually exhausted. Use the pagespeed.web.dev UI,
+  or install Lighthouse into the scratchpad (`npm i lighthouse`) and run it
+  with `CHROME_PATH=/usr/bin/google-chrome-stable`.
+- A/B on real Shopify without touching live: `shopify theme push --unpublished
+  --theme "TEMP …"` for a copy of live and a copy with the change, then run
+  Lighthouse on `https://www.attarwalas.com/?preview_theme_id=<id>` for both,
+  interleaved, discarding the first run (a freshly pushed theme's CSS comes
+  from a cold CDN, ~3s). Delete the temp themes afterwards. `curl` needs
+  `-L -c jar -b jar`: the preview URL 302s to `/` while setting a cookie.
+- Lab TBT on mobile moves with *when* third-party pixels land inside the
+  FCP→TTI window, so a faster page can show a higher TBT. Compare long-task
+  lists, not just the number.
+- The shell here is zsh: `for f in $LIST` does **not** word-split. Use a file
+  and `while read`.
+
+### Follow-up fixes (2026-10-02, pushed live)
+
+- **Offer pages' Perfumes tab was empty** ("These items are being restocked")
+  on offer-for-2/3/5. Not a theme bug: the `men-3`, `women-1` and `unisex-3`
+  collections the perfume group blocks pointed at had been removed in admin
+  (the storefront 404s on them). With no products, none of the offer page's
+  animations (tray filling, savings count-up) had anything to run on either.
+  The groups now use `signature-series` (the same 6 perfumes). Also,
+  `snippets/offer-group.liquid` now falls back to the free-gift qualifying
+  collection (signature-series) for bottle groups, or `attar-roll-ons` for
+  roll-on groups, whenever the configured collections come back empty.
+  Hand-picked products are never overridden. `snippets/product-best-fit.liquid`
+  also keys off those deleted gender collections, so its Men/Women/Unisex
+  label no longer shows on perfumes. Recreate the collections or re-point it
+  if that label matters.
+- **Hero video waited for `window` load** (yesterday's change). On a real
+  phone that is seconds of third-party scripts, so the site opened on a still
+  frame. It now starts two frames after the poster's `load` (i.e. once the
+  poster has painted, so still out of LCP's way), with a 2.5s backstop.
+- **Review videos only loaded on approach**, so on phones they sat on posters
+  while 1080p buffered. All eight now get posters + `preload=metadata`
+  sources at `requestIdleCallback` after window load (the old behaviour was
+  at parse time, which competed with the hero). The play threshold dropped
+  0.5 → 0.25, so cards peeking in at the strip's edge play too.
+
+PSI after these: desktop LCP 0.8s, FCP 0.6s, SI 0.8s. Desktop score swings
+89–91 vs 98 the day before, purely on TBT. PSI attributes it to Shiprocket's
+`sr-cdn.shiprocket.in/sr-promise/static/iframe.html` (one 532ms task) — an
+app, not the theme. The theme's own longest task was 87ms.
+
 ## Floating launchers (WhatsApp + Shopify Inbox) — keep them off the CTAs
 
 `snippets/floating-stack.liquid` (rendered from `layout/theme.liquid` on every
@@ -2465,13 +2572,3 @@ page), theme CSS comes from `cdn.shopify.com` so `sheet.cssRules` throws
 `SecurityError` and rule enumeration is impossible (grep the local files
 instead), and a screenshot taken mid-drawer-animation will look clipped —
 re-measure before believing it.
-
-## Useful Shopify CLI commands
-
-```
-shopify theme dev --store=<store> --theme=<id>   # local dev server + live push to draft theme
-shopify theme list --store=<store>               # list themes and their ids
-shopify theme pull --store=<store> --theme=<id>   # pull remote theme state down locally
-shopify theme push --store=<store> --theme=<id>   # one-time upload (not used mid-dev-session;
-                                                    # theme dev already live-syncs)
-```

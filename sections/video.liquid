@@ -1,5 +1,8 @@
 {{ 'video-section.css' | asset_url | stylesheet_tag }}
-{{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
+{%- comment -%} Only the click-to-play layout uses deferred-media; the hero never does. {%- endcomment -%}
+{%- unless section.settings.full_width -%}
+  {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
+{%- endunless %}
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -18,6 +21,10 @@
 {%- liquid
   assign video_id = section.settings.video.id | default: section.settings.video_url.id
   assign video_alt = section.settings.video.alt | default: section.settings.description
+  assign hero_alt = video_alt | default: section.settings.heading | strip_html
+  if hero_alt == blank
+    assign hero_alt = shop.name | append: ' handcrafted perfumes and attars'
+  endif
   assign alt = 'sections.video.load_video' | t: description: video_alt | escape
   assign poster = section.settings.video.preview_image | default: section.settings.cover_image
 
@@ -62,24 +69,38 @@
         Hero mode: full-width video as a banner, muted autoplay loop, cover-cropped, with
         overlay copy + premium transparent buttons.
 
-        No lazy-loading or connection checks here by design: the store owner serves this
-        from a CDN with plenty of bandwidth, so the video loads eagerly at the highest
-        quality source (the HD MP4 is preferred over the adaptive HLS stream).
+        No connection checks or quality downgrades here by design: the video always plays
+        at the highest quality source (the HD MP4 is preferred over the adaptive HLS
+        stream). It does start a beat after the page, though: the sources sit in
+        data-src until the poster has painted. Loaded eagerly, the 5 MB file competed
+        with the poster for bandwidth and pushed Largest Contentful Paint on phones past
+        10s in PageSpeed. The poster is the video's own first frame, so the hand-over
+        is invisible. (Waiting for window load instead was tried first: on a real phone
+        that is seconds of third-party scripts, so the site opened on a still image —
+        reported as "the opening animation is gone", 2026-10-02.)
       {%- endcomment -%}
       <div class="video-section__hero" data-media-id="{{ video_id }}" data-video-hero="{{ section.id }}">
         {%- if poster != blank -%}
+          {%- comment -%}
+            The poster is the page's Largest Contentful Paint, so it's requested at
+            quality 70: Shopify's CDN honours a `quality` URL parameter (image_url has
+            no option for it, hence the append). On this sandy frame that's ~38%
+            smaller (217 KB → 136 KB at 750w) with no visible difference, and it is
+            only on screen until the video takes over. If the CDN ever ignores the
+            parameter, the default quality comes back on its own.
+          {%- endcomment -%}
           <img
             class="video-section__hero-poster"
-            src="{{ poster | image_url: width: 1100 }}"
+            src="{{ poster | image_url: width: 1100 | append: '&quality=70' }}"
             srcset="
-              {{ poster | image_url: width: 375 }} 375w,
-              {{ poster | image_url: width: 750 }} 750w,
-              {{ poster | image_url: width: 1100 }} 1100w,
-              {{ poster | image_url: width: 1500 }} 1500w,
-              {{ poster | image_url: width: 1920 }} 1920w
+              {{ poster | image_url: width: 375 | append: '&quality=70' }} 375w,
+              {{ poster | image_url: width: 750 | append: '&quality=70' }} 750w,
+              {{ poster | image_url: width: 1100 | append: '&quality=70' }} 1100w,
+              {{ poster | image_url: width: 1500 | append: '&quality=70' }} 1500w,
+              {{ poster | image_url: width: 1920 | append: '&quality=70' }} 1920w
             "
             sizes="100vw"
-            alt="{{ video_alt | escape }}"
+            alt="{{ hero_alt | escape }}"
             fetchpriority="high"
             decoding="async"
           >
@@ -93,7 +114,7 @@
             muted
             loop
             playsinline
-            preload="auto"
+            preload="none"
             disablepictureinpicture
             tabindex="-1"
             aria-hidden="true"
@@ -104,12 +125,12 @@
             {%- endcomment -%}
             {%- for source in section.settings.video.sources -%}
               {%- if source.mime_type == 'video/mp4' -%}
-                <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
               {%- endif -%}
             {%- endfor -%}
             {%- for source in section.settings.video.sources -%}
               {%- if source.mime_type != 'video/mp4' -%}
-                <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
               {%- endif -%}
             {%- endfor -%}
           </video>
@@ -183,7 +204,9 @@
             var top = hero.getBoundingClientRect().top + window.pageYOffset;
             hero.style.setProperty('--aw-header-offset', top + 'px');
           };
-          setHeroOffset();
+          /* First measurement in the first frame (still before it paints)
+             rather than mid-parse, where it forced a full layout. */
+          requestAnimationFrame(setHeroOffset);
           window.addEventListener('resize', setHeroOffset);
           window.addEventListener('load', setHeroOffset);
 
@@ -205,11 +228,37 @@
             video.addEventListener('playing', revealVideo, { once: true });
           }
 
-          /* No lazy-loading, connection checks, or scroll observers here — the video
-             is served from a fast CDN, so it simply starts playing immediately at
-             its highest-quality source. */
-          var attempt = video.play();
-          if (attempt && attempt.catch) attempt.catch(function () {});
+          /* Sources go live as soon as the poster has painted (see the comment
+             above the markup), then the video plays at its highest-quality
+             source. Two frames after the poster's load event is after it has
+             painted, so the video never competes with it; the timeout is a
+             backstop for a poster that never loads. */
+          var started = false;
+          var startVideo = function () {
+            if (started) return;
+            started = true;
+            video.querySelectorAll('source[data-src]').forEach(function (source) {
+              source.src = source.getAttribute('data-src');
+              source.removeAttribute('data-src');
+            });
+            video.preload = 'auto';
+            video.load();
+            var attempt = video.play();
+            if (attempt && attempt.catch) attempt.catch(function () {});
+          };
+          var afterPaint = function () {
+            requestAnimationFrame(function () {
+              requestAnimationFrame(startVideo);
+            });
+          };
+          var poster = hero.querySelector('.video-section__hero-poster');
+          if (!poster || (poster.complete && poster.naturalWidth > 0)) {
+            afterPaint();
+          } else {
+            poster.addEventListener('load', afterPaint, { once: true });
+            poster.addEventListener('error', startVideo, { once: true });
+          }
+          setTimeout(startVideo, 2500);
         })();
       </script>
     {%- else -%}

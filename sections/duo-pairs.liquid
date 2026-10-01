@@ -60,6 +60,7 @@
     assign all_duos_url = all_duos_product.url | append: '?view=duo'
   endif
 
+
   comment
     Free-gift picker (added 2026-09-27): a duo's perfume is a real
     signature-series product line, so it already earns a free 10ml/35ml
@@ -165,6 +166,11 @@
       2 up below 990px, 3 up above), so the two pages lay out identically.
     {%- endcomment -%}
     <div class="duo-browse-grid">
+      {%- comment -%}
+        Screen-reader/outline heading between the page title and each tile's
+        h3 (the collection grid has the same, visually hidden).
+      {%- endcomment -%}
+      <h2 class="visually-hidden">All Signature Duos</h2>
       <ul class="grid product-grid grid--2-col-tablet-down grid--3-col-desktop" role="list">
         {%- assign rendered_count = 0 -%}
         {%- for perfume in perfume_collection.products -%}
@@ -619,7 +625,13 @@
 
         <div class="duo-hero__info{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
           <p class="duo-hero__eyebrow">Signature Duo</p>
-          <h1 class="duo-hero__title">{{ perfume.title | escape }} Duo</h1>
+          {%- comment -%}
+            h2 styled as h1: every fragrance's hero is in the markup at once
+            (JS shows one), and each used to be an h1 alongside the grid's
+            "Signature Duos" h1 — seven per page. The grid title, which
+            comes first in the markup, is the page's one h1.
+          {%- endcomment -%}
+          <h2 class="duo-hero__title h1">{{ perfume.title | escape }} Duo</h2>
           <p class="duo-card__subtitle">Perfume + Attar Roll-On</p>
 
           {%- if section.settings.tagline != blank -%}

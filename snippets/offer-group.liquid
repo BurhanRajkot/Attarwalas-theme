@@ -111,6 +111,32 @@
 
   assign include_mode = group_include | default: 'bottles'
 
+  comment
+    Safety net (added 2026-10-02): if the configured collections come back
+    empty, fall back to the store's whole set for this group's kind rather
+    than showing "being restocked". Found live: offer-2/3/5's perfume groups
+    pointed at men-3 / women-1 / unisex-3, those collections were removed in
+    admin, and every offer page's Perfumes tab went empty with nothing in the
+    theme editor saying why. Hand-picked products are never second-guessed.
+  endcomment
+  if group_products == blank or group_products.size == 0
+    if group_products_count == blank or group_products_count == 0
+      if include_mode == 'rollons'
+        assign fallback_collection = collections['attar-roll-ons']
+      else
+        assign fallback_collection = settings.free_gift_qualifying_collection
+        if fallback_collection == blank
+          assign fallback_collection = collections['signature-series']
+        endif
+      endif
+      if fallback_collection != blank and fallback_collection.products_count > 0
+        assign grid_products = fallback_collection.products
+        assign group_products_count = fallback_collection.products_count
+        assign title_list = fallback_collection.title
+      endif
+    endif
+  endif
+
   # 10ML/35ML variants on signature-series products exist only to back the
   # free-gift picker, never a normal purchase option — hidden from this
   # bundle page's own size dropdown the same way
@@ -155,7 +181,11 @@
   <details class="offer-group__details" {% if group_open %}open{% endif %}>
     <summary class="offer-group__summary">
       <span class="offer-group__summary-main">
-        <span class="offer-group__summary-text">{{ heading }}</span>
+        {%- comment -%}
+          h2, not a span: it's the heading between the page's h1 (the
+          offer title) and each card's h3, which otherwise skipped a level.
+        {%- endcomment -%}
+        <h2 class="offer-group__summary-text">{{ heading }}</h2>
       </span>
       <span class="offer-group__summary-meta">
         <span class="offer-group__pill" data-group-counter>

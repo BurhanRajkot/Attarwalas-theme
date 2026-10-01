@@ -11,11 +11,17 @@
 {%- endif -%}
 
 {%- if settings.cart_type == "drawer" -%}
+  {%- comment -%}
+    Only the drawer's own positioning sheet blocks rendering (it keeps the
+    closed drawer off screen). The rest style what's inside it, and every
+    page that shows prices or the full cart loads its own copy, so they load
+    without holding up first paint.
+  {%- endcomment -%}
   {{ 'component-cart-drawer.css' | asset_url | stylesheet_tag }}
-  {{ 'component-cart.css' | asset_url | stylesheet_tag }}
-  {{ 'component-totals.css' | asset_url | stylesheet_tag }}
-  {{ 'component-price.css' | asset_url | stylesheet_tag }}
-  {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'component-cart.css' | asset_url }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ 'component-totals.css' | asset_url }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ 'component-price.css' | asset_url }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ 'component-discounts.css' | asset_url }}" media="print" onload="this.media='all'">
 {%- endif -%}
 
 {{ 'section-header-attarwalas.css' | asset_url | stylesheet_tag }}
@@ -108,9 +114,13 @@
 <script src="{{ 'details-modal.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'cart-notification.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'search-form.js' | asset_url }}" defer="defer"></script>
-{%- if settings.cart_type == "drawer" -%}
-  <script src="{{ 'cart-drawer.js' | asset_url }}" defer="defer"></script>
-{%- endif -%}
+{%- comment -%}
+  cart-drawer.js is loaded from snippets/cart-drawer.liquid, right after
+  cart.js: its CartDrawerItems class extends cart.js's CartItems, and since the
+  drawer moved below the footer, loading it here ran it first and threw
+  "CartItems is not defined" — so <cart-drawer-items> never upgraded and the
+  drawer's quantity and remove buttons did nothing.
+{%- endcomment -%}
 
 <svg xmlns="http://www.w3.org/2000/svg" class="hidden">
   <symbol id="icon-search" viewbox="0 0 18 19" fill="none">
@@ -124,7 +134,7 @@
   </symbol>
 
   <symbol id="icon-close" class="icon icon-close" fill="none" viewBox="0 0 18 17">
-    <path d="M.865 15.978a.5.5 0 00.707.707l7.433-7.431 7.579 7.282a.501.501 0 00.846-.37.5.5 0 00-.153-.351L9.712 8.546l7.417-7.416a.5.5 0 10-.707-.708L8.991 7.853 1.413.573a.5.5 0 10-.693.72l7.563 7.268-7.418 7.417z" fill="currentColor">
+    <path d="M.865 15.978a.5.5 0 00.707.707l7.433-7.431 7.579 7.282a.501.501 0 00.846-.37.5.5 0 00-.153-.351L9.712 8.546l7.417-7.416a.5.5 0 10-.707-.708L8.991 7.853 1.413.573a.5.5 0 10-.693.72l7.563 7.268-7.418 7.417z" fill="currentColor" />
   </symbol>
 </svg>
 
@@ -141,7 +151,7 @@
     assign social_links = false
     assign localization_forms = false
 
-    if settings.social_twitter_link != blank or settings.social_facebook_link != blank or settings.social_pinterest_link != blank or settings.social_instagram_link != blank or settings.social_youtube_link != blank or settings.social_vimeo_link != blank or settings.social_tiktok_link != blank or settings.social_tumblr_link != blank or settings.social_snapchat_link != blank
+    if settings.social_twitter_link != blank or settings.social_facebook_link != blank or settings.social_pinterest_link != blank or settings.social_instagram_link != blank or settings.social_youtube_link != blank or settings.social_vimeo_link != blank or settings.social_tiktok_link != blank or settings.social_tumblr_link != blank or settings.social_snapchat_link != blank or settings.social_linkedin_link != blank
       assign social_links = true
     endif
 
@@ -285,12 +295,18 @@
   same, but later). The homepage pulls the hero up underneath the header by
   this amount so the header can sit transparently over it — without it
   set before first paint the hero would jump up once the JS ran.
+  Measured in a requestAnimationFrame callback, which still runs before the
+  first frame paints: reading offsetHeight straight away forced a layout in
+  the middle of parsing the page, which showed up as blocking time.
 {%- endcomment -%}
 <script>
   (function () {
     var h = document.currentScript.previousElementSibling;
     var s = h && h.closest('.section-header');
-    if (s) document.documentElement.style.setProperty('--header-height', s.offsetHeight + 'px');
+    if (!s) return;
+    requestAnimationFrame(function () {
+      document.documentElement.style.setProperty('--header-height', s.offsetHeight + 'px');
+    });
   })();
 </script>
 
@@ -445,45 +461,11 @@
   customElements.define('sticky-header', StickyHeader);
 {% endjavascript %}
 
-<script type="application/ld+json">
-  {
-    "@context": "http://schema.org",
-    "@type": "Organization",
-    "name": {{ shop.name | json }},
-    {% if settings.logo %}
-      "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
-    {% endif %}
-    "sameAs": [
-      {{ settings.social_twitter_link | json }},
-      {{ settings.social_facebook_link | json }},
-      {{ settings.social_pinterest_link | json }},
-      {{ settings.social_instagram_link | json }},
-      {{ settings.social_tiktok_link | json }},
-      {{ settings.social_tumblr_link | json }},
-      {{ settings.social_snapchat_link | json }},
-      {{ settings.social_youtube_link | json }},
-      {{ settings.social_vimeo_link | json }}
-    ],
-    "url": {{ request.origin | append: page.url | json }}
-  }
-</script>
-
-{%- if request.page_type == 'index' -%}
-  {% assign potential_action_target = request.origin | append: routes.search_url | append: "?q={search_term_string}" %}
-  <script type="application/ld+json">
-    {
-      "@context": "http://schema.org",
-      "@type": "WebSite",
-      "name": {{ shop.name | json }},
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {{ potential_action_target | json }},
-        "query-input": "required name=search_term_string"
-      },
-      "url": {{ request.origin | append: page.url | json }}
-    }
-  </script>
-{%- endif -%}
+{%- comment -%}
+  Organization / WebSite JSON-LD moved to snippets/seo-structured-data.liquid
+  (rendered from layout/theme.liquid) so every page gets it, not just pages
+  that happen to render this section, and empty social links are left out.
+{%- endcomment -%}
 
 {% schema %}
 {

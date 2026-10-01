@@ -17,10 +17,10 @@
     >
       <span>
         <svg class="modal__toggle-open icon icon-search" aria-hidden="true" focusable="false">
-          <use href="#icon-search">
+          <use href="#icon-search" />
         </svg>
         <svg class="modal__toggle-close icon icon-close" aria-hidden="true" focusable="false">
-          <use href="#icon-close">
+          <use href="#icon-close" />
         </svg>
       </span>
     </summary>
@@ -52,8 +52,6 @@
               {%- if settings.predictive_search_enabled -%}
                 role="combobox"
                 aria-expanded="false"
-                aria-owns="predictive-search-results"
-                aria-controls="predictive-search-results"
                 aria-haspopup="listbox"
                 aria-autocomplete="list"
                 autocorrect="off"
@@ -69,13 +67,13 @@
               class="reset__button field__button{% if search.terms == blank %} hidden{% endif %}"
               aria-label="{{ 'general.search.reset' | t }}"
             >
-              <svg class="icon icon-close" aria-hidden="true" focusable="false">
-                <use xlink:href="#icon-reset">
+              <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="icon icon-close" aria-hidden="true" focusable="false">
+                <use xlink:href="#icon-reset" />
               </svg>
             </button>
             <button class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
               <svg class="icon icon-search" aria-hidden="true" focusable="false">
-                <use href="#icon-search">
+                <use href="#icon-search" />
               </svg>
             </button>
           </div>
@@ -99,7 +97,7 @@
           aria-label="{{ 'accessibility.close' | t }}"
         >
           <svg class="icon icon-close" aria-hidden="true" focusable="false">
-            <use href="#icon-close">
+            <use href="#icon-close" />
           </svg>
         </button>
       </div>
