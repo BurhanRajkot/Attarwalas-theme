@@ -1553,7 +1553,7 @@
         "type": "textarea",
         "id": "seo_home_description",
         "label": "Homepage meta description",
-        "default": "Long-lasting non-alcoholic perfumes and handcrafted attar roll-ons from ATTARWALAS, Mumbai, since 1998. Delivered across India.",
+        "default": "Long-lasting perfumes and handcrafted attar roll-ons from ATTARWALAS, Mumbai, since 1998. Alcohol-based and non-alcoholic.",
         "info": "Used when the admin homepage description is empty. Aim for 100–130 characters; longer text is cut at 130."
       },
       {
@@ -1602,6 +1602,19 @@
       },
       {
         "type": "text",
+        "id": "seo_business_latitude",
+        "label": "Latitude",
+        "info": "From the shop's Google Maps pin, 5+ decimal places. Leave blank to omit geo.",
+        "default": "19.0700624"
+      },
+      {
+        "type": "text",
+        "id": "seo_business_longitude",
+        "label": "Longitude",
+        "default": "72.8798398"
+      },
+      {
+        "type": "text",
         "id": "seo_business_opening_days",
         "label": "Open days",
         "default": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday",
@@ -1611,7 +1624,7 @@
         "type": "text",
         "id": "seo_business_opens",
         "label": "Opens at (24h)",
-        "default": "10:00"
+        "default": "11:00"
       },
       {
         "type": "text",

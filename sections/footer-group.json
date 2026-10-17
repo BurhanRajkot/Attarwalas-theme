@@ -39,7 +39,7 @@
           "type": "text",
           "settings": {
             "heading": "ATTARWALAS",
-            "subtext": "<p>Handcrafted attars and non-alcoholic perfumes, composed from the finest natural oils. Find your signature scent — from rich Oudh to fresh florals.</p>"
+            "subtext": "<p>Handcrafted attars and long-lasting perfumes, composed from the finest natural oils. Find your signature scent — from rich Oudh to fresh florals.</p>"
           }
         },
         "aw_shop": {
@@ -53,7 +53,7 @@
           "type": "text",
           "settings": {
             "heading": "Customer Care",
-            "subtext": "<p><a href=\"https://attarwalas.shiprocket.co/tracking\">Track Your Order</a></p><p><a href=\"/pages/about-us\">About Us</a></p><p><a href=\"/pages/contact\">Contact Us</a></p><p><a href=\"/policies/shipping-policy\">Shipping Policy</a></p><p><a href=\"/policies/refund-policy\">Refund Policy</a></p>"
+            "subtext": "<p><a href=\"https://attarwalas.shiprocket.co/tracking\">Track Your Order</a></p><p><a href=\"/pages/about-us\">About Us</a></p><p><a href=\"/blogs/news\">Fragrance Journal</a></p><p><a href=\"/pages/contact\">Contact Us</a></p><p><a href=\"https://g.page/r/CU3Boruw6oDeEBM/review\">Review Us on Google</a></p><p><a href=\"/policies/shipping-policy\">Shipping Policy</a></p><p><a href=\"/policies/refund-policy\">Refund Policy</a></p>"
           }
         }
       },

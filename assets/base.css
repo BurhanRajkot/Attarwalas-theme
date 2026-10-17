@@ -3472,3 +3472,12 @@ details-disclosure > details {
     box-shadow:0 8px 20px rgba(184,156,93,.12) !important;
 
 }
+
+/* Judge.me review widget: hide the "Based on N review(s)" line and its
+   verified checkmark under the average rating (Burhan, 2026-10-17). The
+   stars, "5.00 out of 5" and the histogram stay. */
+.jdgm-rev-widg__summary-text,
+.jdgm-all-reviews__summary-text,
+.jdgm-verified-checkmark {
+  display: none !important;
+}

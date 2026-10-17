@@ -136,12 +136,15 @@
                       far above this section. The 9:16 wrap holds the space
                       meanwhile.
 
-                      Both go live for every card as soon as the page has loaded
-                      (or earlier, if the section is scrolled near first), so by
-                      the time anyone reaches the strip each video has its first
-                      frames and starts playing on its own. Hydrating only on
-                      approach was tried and was too late on phones: cards sat on
-                      a still poster while 1080p video buffered (2026-10-02).
+                      Both go live for every card together once the section is
+                      about a screen and a half away, so by the time anyone
+                      reaches the strip each video has its first frames and starts
+                      playing on its own. Two earlier versions, both wrong:
+                      per-card at 400px was too late on phones (cards sat on a
+                      still poster while video buffered), and "everything after
+                      window load" made Chrome buffer the HLS streams of all
+                      eight at 720p/1080p — ~65 MB on page open, which took
+                      mobile PageSpeed from 77 to 57 (2026-10-02).
                     {%- endcomment -%}
                     {%- for source in block.settings.video.sources -%}
                       <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
@@ -408,26 +411,18 @@
       }
     }
 
-    /* ---------- Lazy posters (see the comment on the markup) ---------- */
+    /* ---------- Lazy posters + sources (see the comment on the markup) ---------- */
     var videos = Array.from(section.querySelectorAll('[data-reviews-video]'));
+    // Posters are rendered at width=700, but a phone card is ~180px wide, so
+    // ask the CDN for the size the card actually needs (and quality 75).
     var showPoster = function (video) {
       if (!video.dataset.poster) return;
-      video.poster = video.dataset.poster;
+      var need = (video.clientWidth || 350) * (window.devicePixelRatio || 1);
+      var width = [300, 450, 600, 700].find(function (w) { return w >= need; }) || 700;
+      video.dataset.posterFull = video.dataset.poster;
+      video.poster = video.dataset.poster.replace(/([?&])width=\d+/, '$1width=' + width) + '&quality=75';
       video.removeAttribute('data-poster');
     };
-    if ('IntersectionObserver' in window) {
-      var posterObserver = new IntersectionObserver(
-        function (entries) {
-          if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
-          videos.forEach(showPoster);
-          posterObserver.disconnect();
-        },
-        { rootMargin: '900px 0px' }
-      );
-      posterObserver.observe(section);
-    } else {
-      videos.forEach(showPoster);
-    }
 
     /* ---------- Video sources (see the comment on the markup) ---------- */
     var hydrateVideo = function (video) {
@@ -441,39 +436,22 @@
       video.preload = 'metadata';
       video.load();
     };
-    if ('IntersectionObserver' in window) {
-      var hydrateObserver = new IntersectionObserver(
-        function (entries) {
-          entries.forEach(function (entry) {
-            if (!entry.isIntersecting) return;
-            hydrateVideo(entry.target);
-            hydrateObserver.unobserve(entry.target);
-          });
-        },
-        { rootMargin: '400px 400px' }
-      );
-      videos.forEach(function (video) {
-        hydrateObserver.observe(video);
-      });
-    } else {
-      videos.forEach(hydrateVideo);
-    }
-
     var hydrateAll = function () {
       videos.forEach(showPoster);
       videos.forEach(hydrateVideo);
     };
-    var afterLoad = function () {
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(hydrateAll, { timeout: 1500 });
-      } else {
-        setTimeout(hydrateAll, 200);
-      }
-    };
-    if (document.readyState === 'complete') {
-      afterLoad();
+    if ('IntersectionObserver' in window) {
+      var approachObserver = new IntersectionObserver(
+        function (entries) {
+          if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+          hydrateAll();
+          approachObserver.disconnect();
+        },
+        { rootMargin: '1200px 0px' }
+      );
+      approachObserver.observe(section);
     } else {
-      window.addEventListener('load', afterLoad, { once: true });
+      hydrateAll();
     }
 
     /* ---------- Mute toggles ---------- */
@@ -570,6 +548,8 @@
       if (src) {
         hydrateVideo(src);
         var clone = src.cloneNode(true);
+        // The modal shows the video large: give it the full-size poster.
+        if (src.dataset.posterFull) clone.poster = src.dataset.posterFull;
         clone.removeAttribute('autoplay');
         clone.removeAttribute('muted');
         clone.muted = false;

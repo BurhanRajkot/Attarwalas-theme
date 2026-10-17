@@ -2644,3 +2644,120 @@ a.product__text {
     min-height: 4.2rem;
   }
 }
+
+/* ============================================================
+   ATTARWALAS — Desktop gallery: single-row thumbnail strip
+   The stock thumbnail grid wrapped to a second, half-empty row
+   on products with 5+ photos, and sat below the fold under a
+   viewport-tall image, so nothing suggested the photos could be
+   browsed. Now: one swipeable/scrollable row, floated over the
+   bottom of the image on desktop. Left/right arrow keys step
+   through the photos (media-gallery.js).
+   ============================================================ */
+
+@media screen and (min-width: 750px) {
+  [id^="MainProduct-"] .product--thumbnail .thumbnail-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.8rem;
+    position: relative;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* margin:auto (not justify-content:center) so a strip that overflows
+     still starts at its first thumbnail instead of being clipped left */
+  [id^="MainProduct-"] .product--thumbnail .thumbnail-list__item:first-child {
+    margin-left: auto;
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail-list__item:last-child {
+    margin-right: auto;
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail-list__item.slider__slide {
+    flex: 0 0 6rem;
+    width: 6rem;
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail {
+    border-radius: 0.8rem;
+    overflow: hidden;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail:hover,
+  [id^="MainProduct-"] .product--thumbnail .thumbnail[aria-current] {
+    opacity: 1;
+  }
+
+  [id^="MainProduct-"] .product__media-wrapper slider-component.thumbnail-slider {
+    width: fit-content;
+    max-width: min(46rem, calc(100% - 3.2rem));
+  }
+}
+
+@media screen and (min-width: 990px) {
+  /* strip floats over the bottom edge of the image instead of sitting
+     under the fold */
+  [id^="MainProduct-"] .product__media-wrapper slider-component.thumbnail-slider {
+    position: absolute;
+    left: 50%;
+    bottom: 2rem;
+    margin: 0;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+}
+
+/* ============================================================
+   ATTARWALAS — Desktop gallery fit + thumbnail ring
+   - The image was sized max(50rem, 100vh - 12rem), which ignores
+     the ~15rem announcement bar + header above it, so the bottom
+     of the photo and the floating thumbnail strip sat below the
+     fold on a typical laptop. Sized to what's actually left of
+     the viewport now, and never taller than the half is wide
+     (a portrait "desktop site" phone has a very tall 100vh).
+   - The active-thumbnail outline was an outer box-shadow, which
+     the strip's horizontal scroller clips top/bottom — it read as
+     a broken, overlapping border. Drawn inside each thumbnail in
+     the brand gold instead, matching the Duo page's strip.
+   ============================================================ */
+
+@media screen and (min-width: 990px) {
+  [id^="MainProduct-"] .product__media-wrapper .product-media-container.constrain-height .media {
+    height: min(50vw, max(46rem, calc(100vh - 18rem)));
+  }
+}
+
+@media screen and (min-width: 750px) {
+  [id^="MainProduct-"] .product--thumbnail .thumbnail-list .thumbnail {
+    box-shadow: none;
+    outline: 0;
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 0.2rem solid transparent;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color 0.2s ease;
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail[aria-current]::after {
+    border-color: rgb(var(--color-button));
+  }
+
+  [id^="MainProduct-"] .product--thumbnail .thumbnail:focus-visible::after {
+    border-color: rgba(var(--color-button), 0.55);
+  }
+}

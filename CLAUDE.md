@@ -2093,10 +2093,17 @@ pagespeed.web.dev: **desktop 92 → 98** (FCP 0.6s, LCP 0.9s, TBT 100ms, SI
   (`npx lighthouse@11`, SEO category) or a Puppeteer pass over text nodes
   flagging computed `font-size` under 12px at a 412px viewport. If
   Semrush still shows 1/3 with those passing, that's the same missing-audit
-  problem as DOM size.
+  problem as DOM size. **Confirmed 2026-10-03:** Lighthouse 11 mobile gives
+  legible text 100%, tap targets 100% and viewport pass, while Semrush still
+  says 1/3. Same day, 4 desktop runs scored 96 every time (TBT 0–80ms), against
+  Semrush's 80 / 312ms. Semrush is reporting a single noisy run.
 - Meta description must be **100–130 characters** for this checker.
 - Social wants an X link. **Burhan has no X account, so it was deliberately
-  left out.** Don't add a guessed handle.
+  left out.** Don't add a guessed handle. **There is no Facebook page
+  either**: the link was removed 2026-10-03 (Theme settings → Social media).
+  Real profiles: `instagram.com/attarwalasofficial` and
+  `youtube.com/@attarwalasofficial`. LinkedIn is Burhan's personal profile.
+  Semrush will now flag Facebook as missing too; that's expected.
 
 **Changes:**
 
@@ -2169,10 +2176,195 @@ others "Amber"); desktop is unchanged apart from 10.5 → 12px.
   at parse time, which competed with the hero). The play threshold dropped
   0.5 → 0.25, so cards peeking in at the strip's edge play too.
 
+**Correction, same day:** "hydrate every review video after window load"
+made Chrome buffer all eight HLS streams at 720p/1080p (~65 MB; PSI mobile
+showed a 51,858 KiB payload and scored 57). Reviews now hydrate all at once
+when the section is within 1200px (`approachObserver`), which never fires at
+the top of the page. Posters are requested at the card's real width
+(`showPoster` picks 300/450/600/700, quality 75); the modal clone gets the
+full 700px poster back from `data-poster-full`. PSI mobile afterwards: 82,
+payload 7.3 MB.
+
+**SEO pass 3 (2026-10-02)** in `snippets/seo-head.liquid` and
+`snippets/seo-structured-data.liquid`:
+
+- Product/collection titles get a kind descriptor while they're still the
+  plain name: "Oudh Eternal – Non-Alcoholic Perfume – ATTARWALAS",
+  "… – Perfume & Attar Duo", "… – Perfume Gift Set", "Signature Series –
+  Non-Alcoholic Perfumes". Titles that already say perfume/attar/roll-on, or
+  that have an SEO title set in admin, are untouched.
+- `noindex, follow` added for: products in `35ml-complimentary` (free-gift
+  picker), products in no collection with no description (e.g. the bare
+  duplicate `/products/fresh-woodscape`; duo handles excepted because
+  `/products/signature-duo` is a real page), and the `35ml-complimentary` /
+  `featured-collection` collections.
+- Organization gets `alternateName` (Attarwalas, Attarwala, Attar Walas,
+  attarwalas.com) and a `description`; WebSite gets `alternateName`.
+- Checked and fine: robots.txt (Shopify default), sitemap, canonicals, one
+  H1 per page, every homepage link a real `<a href>` with text, 0 images
+  missing alt across all 66 sitemap URLs.
+
 PSI after these: desktop LCP 0.8s, FCP 0.6s, SI 0.8s. Desktop score swings
 89–91 vs 98 the day before, purely on TBT. PSI attributes it to Shiprocket's
 `sr-cdn.shiprocket.in/sr-promise/static/iframe.html` (one 532ms task) — an
 app, not the theme. The theme's own longest task was 87ms.
+
+**Admin-side SEO follow-ups (2026-10-02)**:
+
+- Share image: `assets/aw-share-image.jpg` (1200×630, wordmark + the six
+  Signature bottles) is the `og:image` on every page except products,
+  collections and articles (`snippets/meta-tags.liquid`). The Preferences
+  social image is now ignored by the theme.
+- SEO meta descriptions set in admin for the Signature Series collection and
+  the Shipping Policy page. Keep them ≤130 chars: `seo-head.liquid` cuts
+  anything longer with "…" even though admin allows 160.
+- The collection's own description still says "ATTARWLAS" (typo). It shows on
+  the homepage card and the collection banner, so it's visible text: fix only
+  with the owner's OK.
+- `/products/fresh-woodscape` (bare duplicate) unpublished from Online Store
+  only, so it now 404s. The real page is `fresh-woodscape-100ml`.
+- Product metafield definition `seo.hidden` (Integer, "Hide from search and
+  sitemap") created; set to 1 on the 7 `globo-product-options` helper
+  products, which are now out of the sitemap but still resolve for Globo.
+- Domain DNS is at **BigRock** (dns1–4.bigrock.in), not GoDaddy.
+- Typo "ATTARWLAS" fixed in the Signature Series collection description and
+  the main-menu item "About ATTARWALAS".
+
+**Blog: "Fragrance Journal" (2026-10-02).** The `news` blog was renamed (handle
+unchanged, so URLs are `/blogs/news/<handle>`). 16 posts were published: six
+guides, six Signature-scent posts, a gift guide, a summer/monsoon guide, the brand
+story, and how-to-find-your-scent. Sources and the 1200×630 cover generator are in
+`../blog/` (outside the theme, so they never get pushed). Covers live in Shopify's
+article storage (`/cdn/shop/articles/…`). Each post has a meta description
+≤130 chars in `global.description_tag`.
+
+- Facts used are only what the site states: notes from product descriptions,
+  "100% Non-Alcoholic", Mumbai since 1998, the Kurla West address and phone.
+  The Discovery Set holds all six Signature scents (checked against its
+  photo). Duo = perfume + its own attar roll-on. Gift sets = for-him perfume +
+  for-her perfume + unisex roll-on. Bundle percentages are left out of posts
+  on purpose; see the offer config split in memory.
+- `sections/main-article.liquid` JSON-LD is now BlogPosting with real UTC
+  offsets (stock Dawn printed local time with "Z"), canonical
+  mainEntityOfPage, the author as an Organization, and publisher linked to
+  `/#organization`. Don't add a second article schema in
+  `seo-structured-data.liquid`.
+- Footer "Customer Care" text block (`sections/footer-group.json`) links to
+  `/blogs/news`.
+- The store timezone is US Eastern (dates render −04:00), not Asia/Kolkata.
+  It's an admin setting, left for the owner to change.
+
+### SEOptimer + Semrush re-check (2026-10-11)
+
+Burhan pasted a Semrush report (62) and an SEOptimer report. Crawled all 76
+sitemap URLs (status, title, description, canonical, H1, robots, alt):
+
+- **Already fine:** every URL 200, one H1, self canonical; noindex only on
+  the free-gift picker product/collection and featured-collection (on
+  purpose). Empty `alt=""` images are the zoom-lightbox copies and card
+  hover images, which is correct (the visible copy has alt text).
+- **Fixed locally in `snippets/seo-head.liquid`, NOT yet pushed** (CLI
+  login had expired and the live write needs Burhan's OK):
+  - 10 groups of duplicate meta descriptions. Perfume and its roll-on share
+    body copy, and each gift set's 100/65/35ml products share one. Products
+    without an admin SEO description now lead with their full title
+    ("Oudh Eternal – Non-Alcoholic Perfume: The perfume opens…"), and the
+    body is re-stripped from HTML so "Lemon</strong><br>Heart" no longer
+    renders "LemonHeart". Duo/offer products keep their own fallback.
+  - Collection fallback reads "Browse the X collection…" (the Discovery Set
+    product and collection had the same line).
+  - Blog index description lengthened (was 64 chars).
+  - Article titles over 46 chars drop the "– ATTARWALAS" suffix (they ran
+    67–74 chars).
+  - Contact email no longer plain text: `sections/contact-form.liquid`
+    writes "@"/"." as `&#64;`/`&#46;` (renders and links the same), and the
+    JSON-LD `email` uses `\u0040`. Shopify Inbox's injected
+    `customerServiceEmail` still contains it; that isn't theme code.
+- **SEOptimer flags that aren't theme work:** page weight 7.29 MB is the
+  5.3 MB 1080p hero MP4 (only a re-encoded/smaller video fixes it);
+  `http://www → https://www` is one unavoidable redirect; "deprecated HTML"
+  is `<s>` for struck-through prices (valid HTML5); plain-text email is the
+  store's own contact address; SPF/DMARC need DNS at BigRock (no MX exists,
+  so the domain sends no mail). Facebook/X: no accounts, by choice.
+
+### SEO pass 4: branding, FAQ, ratings, product copy, blog (2026-10-11, live)
+
+**Brand position changed: ATTARWALAS sells alcohol-based AND non-alcoholic
+perfumes** (Burhan, 2026-10-11: "branding only, SEO perspective"). Never say
+the store, the Signature perfumes or "our perfumes" are non-alcoholic. Attar
+roll-ons are oil-based/alcohol-free (true); Customize Perfume has a Type
+option Alcoholic / Non-Alcoholic. Which Signature perfumes are which is
+unknown, so per-product copy makes no alcohol claim for perfumes.
+
+Pushed to live via Admin GraphQL `themeFilesUpsert` from a Chrome admin tab
+(CLI login had expired). Each file was patched from the live copy and
+SHA-256-checked against local before upload:
+
+- `seo-head.liquid`: perfume kind "Non-Alcoholic Perfume(s)" -> "Long-Lasting
+  Perfume(s)"; product meta description = title + re-stripped body when no
+  admin SEO description; collection/blog fallbacks reworded; long article
+  titles drop the brand suffix.
+- Announcement bar "Long-Lasting Perfumes & Attars"; footer brand line,
+  About intro and the "Pure, Oil-Based Attars" value reworded; Organization
+  schema description and homepage default meta (settings_schema) reworded.
+- Contact email written with `&#64;`/`&#46;`; schema email uses `\u0040`.
+- **Homepage FAQ**: `aw_faq` (collapsible-content) before the contact form, 8
+  questions, with a new opt-in `faq_schema` setting on collapsible-content
+  that outputs FAQPage JSON-LD. Facts only from the site.
+- **Star ratings**: `main-product.liquid` Product JSON-LD emits
+  `aggregateRating` from `reviews.rating` / `reviews.rating_count` metafields
+  (Judge.me syncs them). Judge.me had **0 reviews** on 2026-10-11, so nothing
+  shows until real reviews exist. Never fake it.
+
+Admin content (via GraphQL):
+- 27 products got new unique descriptionHtml + SEO description (<=130). Duos,
+  offers, Globo helpers and the complimentary picker were skipped (the
+  homepage Duo carousel prints 5 words of duo descriptions). Source + old
+  copy backup: `../seo-content/descriptions.py`,
+  `../seo-content/products-backup-2026-10-11.json`.
+- Collection SEO descriptions set for 9 collections; featured-collection
+  description reworded. `65ml/100ml-gift-set` need `collectionUpdate(collection:)`
+  (the legacy `input:` argument is refused for them).
+- 12 existing posts edited (claims) + their SEO descriptions; 8 new posts
+  from `../blog/posts_c.py`, covers uploaded via admin Files (file_upload on
+  `/content/files`). Article SEO description must go through
+  `articleUpdate(article:{metafields:[global.description_tag]})`;
+  `metafieldsSet` rejects article owner ids.
+- Product Offers carry `shippingDetails` (free Standard shipping to IN, the
+  only Shopify rate; 0-1 + 3-7 days = the policy's 3-8) and
+  `hasMerchantReturnPolicy` = MerchantReturnNotPermitted (refund policy only
+  covers damage claims within 24h). claude-seo's merchant validator then
+  reports only member-program / ProductGroup (not applicable / optional).
+  Update `seo_offer_policies` in `main-product.liquid` if rates or policy change.
+- Shop hours confirmed by Burhan 2026-10-11: **Mon-Sat 11:00 AM-8:00 PM**. Store
+  schema default and the About page were 10:00 and were corrected.
+
+### Reviews + local SEO (2026-10-11, live)
+
+Pushed via `themeFilesUpsert` (patched from the live copy, SHA-256-checked
+against local; the live JSON templates carry Shopify's `/* auto-generated */`
+header, which local copies don't, so compare with it stripped):
+
+- **Judge.me on product pages**: `templates/product.json` and
+  `product.customize-perfume.json` got the `preview_badge` app block (after the
+  title, in `main`) and a new `judgeme_reviews` `apps` section holding
+  `review_widget`, right after `main`. Block types are
+  `shopify://apps/judge-me-reviews/blocks/<handle>/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8`.
+  Offer/duo templates deliberately have none.
+- **Google review link** `https://g.page/r/CU3Boruw6oDeEBM/review` in the footer
+  Customer Care list (`footer-group.json`) and the homepage contact section
+  description (`index.json`).
+- **Store schema `geo`**: new Theme settings → SEO Latitude / Longitude
+  (defaults 19.0700624 / 72.8798398, Google Maps' pin for M K Heights);
+  `seo-structured-data.liquid` emits GeoCoordinates when both are set.
+- A Google Business Profile exists (5.0, 7 reviews); its hours were aligned to
+  the site on the same day (Mon–Sat 11–8, Sunday closed). Don't copy Google
+  reviews into Judge.me or into schema: that's against Google's terms and
+  self-serving review markup.
+- Judge.me past-order review requests were scheduled for orders since
+  2023-01-01. Its review requests also go to the Globo helper products
+  ("Select Size:", "Select size value", "Select Your Complimentary Perfume:");
+  turning them off in Judge.me → Product management didn't save from automation.
 
 ## Floating launchers (WhatsApp + Shopify Inbox) — keep them off the CTAs
 
@@ -2572,3 +2764,5 @@ page), theme CSS comes from `cdn.shopify.com` so `sheet.cssRules` throws
 `SecurityError` and rule enumeration is impossible (grep the local files
 instead), and a screenshot taken mid-drawer-animation will look clipped —
 re-measure before believing it.
+
+Your step: finish the Google sign-in for the app. In Shopify admin → Google & YouTube, click "Connect Google account". Google opens a popup window that I can't see or control. In it, choose <attarwalahussain72@gmail.com> (not the gamershome one) and click Allow. If nothing appears, look for a "popup blocked" icon at the right end of the address bar.

@@ -54,7 +54,14 @@
               <div class="contact__detail">
                 <dt>Email</dt>
                 <dd>
-                  <a href="mailto:{{ section.settings.contact_email }}">{{ section.settings.contact_email }}</a>
+                  {%- comment -%}
+                    "@" and "." as HTML entities: the browser shows and links
+                    the address exactly as before, but email-harvesting bots
+                    (and SEO checkers that flag plain-text addresses) don't
+                    match it.
+                  {%- endcomment -%}
+                  {%- assign contact_email_safe = section.settings.contact_email | escape | replace: '@', '&#64;' | replace: '.', '&#46;' -%}
+                  <a href="mailto:{{ contact_email_safe }}">{{ contact_email_safe }}</a>
                 </dd>
               </div>
             {%- endif -%}

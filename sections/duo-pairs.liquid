@@ -431,11 +431,6 @@
     unchanged from before this existed.
   {%- endcomment -%}
   <div class="page-width duo-hero-view" data-duo-hero-view hidden>
-    <a class="duo-hero__back" href="{{ all_duos_url }}">
-      {% render 'icon-arrow' %}
-      <span>All Signature Duos</span>
-    </a>
-
     {%- for perfume in perfume_collection.products -%}
       {%- assign matched_rollon = blank -%}
       {%- for candidate in rollon_collection.products -%}

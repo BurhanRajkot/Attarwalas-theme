@@ -106,6 +106,33 @@
   </div>
 </div>
 
+{%- comment -%}
+  FAQPage structured data, opt-in per section ("Mark up as FAQ for
+  search engines"). Only for real questions and answers shown on the page:
+  each row's heading is the question and its text the answer.
+{%- endcomment -%}
+{%- if section.settings.faq_schema and section.blocks.size > 0 -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {%- for block in section.blocks -%}
+          {%- assign faq_answer = block.settings.row_content | append: block.settings.page.content -%}
+          {
+            "@type": "Question",
+            "name": {{ block.settings.heading | default: block.settings.page.title | strip_html | strip | json }},
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": {{ faq_answer | strip | json }}
+            }
+          }{% unless forloop.last %},{% endunless %}
+        {%- endfor -%}
+      ]
+    }
+  </script>
+{%- endif -%}
+
 {% schema %}
 {
   "name": "t:sections.collapsible_content.name",
@@ -204,6 +231,13 @@
       "id": "open_first_collapsible_row",
       "default": false,
       "label": "t:sections.collapsible_content.settings.open_first_collapsible_row.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "faq_schema",
+      "default": false,
+      "label": "Mark up as FAQ for search engines",
+      "info": "Only for real questions and answers. Each row heading is the question, its text the answer."
     },
     {
       "type": "header",

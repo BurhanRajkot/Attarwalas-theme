@@ -19,6 +19,22 @@ if (!customElements.get('media-gallery')) {
             .addEventListener('click', this.setActiveMedia.bind(this, mediaToSwitch.dataset.target));
         });
         if (this.dataset.desktopLayout.includes('thumbnail') && this.mql.matches) this.removeListSemantic();
+
+        this.addEventListener('keydown', (event) => {
+          if (!this.mql.matches || event.target.closest('input, select, textarea')) return;
+          if (event.key === 'ArrowLeft') this.stepMedia(-1);
+          else if (event.key === 'ArrowRight') this.stepMedia(1);
+        });
+      }
+
+      stepMedia(step) {
+        const items = [...this.elements.thumbnails.querySelectorAll('[data-target]')].filter(
+          (item) => getComputedStyle(item).display !== 'none'
+        );
+        if (items.length < 2) return;
+        const current = items.findIndex((item) => item.querySelector('button[aria-current]'));
+        const next = (Math.max(current, 0) + step + items.length) % items.length;
+        this.setActiveMedia(items[next].dataset.target);
       }
 
       onSlideChanged(event) {

@@ -42,6 +42,12 @@
     "@type": "Organization",
     "@id": {{ sd_origin | append: '/#organization' | json }},
     "name": {{ shop.name | json }},
+    {%- comment -%}
+      Other ways people type the brand. Google matches brand searches and
+      picks the site name shown in results partly from these.
+    {%- endcomment %}
+    "alternateName": ["Attarwalas", "Attarwala", "Attar Walas", "attarwalas.com"],
+    "description": "Handcrafted attars and long-lasting perfumes, alcohol-based and non-alcoholic, made in Mumbai since 1998 and delivered across India.",
     "url": {{ sd_origin | append: '/' | json }},
     {%- if sd_logo != blank %}
     "logo": {{ sd_logo | json }},
@@ -56,7 +62,7 @@
       "telephone": {{ settings.seo_business_phone | json }},
       {%- endif %}
       {%- if settings.seo_business_email != blank %}
-      "email": {{ settings.seo_business_email | json }},
+      "email": {{ settings.seo_business_email | json | replace: '@', '\u0040' }},
       {%- endif %}
       "areaServed": "IN",
       "contactType": "customer service"
@@ -74,6 +80,7 @@
       "@type": "WebSite",
       "@id": {{ sd_origin | append: '/#website' | json }},
       "name": {{ shop.name | json }},
+      "alternateName": ["Attarwalas", "attarwalas.com"],
       "url": {{ sd_origin | append: '/' | json }},
       "publisher": { "@id": {{ sd_origin | append: '/#organization' | json }} },
       "inLanguage": {{ request.locale.iso_code | append: '-' | append: localization.country.iso_code | json }},
@@ -107,7 +114,7 @@
       "telephone": {{ settings.seo_business_phone | json }},
       {%- endif %}
       {%- if settings.seo_business_email != blank %}
-      "email": {{ settings.seo_business_email | json }},
+      "email": {{ settings.seo_business_email | json | replace: '@', '\u0040' }},
       {%- endif %}
       "priceRange": "₹₹",
       "address": {
@@ -118,6 +125,13 @@
         "postalCode": {{ settings.seo_business_postcode | json }},
         "addressCountry": "IN"
       },
+      {%- if settings.seo_business_latitude != blank and settings.seo_business_longitude != blank %}
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": {{ settings.seo_business_latitude | strip }},
+        "longitude": {{ settings.seo_business_longitude | strip }}
+      },
+      {%- endif %}
       {%- capture sd_map_query -%}{{ settings.seo_business_street }}, {{ settings.seo_business_city }}, {{ settings.seo_business_region }} {{ settings.seo_business_postcode }}{%- endcapture -%}
       {%- assign sd_map_query = sd_map_query | url_encode -%}
       "hasMap": {{ 'https://www.google.com/maps/search/?api=1&query=' | append: sd_map_query | json }},

@@ -30,6 +30,88 @@
     endif
   endif
 
+  # Say what the thing is. "Oudh Eternal – ATTARWALAS" gives search engines
+  # no reason to show the page for "oud perfume" or "long-lasting perfume".
+  # ATTARWALAS sells alcohol-based and non-alcoholic perfumes, so perfume
+  # titles don't claim either; attars are oil-based, so "alcohol-free" holds.
+  # Only applied while the title is still the plain product/collection name
+  # (no SEO title set in admin) and doesn't already name its kind; the
+  # result stays inside ~60 characters.
+  assign seo_kind = ''
+  assign seo_title_down = seo_title | downcase
+  if request.page_type == 'product' and seo_title == product.title
+    assign seo_in_signature = false
+    assign seo_in_rollons = false
+    assign seo_in_gift = false
+    for c in product.collections
+      if c.handle == 'signature-series'
+        assign seo_in_signature = true
+      elsif c.handle == 'attar-roll-ons'
+        assign seo_in_rollons = true
+      elsif c.handle contains 'gift-set'
+        assign seo_in_gift = true
+      endif
+    endfor
+    if template.suffix == 'duo' or seo_title_down contains ' duo'
+      assign seo_kind = 'Perfume & Attar Duo'
+    elsif product.tags contains 'offer'
+      assign seo_kind = 'Perfume & Attar Bundle'
+    elsif seo_title_down contains 'perfume' or seo_title_down contains 'attar' or seo_title_down contains 'roll-on'
+      assign seo_kind = ''
+    elsif seo_in_gift or seo_title_down contains 'gift set'
+      assign seo_kind = 'Perfume Gift Set'
+      if seo_title_down contains 'customize'
+        assign seo_kind = 'Custom Perfumes'
+      elsif seo_title_down contains 'gift set'
+        assign seo_kind = 'Perfumes'
+      endif
+    elsif seo_title_down contains 'discovery'
+      assign seo_kind = 'Perfume Sampler'
+    elsif seo_in_rollons
+      assign seo_kind = 'Attar Roll-On'
+    elsif seo_in_signature or product.type == 'Parfum'
+      assign seo_kind = 'Long-Lasting Perfume'
+    endif
+  elsif request.page_type == 'collection' and seo_title == collection.title
+    case collection.handle
+      when 'signature-series'
+        assign seo_kind = 'Long-Lasting Perfumes'
+      when 'attar-roll-ons'
+        assign seo_kind = 'Alcohol-Free Attars'
+      when 'duo'
+        assign seo_kind = 'Perfume & Attar Sets'
+      when 'offer'
+        assign seo_kind = 'Perfume Bundle Offers'
+      when 'customize'
+        assign seo_kind = 'Custom Perfumes & Attars'
+      when 'discovery-set'
+        assign seo_kind = 'Perfume Samplers'
+      else
+        if collection.handle contains 'gift-set'
+          assign seo_kind = 'Perfume Gifts'
+        endif
+    endcase
+  endif
+  if seo_kind != blank
+    assign seo_title = seo_title | append: ' – ' | append: seo_kind
+  endif
+
+  # A product with no SEO description in admin falls back to its body text,
+  # and several bodies are shared: each perfume and its attar roll-on carry
+  # the same notes copy, and each gift set is three products (100/65/35ml)
+  # with one text. Lead with the full product title so every page gets its
+  # own description. The body is re-read from the HTML because Shopify's
+  # stripped version runs paragraphs together ("Lemon</strong><br>Heart"
+  # became "LemonHeart").
+  if request.page_type == 'product' and product.description != blank and product.metafields.global.description_tag == blank
+    unless template.suffix == 'duo' or product.tags contains 'offer'
+      assign seo_body = product.description | replace: '&nbsp;', ' ' | replace: ' ', ' ' | replace: '<br', ' <br' | replace: '</', ' </' | strip_html | split: ' ' | join: ' '
+      if seo_body != blank
+        assign seo_description = seo_title | append: ': ' | append: seo_body
+      endif
+    endunless
+  endif
+
   if seo_description == blank
     case request.page_type
       when 'product'
@@ -44,14 +126,16 @@
         if collection.handle == 'all'
           assign seo_description = 'Shop every ATTARWALAS fragrance: signature perfumes, attar roll-ons, gift sets and bundle offers, handcrafted in Mumbai and delivered across India.'
         else
-          assign seo_description = 'Shop ' | append: collection.title | append: ' at ATTARWALAS: long-lasting perfumes and attars handcrafted in Mumbai, delivered across India.'
+          # Worded differently from the product fallback: the Discovery Set
+          # product and collection share a title, so they shared this line.
+          assign seo_description = 'Browse the ' | append: collection.title | append: ' collection at ATTARWALAS: long-lasting perfumes and attars handcrafted in Mumbai, delivered across India.'
         endif
       when 'list-collections'
         assign seo_description = 'Browse every ATTARWALAS collection: signature perfumes, attar roll-ons, gift sets and discovery sets, delivered across India.'
       when 'page'
         assign seo_description = page.title | append: ' – ATTARWALAS, handcrafted perfumes and attars from Mumbai since 1998.'
       when 'blog'
-        assign seo_description = blog.title | append: ' – stories and fragrance notes from ATTARWALAS.'
+        assign seo_description = blog.title | append: ' by ATTARWALAS: guides to attars and perfumes, alcohol-free and alcohol-based, scent notes and gifting ideas.'
       when 'article'
         assign seo_description = article.excerpt_or_content | strip_html | newline_to_br | replace: '<br />', ' ' | strip_newlines | strip
       when 'cart'
@@ -106,6 +190,31 @@
     assign seo_noindex = true
   elsif request.page_type == 'product' and product.tags contains 'globo-product-options'
     assign seo_noindex = true
+  elsif request.page_type == 'product'
+    # Helper products that are published only so other features can use them:
+    # the free-gift picker product (35ml-complimentary), and stray copies that
+    # sit in no collection and have no description, e.g. /products/fresh-woodscape,
+    # a bare duplicate of the real /products/fresh-woodscape-100ml. Indexed,
+    # they compete with the real product pages for the same names.
+    for c in product.collections
+      if c.handle == '35ml-complimentary'
+        assign seo_noindex = true
+      endif
+    endfor
+    # Duo pages are excepted: /products/signature-duo is in no collection and
+    # has no description, yet it is the real Duo page the homepage links to.
+    if product.collections.size == 0 and product.description == blank
+      unless product.handle contains 'duo'
+        assign seo_noindex = true
+      endunless
+    endif
+  elsif request.page_type == 'collection'
+    # Collections that exist to feed a feature, not to be browsed: the
+    # free-gift picker's list, and the homepage carousel's hand-picked subset
+    # of Signature Series (duplicate content of that collection).
+    if collection.handle == '35ml-complimentary' or collection.handle == 'featured-collection'
+      assign seo_noindex = true
+    endif
   endif
 -%}
 
@@ -113,8 +222,16 @@
   {{- seo_title -}}
   {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
   {%- if current_page > 1 %} &ndash; Page {{ current_page }}{% endif -%}
+  {%- comment -%}
+    Long article titles skip the brand suffix: with it they ran 67–74
+    characters and Google cut them mid-word. Google shows the site name
+    above the result anyway, and the article's own schema names the brand.
+  {%- endcomment -%}
   {%- assign title_down = seo_title | downcase -%}
-  {%- unless title_down contains shop_down %} &ndash; {{ shop.name }}{% endunless -%}
+  {%- assign title_branded = false -%}
+  {%- if title_down contains shop_down -%}{%- assign title_branded = true -%}{%- endif -%}
+  {%- if request.page_type == 'article' and seo_title.size > 46 -%}{%- assign title_branded = true -%}{%- endif -%}
+  {%- unless title_branded %} &ndash; {{ shop.name }}{% endunless -%}
 </title>
 <meta name="description" content="{{ seo_description | escape }}">
 {%- comment -%}

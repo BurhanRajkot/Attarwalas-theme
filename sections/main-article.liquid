@@ -277,34 +277,49 @@
   {%- endif -%}
 </article>
 
+{%- comment -%}
+  Article JSON-LD. Fixed from the stock version: dates carry their real UTC
+  offset (they were local time labelled "Z"), mainEntityOfPage is the
+  article's canonical URL (page.url is empty here, so it pointed at the
+  homepage), the author is the brand as an Organization rather than a Person
+  named "ATTARWALAS", and publisher links to the site-wide Organization in
+  snippets/seo-structured-data.liquid.
+{%- endcomment -%}
 <script type="application/ld+json">
   {
-    "@context": "http://schema.org",
-    "@type": "Article",
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
     "articleBody": {{ article.content | strip_html | json }},
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": {{ request.origin | append: page.url | json }}
+      "@id": {{ canonical_url | json }}
     },
-    "headline": {{ article.title | json }},
+    "headline": {{ article.title | truncate: 110, '' | json }},
     {% if article.excerpt != blank %}
-      "description": {{ article.excerpt | strip_html | json }},
+      "description": {{ article.excerpt | strip_html | strip | json }},
     {% endif %}
     {% if article.image %}
       "image": [
         {{ article | image_url: width: 1920 | prepend: "https:" | json }}
       ],
     {% endif %}
-    "datePublished": {{ article.published_at | date: '%Y-%m-%dT%H:%M:%SZ' | json }},
-    "dateCreated": {{ article.created_at | date: '%Y-%m-%dT%H:%M:%SZ' | json }},
+    "datePublished": {{ article.published_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
+    "dateCreated": {{ article.created_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
+    "dateModified": {{ article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
+    {%- if article.tags.size > 0 %}
+    "keywords": {{ article.tags | join: ', ' | json }},
+    {%- endif %}
     "author": {
-      "@type": "Person",
-      "name": {{ article.author | json }}
+      "@type": "Organization",
+      "name": {{ article.author | default: shop.name | json }},
+      "url": {{ request.origin | append: '/' | json }}
     },
     "publisher": {
       "@type": "Organization",
+      "@id": {{ request.origin | append: '/#organization' | json }},
       "name": {{ shop.name | json }}
-    }
+    },
+    "inLanguage": "en-IN"
   }
 </script>
 

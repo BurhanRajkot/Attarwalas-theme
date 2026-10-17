@@ -217,30 +217,6 @@
   }
 }
 
-.duo-hero__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin-bottom: 2.4rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(var(--offer-ink), 0.55);
-  text-decoration: none;
-  transition: color 0.18s ease;
-}
-
-.duo-hero__back svg {
-  width: 1.4rem;
-  height: 1rem;
-  transform: rotate(180deg);
-}
-
-.duo-hero__back:hover {
-  color: rgb(var(--offer-gold));
-}
-
 .duo-hero {
   display: grid;
   gap: 3.2rem;
@@ -715,4 +691,102 @@
   width: 100%;
   max-width: 40rem;
   margin-top: 2rem;
+}
+
+/* ==========================================================================
+   DESKTOP — same full-bleed 50/50 layout as every other product page
+   (assets/section-main-product.css, "Desktop full-bleed product layout").
+   The hero used to sit inside the 1200px page width with a ~480px photo,
+   so the Duo page read small and cramped next to the signature-series and
+   roll-on pages. Now: photo fills the left half edge to edge, thumbnails
+   float over its bottom edge on the same frosted plate, buy column is
+   centred in the right half at the same width and padding.
+   ========================================================================== */
+
+@media screen and (min-width: 990px) {
+  .duo-hero-view.page-width {
+    position: relative;
+    max-width: none;
+    padding: 0;
+  }
+
+  .duo-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .duo-hero__media {
+    position: relative;
+    gap: 0;
+  }
+
+  .duo-hero__frame {
+    background: #fff;
+  }
+
+  .duo-hero__gallery {
+    aspect-ratio: auto;
+    height: min(50vw, max(46rem, calc(100vh - 18rem)));
+  }
+
+  /* product photos are shot on white — show them on white, like the
+     main product gallery, rather than multiplied into the cream. contain,
+     not cover: the duo shots are framed tight, and cover cropped the caps. */
+  .duo-hero__image {
+    mix-blend-mode: normal;
+    object-fit: contain;
+  }
+
+  /* the thumbnail strip already says where you are */
+  .duo-hero__counter {
+    display: none;
+  }
+
+  .duo-hero__thumbs {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: 2rem;
+    transform: translateX(-50%);
+    width: fit-content;
+    max-width: min(46rem, calc(100% - 3.2rem));
+    padding: 0.8rem;
+    gap: 0.8rem;
+    border-radius: 1.2rem;
+    background-color: rgba(var(--color-background), 0.72);
+    backdrop-filter: blur(0.8rem);
+    -webkit-backdrop-filter: blur(0.8rem);
+  }
+
+  .duo-hero__thumb {
+    width: 6rem;
+    height: 6rem;
+    border-width: 0.2rem;
+    opacity: 0.7;
+  }
+
+  .duo-hero__thumb:hover {
+    transform: none;
+    opacity: 1;
+  }
+
+  .duo-hero__thumb-image {
+    mix-blend-mode: normal;
+  }
+
+  .duo-hero__info {
+    justify-content: center;
+    padding: 6rem 7rem;
+  }
+
+  .duo-hero__info > * {
+    width: 100%;
+    max-width: 52rem;
+  }
+
+  .duo-hero .duo-size-row,
+  .duo-hero .duo-gift-picker {
+    max-width: 52rem;
+  }
 }

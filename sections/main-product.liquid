@@ -805,6 +805,33 @@
       endif
       assign seo_first_offer = true
     -%}
+    {%- comment -%}
+      Shipping and returns for Google merchant listings, attached to every
+      Offer. Facts as of 2026-10-11: Shopify's only shipping rate is free
+      "Standard" to India; the Shipping Policy promises delivery in 3-8 days
+      (split here as 0-1 handling + 3-7 transit); the Refund Policy only
+      accepts damage / wrong-item claims within 24h, with no change-of-mind
+      return window, hence MerchantReturnNotPermitted. Update these if the
+      shipping rates or the refund policy change.
+    {%- endcomment -%}
+    {%- capture seo_offer_policies -%}
+      "shippingDetails": {
+        "@type": "OfferShippingDetails",
+        "shippingRate": { "@type": "MonetaryAmount", "value": 0, "currency": "INR" },
+        "shippingDestination": { "@type": "DefinedRegion", "addressCountry": "IN" },
+        "deliveryTime": {
+          "@type": "ShippingDeliveryTime",
+          "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 1, "unitCode": "DAY" },
+          "transitTime": { "@type": "QuantitativeValue", "minValue": 3, "maxValue": 7, "unitCode": "DAY" }
+        }
+      },
+      "hasMerchantReturnPolicy": {
+        "@type": "MerchantReturnPolicy",
+        "applicableCountry": "IN",
+        "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted",
+        "merchantReturnLink": {{ request.origin | append: '/policies/refund-policy' | json }}
+      },
+    {%- endcapture -%}
 
     <script type="application/ld+json">
       {
@@ -825,6 +852,23 @@
           "@type": "Brand",
           "name": {{ product.vendor | json }}
         },
+        {%- comment -%}
+          Star ratings in Google. Judge.me syncs each product's average and
+          count into Shopify's standard reviews.rating / reviews.rating_count
+          metafields; this stays silent until a product has a real review
+          (no reviews existed on 2026-10-11), then emits itself.
+        {%- endcomment -%}
+        {%- assign aw_rating = product.metafields.reviews.rating.value -%}
+        {%- assign aw_rating_count = product.metafields.reviews.rating_count.value | default: 0 -%}
+        {%- if aw_rating != blank and aw_rating_count > 0 %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": {{ aw_rating.rating | json }},
+          "bestRating": {{ aw_rating.scale_max | json }},
+          "worstRating": {{ aw_rating.scale_min | json }},
+          "reviewCount": {{ aw_rating_count | json }}
+        },
+        {%- endif %}
         "offers": [
           {%- for variant in product.variants -%}
             {%- if seo_hide_gift_sizes -%}
@@ -851,6 +895,7 @@
               "availability" : "http://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
               "price" : {{ variant.price | divided_by: 100.00 | json }},
               "priceCurrency" : {{ cart.currency.iso_code | json }},
+              {{ seo_offer_policies }}
               "url" : {{ request.origin | append: variant.url | json }}
             }
           {%- endfor -%}

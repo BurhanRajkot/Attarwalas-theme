@@ -23,7 +23,7 @@
         "text": {
           "type": "text",
           "settings": {
-            "text": "Non-alcoholic attars and perfumes, composed the old way — for those who wear scent as memory.",
+            "text": "Attars and perfumes, composed the old way — for those who wear scent as memory.",
             "text_style": "subtitle"
           }
         }
@@ -145,7 +145,7 @@
           "type": "promise",
           "settings": {
             "icon": "purity",
-            "title": "Pure, Non-Alcoholic",
+            "title": "Pure, Oil-Based Attars",
             "text": "Every attar is oil-based and alcohol-free — kinder to skin, and closer to how fragrance was always meant to be worn."
           }
         },
@@ -205,7 +205,7 @@
         "address": "<p>Shop No. 4, M.K. Heights, Opposite BMC L Ward, Kurla West, Mumbai, Maharashtra 400070</p>",
         "map_query": "M.K. Heights, Opposite BMC L Ward, Kurla West, Mumbai, Maharashtra 400070",
         "map_zoom": 16,
-        "hours": "<p>Mon – Sat: 10:00 AM – 8:00 PM</p>",
+        "hours": "<p>Mon – Sat: 11:00 AM – 8:00 PM</p>",
         "phone": "",
         "directions_label": "Get directions",
         "map_position": "right",
