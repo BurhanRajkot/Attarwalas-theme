@@ -33,6 +33,7 @@
         "text"
       ],
       "settings": {
+        "image": "shopify://shop_images/4_dccd9dcc-5468-467d-a525-e96c8c48773b.png",
         "image_overlay_opacity": 40,
         "image_height": "large",
         "desktop_content_position": "middle-center",
@@ -124,6 +125,7 @@
         "text"
       ],
       "settings": {
+        "image": "shopify://shop_images/AB734AE7-7EC4-4C0D-BBCD-2A0160585A4C.jpg",
         "height": "medium",
         "desktop_image_width": "medium",
         "layout": "text_first",

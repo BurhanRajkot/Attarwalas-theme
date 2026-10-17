@@ -88,12 +88,35 @@
                     </div>
                   {%- when 'link_list' -%}
                     {%- if block.settings.menu != blank -%}
+                      {%- comment -%}
+                        The Shop column reuses main-menu, which (a) gives dropdown
+                        parents like "Gift Set" a placeholder "/" link, so the footer
+                        sent them to the homepage and marked them active there, and
+                        (b) repeats links the Customer Care text block already lists
+                        (Track Your Order, About). Parents fall back to their first
+                        child; links another footer text block has are skipped.
+                      {%- endcomment -%}
+                      {%- capture footer_other_links -%}
+                        {%- for other in section.blocks -%}
+                          {%- if other.type == 'text' -%}{{ other.settings.subtext }}{%- endif -%}
+                        {%- endfor -%}
+                      {%- endcapture -%}
                       <ul class="footer-block__details-content list-unstyled">
                         {%- for link in block.settings.menu.links -%}
+                          {%- assign footer_link_url = link.url -%}
+                          {%- assign footer_link_active = link.active -%}
+                          {%- if link.links.size > 0 and link.url == routes.root_url -%}
+                            {%- assign footer_link_url = link.links.first.url -%}
+                            {%- assign footer_link_active = link.child_active -%}
+                          {%- endif -%}
+                          {%- assign footer_link_href = 'href="' | append: footer_link_url | append: '"' -%}
+                          {%- if footer_other_links contains footer_link_href -%}
+                            {%- continue -%}
+                          {%- endif -%}
                           <li>
                             <a
-                              href="{{ link.url }}"
-                              class="link link--text list-menu__item list-menu__item--link{% if link.active %} list-menu__item--active{% endif %}"
+                              href="{{ footer_link_url }}"
+                              class="link link--text list-menu__item list-menu__item--link{% if footer_link_active %} list-menu__item--active{% endif %}"
                             >
                               {{ link.title }}
                             </a>

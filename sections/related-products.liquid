@@ -29,14 +29,23 @@
     # collection" pick as sections/from-collection.liquid) so the section
     # reliably shows the configured count instead of whatever the algorithm felt
     # like returning.
+    # Helper products (Globo product-options value products, the free-gift
+    # picker, the image-less Signature Duo shell) are real products to Shopify,
+    # so the engine recommends them: "Type of Perfume — From Rs. 0.00" with a
+    # blank image. Skip anything tagged globo-product-options or without media,
+    # and pad the grid for each one skipped.
     assign rp_shown_ids = ','
+    assign rp_shown_count = 0
     if recommendations.performed
       for rec in recommendations.products
         assign rp_shown_ids = rp_shown_ids | append: rec.id | append: ','
+        unless rec.tags contains 'globo-product-options' or rec.featured_media == blank
+          assign rp_shown_count = rp_shown_count | plus: 1
+        endunless
       endfor
     endif
 
-    assign rp_needed = section.settings.products_to_show | minus: recommendations.products_count
+    assign rp_needed = section.settings.products_to_show | minus: rp_shown_count
     if recommendations.performed == false
       assign rp_needed = section.settings.products_to_show
     endif
@@ -58,6 +67,9 @@
   -%}
   {%- capture rp_recommendation_items -%}
     {% for recommendation in recommendations.products %}
+      {%- if recommendation.tags contains 'globo-product-options' or recommendation.featured_media == blank -%}
+        {%- continue -%}
+      {%- endif -%}
       <li class="grid__item">
         {% render 'card-product',
           card_product: recommendation,
@@ -77,7 +89,7 @@
         {%- break -%}
       {%- endif -%}
       {%- assign rp_fallback_id_str = ',' | append: fallback_product.id | append: ',' -%}
-      {%- if fallback_product.id == product.id or rp_shown_ids contains rp_fallback_id_str -%}
+      {%- if fallback_product.id == product.id or rp_shown_ids contains rp_fallback_id_str or fallback_product.tags contains 'globo-product-options' or fallback_product.featured_media == blank -%}
         {%- continue -%}
       {%- endif -%}
       {%- assign rp_fill_count = rp_fill_count | plus: 1 -%}
@@ -94,7 +106,7 @@
     {% endfor %}
   {%- endcapture -%}
   {%- liquid
-    assign rp_total_shown = recommendations.products_count | plus: rp_fill_count
+    assign rp_total_shown = rp_shown_count | plus: rp_fill_count
     # A row with fewer items than columns_desktop leaves the trailing columns
     # empty (this grid is width-per-item flexbox, not a track-based CSS grid),
     # so the row visibly doesn't reach the right edge on desktop. Shrinking the

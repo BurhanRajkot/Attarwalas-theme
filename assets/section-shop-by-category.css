@@ -101,10 +101,11 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  /* Transparent on purpose: the category images are cut-out PNGs and should
-     sit straight on the section background. No grey frame, and no hover
-     gradient either, since that would paint a dark box over the tile. */
-  background-color: transparent;
+  /* Painted in the page colour (not a grey frame, no hover gradient): the
+     cut-out PNGs look exactly as on a transparent tile, and it gives the
+     img's mix-blend-mode: multiply something to blend with — the .isolate
+     wrapper means it can't see the page background behind it. */
+  background-color: rgb(var(--color-background));
   border-radius: 0;
   margin-bottom: 1rem;
 }
@@ -130,6 +131,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Not every category image is a cut-out: Discovery Set is a JPG on pure
+     white, which read as a white box next to its neighbours. multiply
+     turns that white into the section background and leaves cut-outs and
+     product colours as they are. */
+  mix-blend-mode: multiply;
   transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 

@@ -29,6 +29,14 @@
       role="list"
     >
       {%- for collection in collections -%}
+        {%- comment -%}
+          Skip internal collections: image-less ones (35ml Complimentary is the
+          free-gift pool, Offer only holds the image-less offer shells) rendered
+          as bare text tiles, and Featured Collection repeats Signature Series.
+        {%- endcomment -%}
+        {%- if collection.featured_image == blank or collection.handle == 'featured-collection' or collection.handle == 'frontpage' -%}
+          {%- continue -%}
+        {%- endif -%}
         <li
           class="collection-list__item grid__item{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
           {% if settings.animations_reveal_on_scroll %}

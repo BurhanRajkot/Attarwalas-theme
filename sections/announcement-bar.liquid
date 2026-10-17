@@ -192,7 +192,7 @@
                     {% if forloop.parentloop.first %}{{ block.shopify_attributes }}{% endif %}
                   >
                     {%- if block.settings.link != blank -%}
-                      <a href="{{ block.settings.link }}" class="announcement-bar__link link link--text animate-arrow">
+                      <a href="{{ block.settings.link }}" class="announcement-bar__link link link--text animate-arrow"{% if pass == 2 %} tabindex="-1"{% endif %}>
                         <span>{{ block.settings.text | escape }}</span>
                         {% render 'icon-arrow' %}
                       </a>

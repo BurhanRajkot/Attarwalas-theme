@@ -23,9 +23,63 @@
     carry its own h1 (the Contact page had an empty one), which gave the page
     two — so any h1 in the body is shifted down to h2.
   {%- endcomment -%}
+  {%- comment -%}
+    /pages/store-locator's body is leftover markup from the uninstalled BSS
+    Store Locator app: hidden (display:none) and with no script to show it,
+    so the page was a bare title. Until real content is written in admin,
+    show the Kurla West store here (same details as GBP and the Contact page).
+  {%- endcomment -%}
+  {%- if page.handle == 'store-locator' and page.content contains 'store-locator-page' or page.handle == 'store-locator' and page.content == blank -%}
+    {%- assign store_address = 'Shop No. 4, M.K. Heights, Opposite BMC L Ward, Kurla West, Mumbai 400070' -%}
+    {%- assign store_wa = settings.whatsapp_number | default: '919137644617' | remove: '+' | remove: ' ' -%}
+    <div class="store-card{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+      <div class="store-card__info rte">
+        <h2 class="h3">ATTARWALAS, Kurla West</h2>
+        <p>{{ store_address }}</p>
+        <p><strong>Hours</strong><br>Mon – Sat: 11:00 AM – 8:00 PM<br>Sunday: Closed</p>
+        <p>
+          <strong>Call or WhatsApp</strong><br><a href="tel:+919137644617">+91 91376 44617</a><br>
+          <strong>Email</strong><br><a href="mailto:attarwalas110&#64;gmail&#46;com">attarwalas110&#64;gmail&#46;com</a>
+        </p>
+        <div class="store-card__buttons">
+          <a
+            class="button button--primary"
+            href="https://www.google.com/maps/search/?api=1&query=M.K.+Heights%2C+Opposite+BMC+L+Ward%2C+Kurla+West%2C+Mumbai%2C+Maharashtra+400070"
+            target="_blank"
+            rel="noopener"
+            >Get directions</a
+          >
+          <a class="button button--secondary" href="https://wa.me/{{ store_wa }}" target="_blank" rel="noopener"
+            >WhatsApp us</a
+          >
+        </div>
+      </div>
+      <div class="store-card__map">
+        <iframe
+          title="Map to ATTARWALAS, Kurla West"
+          src="https://maps.google.com/maps?q=M.K.+Heights%2C+Opposite+BMC+L+Ward%2C+Kurla+West%2C+Mumbai%2C+Maharashtra+400070&z=16&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+    <style>
+      .store-card { display: grid; gap: 2.4rem; margin-top: 2rem; }
+      .store-card__info h2 { margin-top: 0; }
+      .store-card__buttons { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+      .store-card__buttons .button { text-decoration: none; }
+      .store-card__map { aspect-ratio: 4 / 3; max-width: 100%; border: 1px solid rgba(var(--color-foreground), 0.12); }
+      .store-card__map iframe { width: 100%; height: 100%; border: 0; display: block; }
+      @media screen and (min-width: 750px) {
+        .store-card { grid-template-columns: 1fr 1.2fr; align-items: start; gap: 4rem; }
+      }
+    </style>
+  {%- else -%}
   <div class="rte{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
     {{ page.content | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' }}
   </div>
+  {%- endif -%}
 </div>
 
 {% schema %}

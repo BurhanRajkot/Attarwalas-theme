@@ -5,6 +5,10 @@
   width: 100%;
   background: var(--sig-bg);
   overflow: hidden;
+  /* The arrows need z-index: 100 to clear the slides, but without their own
+     stacking context they also cleared the sticky header (z-index 3) and
+     floated over the nav when scrolling past the carousel. */
+  isolation: isolate;
 }
 
 .signature-carousel__empty {

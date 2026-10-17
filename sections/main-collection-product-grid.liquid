@@ -152,6 +152,17 @@
                 assign grid_columns_desktop = 3
               endif
             -%}
+            {%- comment -%}
+              The offer products have no images and only exist to host the
+              offer builder, so as plain product cards this collection was
+              three bare titles (one reading "Rs. 0.00"). Show the same deal
+              cards as the homepage's "Bundle offers" row instead.
+            {%- endcomment -%}
+            {%- if collection.handle == 'offer' -%}
+              <div id="product-grid" data-id="{{ section.id }}">
+                {%- render 'offer-strip', offer_products: collection.products, strip_id: section.id -%}
+              </div>
+            {%- else -%}
             <ul
               id="product-grid"
               data-id="{{ section.id }}"
@@ -162,6 +173,15 @@
               "
             >
               {%- for product in collection.products -%}
+                {%- comment -%}
+                  Helper products (Globo option values like "Women Rs. 150" /
+                  "Type of Perfume Rs. 0", the free-gift picker, the offer and
+                  Signature Duo shells) have no images and aren't for sale on
+                  their own, but /collections/all lists every product.
+                {%- endcomment -%}
+                {%- if product.tags contains 'globo-product-options' or product.featured_media == blank -%}
+                  {%- continue -%}
+                {%- endif -%}
                 {% assign lazy_load = false %}
                 {%- if forloop.index > 2 -%}
                   {%- assign lazy_load = true -%}
@@ -188,6 +208,7 @@
                 </li>
               {%- endfor -%}
             </ul>
+            {%- endif -%}
 
             {%- if paginate.pages > 1 -%}
               {% render 'pagination', paginate: paginate, anchor: '' %}

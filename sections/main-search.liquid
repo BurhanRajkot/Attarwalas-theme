@@ -253,6 +253,12 @@
                 role="list"
               >
                 {%- for item in search.results -%}
+                  {%- comment -%} Skip helper products (Globo option values, free-gift picker): no image, Rs. 0 prices. {%- endcomment -%}
+                  {%- if item.object_type == 'product' -%}
+                    {%- if item.tags contains 'globo-product-options' or item.featured_media == blank -%}
+                      {%- continue -%}
+                    {%- endif -%}
+                  {%- endif -%}
                   {% assign lazy_load = false %}
                   {%- if forloop.index > 2 -%}
                     {%- assign lazy_load = true -%}

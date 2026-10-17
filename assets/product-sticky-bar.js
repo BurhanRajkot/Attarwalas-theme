@@ -4,10 +4,22 @@ if (!customElements.get('product-sticky-bar')) {
     class ProductStickyBar extends HTMLElement {
       constructor() {
         super();
+        this.observer = null;
+        this.variantUnsubscriber = null;
+        this.cartUnsubscribers = [];
+        this.loadingTimeout = null;
+      }
+
+      /* DOM lookups live here, not in the constructor: when the element is
+         upgraded before its children exist (created by the parser after the
+         definition is registered, or cloned), querySelector came back null
+         and the constructor threw on /products/signature-duo. By the time
+         it's connected its children are always there. */
+      queryParts() {
         this.sectionId = this.dataset.sectionId;
         this.priceElement = this.querySelector('[data-sticky-bar-price]');
         this.button = this.querySelector('[data-sticky-bar-add]');
-        this.buttonLabel = this.button.querySelector('span');
+        this.buttonLabel = this.button ? this.button.querySelector('span') : null;
         // The Buy Now button when this product has one (it's the last
         // button in the row), else Add to cart — not the whole
         // .product-form__buttons wrapper. Burhan wants the bar to appear
@@ -25,13 +37,18 @@ if (!customElements.get('product-sticky-bar')) {
            block too and only take over once BOTH have gone. */
         this.mainPrice = document.getElementById(`price-${this.sectionId}`);
         this.onScreen = new Set();
-        this.observer = null;
-        this.variantUnsubscriber = null;
-        this.cartUnsubscribers = [];
-        this.loadingTimeout = null;
       }
 
       connectedCallback() {
+        this.queryParts();
+        if (!this.button) {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.isConnected && this.connectedCallback(), {
+              once: true,
+            });
+          }
+          return;
+        }
         if (!this.buyButtons) {
           this.classList.add('is-visible');
           return;

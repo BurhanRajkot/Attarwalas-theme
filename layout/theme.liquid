@@ -66,6 +66,16 @@
           </script>
         {%- endif -%}
       {%- endif -%}
+      {%- comment -%}
+        Signature Duo is the menu's "Duo" page (/products/signature-duo?view=duo)
+        but sits in no collection, so the check above misses it. Bare, its URL
+        (which is in the sitemap) rendered an image-less "Sold out" buy box.
+      {%- endcomment -%}
+      {%- if product.handle == 'signature-duo' -%}
+        <script>
+          window.location.replace({{ product.url | append: '?view=duo' | json }});
+        </script>
+      {%- endif -%}
     {%- endif -%}
 
     {%- comment -%}
