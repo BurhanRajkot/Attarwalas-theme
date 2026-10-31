@@ -27,6 +27,8 @@
   endif
   assign alt = 'sections.video.load_video' | t: description: video_alt | escape
   assign poster = section.settings.video.preview_image | default: section.settings.cover_image
+  assign video_desktop = section.settings.video_desktop
+  assign poster_desktop = video_desktop.preview_image
 
   if section.settings.video != null
     assign ratio_diff = section.settings.video.aspect_ratio | minus: poster.aspect_ratio | abs
@@ -79,7 +81,17 @@
         that is seconds of third-party scripts, so the site opened on a still image —
         reported as "the opening animation is gone", 2026-10-02.)
       {%- endcomment -%}
-      <div class="video-section__hero" data-media-id="{{ video_id }}" data-video-hero="{{ section.id }}">
+      {%- comment -%}
+        --split: a separate desktop video is set. "Desktop" means a landscape window
+        750px+ wide, not just a wide one — a portrait iPad got the 16:9 video and lost
+        59% of its width to the crop. The same media query is used for the poster
+        below, the script, and the sizing in video-section.css.
+      {%- endcomment -%}
+      <div
+        class="video-section__hero{% if video_desktop != null %} video-section__hero--split{% endif %}"
+        data-media-id="{{ video_id }}"
+        data-video-hero="{{ section.id }}"
+      >
         {%- if poster != blank -%}
           {%- comment -%}
             The poster is the page's Largest Contentful Paint, so it's requested at
@@ -89,6 +101,18 @@
             only on screen until the video takes over. If the CDN ever ignores the
             parameter, the default quality comes back on its own.
           {%- endcomment -%}
+          <picture>
+          {%- if poster_desktop != blank -%}
+            <source
+              media="(min-width: 750px) and (orientation: landscape)"
+              srcset="
+                {{ poster_desktop | image_url: width: 1100 | append: '&quality=70' }} 1100w,
+                {{ poster_desktop | image_url: width: 1500 | append: '&quality=70' }} 1500w,
+                {{ poster_desktop | image_url: width: 1920 | append: '&quality=70' }} 1920w
+              "
+              sizes="100vw"
+            >
+          {%- endif -%}
           <img
             class="video-section__hero-poster"
             src="{{ poster | image_url: width: 1100 | append: '&quality=70' }}"
@@ -104,6 +128,7 @@
             fetchpriority="high"
             decoding="async"
           >
+          </picture>
         {%- endif -%}
 
         {%- if video_is_mp4 -%}
@@ -122,17 +147,31 @@
             {%- comment -%}
               Highest-quality MP4 sources first; the adaptive HLS stream only as a
               fallback for browsers that cannot play MP4 (e.g. older iOS Safari).
+              With a desktop video set, each source is tagged with the viewport it
+              belongs to and the script drops the other set before loading.
             {%- endcomment -%}
             {%- for source in section.settings.video.sources -%}
               {%- if source.mime_type == 'video/mp4' -%}
-                <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
+                <source data-src="{{ source.url }}" type="{{ source.mime_type }}"{% if video_desktop != null %} data-hero-source="mobile"{% endif %}>
               {%- endif -%}
             {%- endfor -%}
             {%- for source in section.settings.video.sources -%}
               {%- if source.mime_type != 'video/mp4' -%}
-                <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
+                <source data-src="{{ source.url }}" type="{{ source.mime_type }}"{% if video_desktop != null %} data-hero-source="mobile"{% endif %}>
               {%- endif -%}
             {%- endfor -%}
+            {%- if video_desktop != null -%}
+              {%- for source in video_desktop.sources -%}
+                {%- if source.mime_type == 'video/mp4' -%}
+                  <source data-src="{{ source.url }}" type="{{ source.mime_type }}" data-hero-source="desktop">
+                {%- endif -%}
+              {%- endfor -%}
+              {%- for source in video_desktop.sources -%}
+                {%- if source.mime_type != 'video/mp4' -%}
+                  <source data-src="{{ source.url }}" type="{{ source.mime_type }}" data-hero-source="desktop">
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
           </video>
         {%- else -%}
           <iframe
@@ -234,17 +273,44 @@
              painted, so the video never competes with it; the timeout is a
              backstop for a poster that never loads. */
           var started = false;
-          var startVideo = function () {
-            if (started) return;
-            started = true;
-            video.querySelectorAll('source[data-src]').forEach(function (source) {
+          /* With a desktop video set, the landscape-window sources and the portrait
+             ones are swapped in whenever the window changes shape (a tablet rotated,
+             a browser window resized), not picked once at load. Sources keep their
+             data-src so they can be re-applied. */
+          var desktopQuery = window.matchMedia('(min-width: 750px) and (orientation: landscape)');
+          var allSources = Array.prototype.slice.call(video.querySelectorAll('source'));
+          var hasSplit = video.querySelector('source[data-hero-source]') !== null;
+          var currentMode = null;
+          var applySources = function () {
+            var mode = hasSplit && desktopQuery.matches ? 'desktop' : 'mobile';
+            if (mode === currentMode) return;
+            var swapping = currentMode !== null;
+            currentMode = mode;
+            while (video.firstChild) video.removeChild(video.firstChild);
+            allSources.forEach(function (source) {
+              var forMode = source.getAttribute('data-hero-source');
+              if (forMode && forMode !== mode) return;
               source.src = source.getAttribute('data-src');
-              source.removeAttribute('data-src');
+              video.appendChild(source);
             });
+            if (swapping) {
+              /* Back to the (matching) poster until the other file has a frame. */
+              hero.classList.remove('is-video-ready');
+              video.addEventListener('loadeddata', revealVideo, { once: true });
+              video.addEventListener('playing', revealVideo, { once: true });
+            }
             video.preload = 'auto';
             video.load();
             var attempt = video.play();
             if (attempt && attempt.catch) attempt.catch(function () {});
+          };
+          var startVideo = function () {
+            if (started) return;
+            started = true;
+            applySources();
+            if (!hasSplit) return;
+            if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', applySources);
+            else if (desktopQuery.addListener) desktopQuery.addListener(applySources);
           };
           var afterPaint = function () {
             requestAnimationFrame(function () {
@@ -422,7 +488,14 @@
     {
       "type": "video",
       "id": "video",
-      "label": "t:sections.video.settings.video.label"
+      "label": "Mobile video (9:16)",
+      "info": "Plays on phones and portrait tablets. Also plays everywhere else if no desktop video is selected."
+    },
+    {
+      "type": "video",
+      "id": "video_desktop",
+      "label": "Desktop video (16:9)",
+      "info": "Plays on landscape screens 750px and wider (laptops, desktops, tablets held sideways). Needs \"Make section full width\" on."
     },
     {
       "type": "header",

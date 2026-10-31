@@ -19,6 +19,19 @@
 
   Add `data-floating-clear` to any future bottom-pinned bar to opt it in.
 
+  A fixed bar that slides in (the product sticky bar: translateY + transition)
+  is counted at its full height as soon as it's shown, not measured mid-slide:
+  measuring its rect on the scroll event caught it still off-screen, the lift
+  stayed 0, and the chat bubble sat on the sticky Add to cart until the next
+  scroll — on some phones and not others, depending on timing. The bar fires
+  `aw:floating-change` when it shows/hides so the lift is recomputed then too.
+
+  In-page buy controls (Add to cart / Buy Now, the free-perfume picker) can't
+  be cleared by lifting — they scroll through the corner the launchers sit
+  in. While one of them is passing through that corner the launchers step
+  aside (`html.aw-float-hide`) so a tap always lands on the button, never on
+  the chat. Add `data-floating-avoid` to opt other controls in.
+
   On mobile, the Shopify Inbox chat bubble is also hidden outright while the
   cart drawer is open (`html.aw-cart-open`, below) — the drawer already
   covers most of the screen at that width, so the bubble has nowhere to sit
@@ -36,6 +49,19 @@
     bottom: var(--aw-float-lift, 0px) !important;
     height: auto !important;
     transition: bottom var(--duration-default, 0.2s) ease;
+  }
+
+  html.aw-float-hide .whatsapp-float {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Inbox's launcher, nested in its own shadow roots, forces visibility:
+     visible and pointer-events: auto on itself, so faded out it still took
+     the tap. Only display: none on the host actually gets it out of the way. */
+  html.aw-float-hide shopify-chat {
+    display: none !important;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -59,10 +85,17 @@
     var root = document.documentElement;
     // Bottom-pinned bars that the launchers must stay clear of.
     var SELECTOR = 'product-sticky-bar.is-visible, .offer-builder__bar, [data-floating-clear]';
+    // In-page controls the launchers must never cover (see the comment above).
+    var AVOID = '.product-form__buttons, product-gift-picker, [data-floating-avoid]';
     var GAP = 8; // breathing room between the bar and the lowest launcher
+    // The corner the launchers occupy, above the lift: Inbox's bubble plus the
+    // WhatsApp button stacked over it (snippets/whatsapp-floating.liquid).
+    var ZONE_HEIGHT = 170;
+    var ZONE_WIDTH = 220;
     var frame = null;
     var timer = null;
     var lastLift = -1;
+    var lastHide = null;
 
     function measure() {
       frame = null;
@@ -74,6 +107,13 @@
         var rect = bar.getBoundingClientRect();
         if (rect.height === 0 || rect.width === 0) return;
 
+        // A fixed bar is pinned by definition; offsetHeight ignores the
+        // slide-in transform, so it's right even mid-transition.
+        if (getComputedStyle(bar).position === 'fixed') {
+          lift = Math.max(lift, bar.offsetHeight + GAP);
+          return;
+        }
+
         // Only count a bar while it's actually spanning the bottom edge —
         // a sticky bar scrolled up mid-page shouldn't push the launchers.
         var pinnedToBottom = rect.bottom >= viewportHeight - 4 && rect.top < viewportHeight;
@@ -82,9 +122,26 @@
         lift = Math.max(lift, viewportHeight - rect.top + GAP);
       });
 
-      if (lift === lastLift) return;
-      lastLift = lift;
-      root.style.setProperty('--aw-float-lift', lift + 'px');
+      if (lift !== lastLift) {
+        lastLift = lift;
+        root.style.setProperty('--aw-float-lift', lift + 'px');
+      }
+
+      var zoneBottom = viewportHeight - lift;
+      var zoneTop = zoneBottom - ZONE_HEIGHT;
+      var zoneLeft = window.innerWidth - ZONE_WIDTH;
+      var hide = false;
+      document.querySelectorAll(AVOID).forEach(function (el) {
+        if (hide) return;
+        var rect = el.getBoundingClientRect();
+        if (rect.height === 0 || rect.width === 0) return;
+        hide = rect.top < zoneBottom && rect.bottom > zoneTop && rect.right > zoneLeft;
+      });
+
+      if (hide !== lastHide) {
+        lastHide = hide;
+        root.classList.toggle('aw-float-hide', hide);
+      }
     }
 
     function schedule() {
@@ -104,7 +161,7 @@
       }, 250);
     }
 
-    ['scroll', 'resize', 'orientationchange'].forEach(function (event) {
+    ['scroll', 'resize', 'orientationchange', 'aw:floating-change'].forEach(function (event) {
       window.addEventListener(event, schedule, { passive: true });
     });
 

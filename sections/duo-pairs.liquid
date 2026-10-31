@@ -63,8 +63,9 @@
 
   comment
     Free-gift picker (added 2026-09-27): a duo's perfume is a real
-    signature-series product line, so it already earns a free 10ml/35ml
-    gift the same as buying that perfume on its own — but until now the
+    signature-series product line, so it already earns a free perfume
+    (same size since Buy 1 Get 1, 2026-10-31; 10ml/35ml before) the same as
+    buying that perfume on its own — but until now the
     duo hero had no picker to claim it, only the cart's own
     free-gift-picker.liquid once the customer got that far. Mirrors
     snippets/product-gift-picker.liquid's collection/variant lookup;
@@ -717,7 +718,7 @@
               Optional, not required — skipping just leaves the slot
               unclaimed, reappearing in the cart's own free-gift-picker
               exactly as if this duo picker didn't exist. Which variant id
-              actually gets added (10ml vs 35ml) is resolved at add-to-cart
+              actually gets added (50ml vs 100ml) is resolved at add-to-cart
               time by duo-pairs.js, from whichever Perfume size chip is
               checked at that moment — not fixed to this size's default.
             {%- endcomment -%}
@@ -744,9 +745,9 @@
                     {%- assign gift_variant_small = blank -%}
                     {%- assign gift_variant_large = blank -%}
                     {%- for v in gift.variants -%}
-                      {%- if v.option1 == '10ML' -%}
+                      {%- if v.option1 == '50ML' -%}
                         {%- assign gift_variant_small = v -%}
-                      {%- elsif v.option1 == '35ML' -%}
+                      {%- elsif v.option1 == '100ML' -%}
                         {%- assign gift_variant_large = v -%}
                       {%- endif -%}
                     {%- endfor -%}

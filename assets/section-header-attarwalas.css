@@ -60,6 +60,40 @@
     padding-right: 2.8rem;
   }
 
+  /* Nine top-level items (since Blog was added) only fit on one line from
+     ~1280px; below that the last ones ("Track your order", "Blog") wrapped
+     onto a second row on tablets and small laptops. Tighter spacing here
+     keeps one row down to 990px, where the menu turns into the drawer. */
+  @media (max-width: 1279px) {
+    .header__inline-menu .list-menu--inline {
+      column-gap: 0.2rem;
+    }
+
+    .header__inline-menu > .list-menu > li > .header__menu-item,
+    .header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item {
+      padding: 1rem 0.6rem;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+    }
+
+    .header__inline-menu > .list-menu > li > header-menu > details > summary.header__menu-item {
+      padding-right: 2.2rem;
+    }
+  }
+
+  @media (max-width: 1049px) {
+    .header__inline-menu > .list-menu > li > .header__menu-item,
+    .header__inline-menu > .list-menu > li > header-menu > details > .header__menu-item {
+      padding-left: 0.45rem;
+      padding-right: 0.45rem;
+      letter-spacing: 0.04em;
+    }
+
+    .header__inline-menu > .list-menu > li > header-menu > details > summary.header__menu-item {
+      padding-right: 2rem;
+    }
+  }
+
   /* A thin line that draws in under the item instead of Dawn's text underline. */
   .header__inline-menu .header__menu-item span,
   .header__inline-menu .header__menu-item:hover span,

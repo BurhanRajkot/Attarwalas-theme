@@ -22,10 +22,10 @@ if (!customElements.get('product-gift-picker')) {
       // Two interchangeable input shapes: a plain <select> (most qualifying
       // products, a handful of gift perfumes) or a searchable
       // <fragrance-picker> radio list (Customize Perfume, ~99 fragrances —
-      // see snippets/product-gift-picker.liquid). Both expose the chosen
-      // gift's variant ids via data-gift-variant-small/-large on the
-      // selected <option>/checked radio, so getSelectedOption() below is the
-      // only place that needs to know which shape is in play.
+      // see snippets/product-gift-picker.liquid). getSelectedOption() reads
+      // whichever is present; giftVariantId() turns it into the variant to
+      // add (ids on the <option> itself, or a lookup by fragrance/size/type
+      // for a radio).
       this.select = this.querySelector('[data-gift-select]');
       this.fragrancePicker = this.querySelector('[data-gift-fragrance-picker]');
       this.confirmEl = this.querySelector('[data-gift-confirm]');
@@ -45,7 +45,15 @@ if (!customElements.get('product-gift-picker')) {
       // resolves this once server-side) — Customize Perfume's Size is
       // option2, not option1 like the single-option signature-series bottles.
       this.sizeOptionKey = this.dataset.sizeOptionKey || 'option1';
-      this.currentBucket = this.sizeToBucket(this.dataset.initialSize);
+      this.typeOptionKey = this.dataset.typeOptionKey || '';
+      this.currentSize = this.dataset.initialSize || '';
+      this.currentType = this.dataset.initialType || '';
+      this.currentBucket = this.sizeToBucket(this.currentSize);
+      // Customize Perfume only: every variant id keyed "fragrance|size|type"
+      // (see snippets/product-gift-picker.liquid), so the free bottle can be
+      // the picked fragrance in exactly the size and type being bought.
+      const variantMap = this.querySelector('[data-gift-variant-map]');
+      this.giftVariantMap = variantMap ? JSON.parse(variantMap.textContent) : null;
       // Whether the *current* variant is purchasable at all — tracked so the
       // required-gift gating below never fights Dawn's own sold-out
       // handling (see updateBuyButtons()). 'false' is the only value that
@@ -107,11 +115,25 @@ if (!customElements.get('product-gift-picker')) {
       return warning;
     }
 
-    // "10ml" for a 50ml bottle, "35ml" for everything else — mirrors the
-    // bucket the rest of this component already tracks (see sizeToBucket()).
+    // Buy 1 Get 1: the free bottle is the same size as the one being bought.
     buyWarningMessage() {
-      const size = this.currentBucket === '50' ? '10ml' : '35ml';
+      const size = (this.currentSize || '').toLowerCase() || (this.currentBucket === '50' ? '50ml' : '100ml');
       return `*Select your free ${size} perfume below before you can buy.`;
+    }
+
+    // The variant to add as the gift for the chosen option. A <select>
+    // option carries the 50ML/100ML ids itself; a fragrance radio
+    // (Customize Perfume) is looked up by fragrance + the size and type being
+    // bought, falling back to the other type if that exact one doesn't exist.
+    giftVariantId(option) {
+      if (!this.giftVariantMap) {
+        return option.dataset[this.currentBucket === '50' ? 'giftVariantSmall' : 'giftVariantLarge'];
+      }
+      const exact = this.giftVariantMap[`${option.value}|${this.currentSize}|${this.currentType}`];
+      if (exact) return exact;
+      const prefix = `${option.value}|${this.currentSize}|`;
+      const key = Object.keys(this.giftVariantMap).find((k) => k.startsWith(prefix));
+      return key ? this.giftVariantMap[key] : undefined;
     }
 
     // Reads whichever input is actually present. For the select, that's the
@@ -140,7 +162,7 @@ if (!customElements.get('product-gift-picker')) {
       clearTimeout(this.confirmTimeout);
     }
 
-    // Keeps the picker pointed at the right gift size (10ml vs 35ml) as the
+    // Keeps the picker pointed at the right gift size (50ml vs 100ml) as the
     // customer switches the main product's own Size option — scoped to this
     // section only, since other product-forms (quick-add cards etc.) on the
     // same page publish this event too.
@@ -156,7 +178,9 @@ if (!customElements.get('product-gift-picker')) {
         return;
       }
       this.currentVariantId = variant.id;
-      this.currentBucket = this.sizeToBucket(variant[this.sizeOptionKey]);
+      this.currentSize = variant[this.sizeOptionKey] || '';
+      if (this.typeOptionKey) this.currentType = variant[this.typeOptionKey] || '';
+      this.currentBucket = this.sizeToBucket(this.currentSize);
       this.variantAvailable = variant.available;
       this.updateBuyButtons();
     }
@@ -237,7 +261,7 @@ if (!customElements.get('product-gift-picker')) {
       const option = this.getSelectedOption();
       if (!option || !option.value) return;
 
-      const variantId = option.dataset[this.currentBucket === '50' ? 'giftVariantSmall' : 'giftVariantLarge'];
+      const variantId = this.giftVariantId(option);
       if (!variantId) return;
 
       // <option> carries its own text directly; a checked radio's label text

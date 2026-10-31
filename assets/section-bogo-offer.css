@@ -1,0 +1,434 @@
+/* Buy 1 Get 1 band + picker (sections/bogo-offer.liquid).
+   Same vocabulary as the rest of the homepage: cream ground, thin gold rules,
+   Cormorant headings, DM Sans small caps, pill buttons. The band's warm
+   wash and "Buy One / Get One" lockup echo the Diwali hero above it. */
+
+.bogo-offer {
+  display: block;
+}
+
+.bogo-offer__band {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.4rem;
+  align-items: center;
+  padding: 3.2rem 2rem 2.4rem;
+  border: 0.1rem solid rgba(var(--color-button), 0.35);
+  background:
+    radial-gradient(120% 90% at 85% 15%, rgba(255, 214, 165, 0.55) 0%, rgba(255, 214, 165, 0) 60%),
+    linear-gradient(160deg, #f8e9d8 0%, #fcf5ec 55%, rgb(var(--color-background)) 100%);
+  overflow: hidden;
+}
+
+.bogo-offer__copy {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.bogo-offer__eyebrow {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(var(--color-button));
+}
+
+.bogo-offer__title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: var(--font-heading-family);
+  font-size: clamp(4rem, 9vw, 6.8rem);
+  font-weight: 500;
+  line-height: 1;
+  color: #7a4f1d;
+}
+
+.bogo-offer__subtext {
+  max-width: 42rem;
+  margin: 1.6rem auto 0;
+  font-size: 1.5rem;
+  color: rgba(var(--color-foreground), 0.72);
+}
+
+.bogo-offer__rules {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 1.8rem 0 2.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.bogo-offer__rules li {
+  padding: 0.6rem 1.4rem;
+  border: 0.1rem solid rgba(var(--color-button), 0.45);
+  border-radius: 999px;
+  background: rgba(var(--color-background), 0.7);
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+}
+
+.bogo-offer__rules strong {
+  font-weight: 600;
+  color: rgb(var(--color-button));
+}
+
+.bogo-offer__open,
+.bogo-offer__add {
+  min-width: 22rem;
+  min-height: 5rem;
+  border-radius: 999px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 1.3rem;
+}
+
+.bogo-offer__open::after,
+.bogo-offer__add::after {
+  border-radius: 999px;
+}
+
+/* ---- bottles ---- */
+
+.bogo-offer__visual {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.bogo-offer__bottle {
+  position: relative;
+  width: min(34vw, 18rem);
+}
+
+.bogo-offer__bottle img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 1.6rem 1.8rem rgba(84, 52, 16, 0.22));
+}
+
+.bogo-offer__bottle--free {
+  transform: rotate(4deg);
+}
+
+.bogo-offer__bottle--paid {
+  transform: rotate(-4deg);
+}
+
+.bogo-offer__plus {
+  align-self: center;
+  font-family: var(--font-heading-family);
+  font-size: 4.8rem;
+  line-height: 1;
+  color: rgb(var(--color-button));
+}
+
+.bogo-offer__tag {
+  position: absolute;
+  bottom: -0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.4rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(var(--color-foreground), 0.85);
+  color: rgb(var(--color-background));
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.bogo-offer__tag--free {
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-label));
+}
+
+/* ---- picker ---- */
+
+.bogo-offer__builder {
+  padding: 3.2rem 0 0;
+  scroll-margin-top: 9rem;
+}
+
+.bogo-offer__builder[hidden] {
+  display: none;
+}
+
+.bogo-offer__step + .bogo-offer__step {
+  margin-top: 3.2rem;
+}
+
+.bogo-offer__step-head {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 1.6rem;
+}
+
+.bogo-offer__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 3.2rem;
+  height: 3.2rem;
+  border: 0.1rem solid rgb(var(--color-button));
+  border-radius: 50%;
+  color: rgb(var(--color-button));
+  font-family: var(--font-body-family);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.bogo-offer__step-title {
+  margin: 0;
+  font-family: var(--font-heading-family);
+  font-size: clamp(2.2rem, 3vw, 2.8rem);
+  font-weight: 500;
+}
+
+.bogo-offer__sizes {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+}
+
+.bogo-offer__size span {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 2.2rem;
+  border: 0.1rem solid rgba(var(--color-foreground), 0.2);
+  border-radius: 999px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.bogo-offer__size small {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+.bogo-offer__size input:checked + span {
+  border-color: rgb(var(--color-button));
+  background: rgb(var(--color-button));
+  color: rgb(var(--color-button-label));
+}
+
+.bogo-offer__size input:focus-visible + span {
+  outline: 0.2rem solid rgb(var(--color-button));
+  outline-offset: 0.3rem;
+}
+
+/* One swipeable row on phones, a grid from tablet up. */
+.bogo-offer__cards {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 42%;
+  gap: 1.2rem;
+  margin: 0 -1.5rem;
+  padding: 0.4rem 1.5rem 1.2rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.bogo-offer__cards::-webkit-scrollbar {
+  display: none;
+}
+
+.bogo-offer__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1rem 1.4rem;
+  border: 0.1rem solid rgba(var(--color-foreground), 0.12);
+  background: rgb(var(--color-background));
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.bogo-offer__card:has(input:checked) {
+  border-color: rgb(var(--color-button));
+  box-shadow: 0 0 0 0.1rem rgb(var(--color-button)), 0 1rem 2.4rem rgba(var(--color-button), 0.18);
+}
+
+.bogo-offer__card:has(input:focus-visible) {
+  outline: 0.2rem solid rgb(var(--color-button));
+  outline-offset: 0.3rem;
+}
+
+.bogo-offer__card.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bogo-offer__card-media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  background: #f6f1e8;
+  overflow: hidden;
+}
+
+.bogo-offer__card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bogo-offer__card-badge {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.8rem;
+  padding: 0.3rem 1rem;
+  border: 0.1rem solid rgb(var(--color-button));
+  border-radius: 999px;
+  background: rgb(var(--color-background));
+  color: rgb(var(--color-button));
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.bogo-offer__card-name {
+  font-family: var(--font-heading-family);
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+
+.bogo-offer__card-price {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
+  white-space: nowrap;
+  align-items: baseline;
+  font-size: 1.3rem;
+}
+
+.bogo-offer__card-price s {
+  color: rgba(var(--color-foreground), 0.5);
+}
+
+.bogo-offer__card-price strong {
+  color: rgb(var(--color-button));
+}
+
+/* Tick on the chosen card. */
+.bogo-offer__card::after {
+  content: '';
+  position: absolute;
+  top: 1.6rem;
+  right: 1.6rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: rgb(var(--color-button))
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E")
+    center / 1.3rem no-repeat;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.bogo-offer__card:has(input:checked)::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.bogo-offer__summary {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2.4rem;
+  padding: 1.6rem 0 calc(1.6rem + env(safe-area-inset-bottom));
+  border-top: 0.1rem solid rgba(var(--color-button), 0.3);
+  background: rgb(var(--color-background));
+  text-align: center;
+}
+
+.bogo-offer__summary-text {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.bogo-offer__add[disabled] {
+  opacity: 0.5;
+}
+
+.bogo-offer__error {
+  margin: 0;
+  font-size: 1.3rem;
+  color: rgb(var(--color-foreground));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bogo-offer__card,
+  .bogo-offer__card::after,
+  .bogo-offer__size span {
+    transition: none;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .bogo-offer__band {
+    grid-template-columns: 1.1fr 1fr;
+    gap: 4rem;
+    padding: 5.6rem 6.4rem;
+  }
+
+  .bogo-offer__copy {
+    text-align: left;
+  }
+
+  .bogo-offer__subtext {
+    margin-left: 0;
+  }
+
+  .bogo-offer__rules {
+    justify-content: flex-start;
+  }
+
+  .bogo-offer__bottle {
+    width: min(18vw, 24rem);
+  }
+
+  .bogo-offer__cards {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-columns: auto;
+    margin: 0;
+    padding: 0.4rem 0;
+    overflow: visible;
+  }
+
+  .bogo-offer__summary {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .bogo-offer__cards {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}

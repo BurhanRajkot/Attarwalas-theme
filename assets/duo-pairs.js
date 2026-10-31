@@ -211,7 +211,7 @@ if (!customElements.get('duo-pairs')) {
       /*
         Free-gift picker (see the hero markup in sections/duo-pairs.liquid):
         which gift variant to add depends on the perfume size actually
-        selected right now (50ML → the 10ml gift, everything else → 35ml),
+        selected right now (50ML → a free 50ml, everything else → 100ml),
         the same bucket rule free-gift-picker.liquid and product-gift-picker
         already use — read fresh here rather than cached, since the
         customer can switch Perfume size after picking a gift.

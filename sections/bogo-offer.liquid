@@ -1,0 +1,336 @@
+{% comment %}
+  Buy 1 Get 1 — homepage offer band with an inline "build your pair" picker.
+
+  The band sells the offer (paid bottle + free bottle, like the hero). Its
+  button opens a two-step picker right underneath — no separate page to
+  create in admin: 1) the perfume and its size, 2) the free perfume. The free
+  bottle follows the same rule as the rest of the site: the same size as the
+  one bought — 100ML with a 100ML, 50ML with a 50ML.
+
+  Both lines go to the cart in ONE /cart/add.js request, the gift tagged
+  exactly like product-gift-picker.js / free-gift.js do (Gift + _free_gift),
+  so the offer-discount function prices it at zero and the cart's own
+  free-gift slot counting sees the slot as claimed — nothing new to keep in
+  sync.
+
+  Opens itself when the page is visited with #buy-1-get-1, so the hero or an
+  announcement can link straight to the picker.
+{% endcomment %}
+
+{{ 'section-bogo-offer.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'bogo-offer.js' | asset_url }}" defer="defer"></script>
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{%- liquid
+  # Same collection fallbacks as snippets/product-gift-picker.liquid.
+  assign qualifying_collection = section.settings.collection
+  if qualifying_collection == blank
+    assign qualifying_collection = settings.free_gift_qualifying_collection
+  endif
+  if qualifying_collection == blank
+    assign qualifying_collection = collections['signature-series']
+  endif
+
+  assign gift_collection = settings.free_gift_collection
+  if gift_collection == blank
+    assign gift_collection = collections['signature-series']
+  endif
+
+  assign gift_label = settings.free_gift_heading | default: 'Your free perfume'
+-%}
+
+<bogo-offer
+  class="bogo-offer color-{{ section.settings.color_scheme }} gradient section-{{ section.id }}-padding"
+  id="buy-1-get-1"
+  data-gift-label="{{ gift_label | escape }}"
+>
+  <div class="page-width">
+    <div class="bogo-offer__band">
+      <div class="bogo-offer__copy">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="bogo-offer__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="bogo-offer__title">
+          <span>{{ section.settings.title_line_1 | escape }}</span>
+          <span>{{ section.settings.title_line_2 | escape }}</span>
+        </h2>
+        {%- if section.settings.subtext != blank -%}
+          <p class="bogo-offer__subtext">{{ section.settings.subtext | escape }}</p>
+        {%- endif -%}
+        <ul class="bogo-offer__rules" role="list">
+          <li><strong>100ML</strong> <span aria-hidden="true">→</span> free <strong>100ML</strong></li>
+          <li><strong>50ML</strong> <span aria-hidden="true">→</span> free <strong>50ML</strong></li>
+        </ul>
+        <button
+          type="button"
+          class="bogo-offer__open button button--primary"
+          aria-expanded="false"
+          aria-controls="BogoBuilder-{{ section.id }}"
+          data-bogo-open
+        >
+          {{ section.settings.cta_label | default: 'Build your pair' | escape }}
+        </button>
+      </div>
+
+      <div class="bogo-offer__visual" aria-hidden="true">
+        <div class="bogo-offer__bottle bogo-offer__bottle--paid">
+          {%- if section.settings.image_paid != blank -%}
+            {{ section.settings.image_paid | image_url: width: 700 | image_tag: loading: 'lazy', widths: '300, 450, 700', sizes: '(min-width: 750px) 22vw, 40vw', alt: '' }}
+          {%- endif -%}
+          <span class="bogo-offer__tag">Buy</span>
+        </div>
+        <span class="bogo-offer__plus">+</span>
+        <div class="bogo-offer__bottle bogo-offer__bottle--free">
+          {%- if section.settings.image_free != blank -%}
+            {{ section.settings.image_free | image_url: width: 700 | image_tag: loading: 'lazy', widths: '300, 450, 700', sizes: '(min-width: 750px) 22vw, 40vw', alt: '' }}
+          {%- endif -%}
+          <span class="bogo-offer__tag bogo-offer__tag--free">Free</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bogo-offer__builder" id="BogoBuilder-{{ section.id }}" data-bogo-builder hidden>
+      <div class="bogo-offer__step">
+        <div class="bogo-offer__step-head">
+          <span class="bogo-offer__step-num">1</span>
+          <h3 class="bogo-offer__step-title">Choose your perfume</h3>
+        </div>
+        <div class="bogo-offer__sizes" role="radiogroup" aria-label="Bottle size">
+          <label class="bogo-offer__size">
+            <input type="radio" name="BogoSize-{{ section.id }}" value="100" class="visually-hidden" checked data-bogo-size>
+            <span>100ML <small>+ free 100ML</small></span>
+          </label>
+          <label class="bogo-offer__size">
+            <input type="radio" name="BogoSize-{{ section.id }}" value="50" class="visually-hidden" data-bogo-size>
+            <span>50ML <small>+ free 50ML</small></span>
+          </label>
+        </div>
+        <div class="bogo-offer__cards" role="radiogroup" aria-label="Your perfume">
+          {%- for bogo_product in qualifying_collection.products -%}
+            {%- liquid
+              assign title_lower = bogo_product.title | downcase
+              if title_lower contains 'customize'
+                continue
+              endif
+              assign v100 = null
+              assign v50 = null
+              for v in bogo_product.variants
+                assign size = v.option1 | upcase
+                if size == '100ML'
+                  assign v100 = v
+                elsif size == '50ML'
+                  assign v50 = v
+                endif
+              endfor
+              if v100 == null and v50 == null
+                continue
+              endif
+            -%}
+            <label class="bogo-offer__card">
+              <input
+                type="radio"
+                name="BogoMain-{{ section.id }}"
+                value="{{ bogo_product.id }}"
+                class="visually-hidden"
+                data-bogo-main
+                data-title="{{ bogo_product.title | escape }}"
+                data-variant-100="{{ v100.id }}"
+                data-variant-50="{{ v50.id }}"
+                data-available-100="{% if v100 and v100.available %}true{% endif %}"
+                data-available-50="{% if v50 and v50.available %}true{% endif %}"
+                data-price-100="{{ v100.price | money }}"
+                data-price-50="{{ v50.price | money }}"
+              >
+              <span class="bogo-offer__card-media">
+                {%- if bogo_product.featured_image -%}
+                  {{ bogo_product.featured_image | image_url: width: 400 | image_tag: loading: 'lazy', widths: '200, 300, 400', sizes: '(min-width: 750px) 16vw, 40vw', alt: '' }}
+                {%- endif -%}
+              </span>
+              <span class="bogo-offer__card-name">{{ bogo_product.title | escape }}</span>
+              <span class="bogo-offer__card-price" data-bogo-price></span>
+            </label>
+          {%- endfor -%}
+        </div>
+      </div>
+
+      <div class="bogo-offer__step">
+        <div class="bogo-offer__step-head">
+          <span class="bogo-offer__step-num">2</span>
+          <h3 class="bogo-offer__step-title">
+            Choose your free <span data-bogo-gift-size>100ML</span>
+          </h3>
+        </div>
+        <div class="bogo-offer__cards" role="radiogroup" aria-label="Your free perfume">
+          {%- for bogo_product in gift_collection.products -%}
+            {%- liquid
+              assign title_lower = bogo_product.title | downcase
+              if title_lower contains 'customize'
+                continue
+              endif
+              assign g100 = null
+              assign g50 = null
+              for v in bogo_product.variants
+                assign size = v.option1 | upcase
+                if size == '100ML'
+                  assign g100 = v
+                elsif size == '50ML'
+                  assign g50 = v
+                endif
+              endfor
+              if g100 == null and g50 == null
+                continue
+              endif
+            -%}
+            <label class="bogo-offer__card bogo-offer__card--gift">
+              <input
+                type="radio"
+                name="BogoGift-{{ section.id }}"
+                value="{{ bogo_product.id }}"
+                class="visually-hidden"
+                data-bogo-gift
+                data-title="{{ bogo_product.title | escape }}"
+                data-variant-100="{{ g100.id }}"
+                data-variant-50="{{ g50.id }}"
+                data-available-100="{% if g100 and g100.available %}true{% endif %}"
+                data-available-50="{% if g50 and g50.available %}true{% endif %}"
+                data-price-100="{{ g100.price | money }}"
+                data-price-50="{{ g50.price | money }}"
+              >
+              <span class="bogo-offer__card-media">
+                {%- if bogo_product.featured_image -%}
+                  {{ bogo_product.featured_image | image_url: width: 400 | image_tag: loading: 'lazy', widths: '200, 300, 400', sizes: '(min-width: 750px) 16vw, 40vw', alt: '' }}
+                {%- endif -%}
+                <span class="bogo-offer__card-badge">Free</span>
+              </span>
+              <span class="bogo-offer__card-name">{{ bogo_product.title | escape }}</span>
+              <span class="bogo-offer__card-price">
+                <s data-bogo-price></s>
+                <strong>{{ 0 | money }}</strong>
+              </span>
+            </label>
+          {%- endfor -%}
+        </div>
+      </div>
+
+      {%- comment -%} data-floating-clear/-avoid: snippets/floating-stack.liquid keeps the chat/WhatsApp launchers off this button. {%- endcomment -%}
+      <div class="bogo-offer__summary" data-floating-clear data-floating-avoid>
+        <p class="bogo-offer__summary-text" data-bogo-summary aria-live="polite">
+          Pick your perfume and your free one.
+        </p>
+        <button type="button" class="bogo-offer__add button button--primary" data-bogo-add disabled>
+          <span>Add both to cart</span>
+          {%- render 'loading-spinner' -%}
+        </button>
+        <p class="bogo-offer__error" data-bogo-error role="alert" hidden></p>
+      </div>
+    </div>
+  </div>
+</bogo-offer>
+
+{% schema %}
+{
+  "name": "Buy 1 Get 1",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Offer band with a built-in picker: customers choose a perfume and its size, then their free perfume in the same size (100ML with a 100ML, 50ML with a 50ML), and both go to the cart together. Link to it from anywhere with /#buy-1-get-1 — it opens the picker."
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "default": "This Diwali"
+    },
+    {
+      "type": "text",
+      "id": "title_line_1",
+      "label": "Heading, line 1",
+      "default": "Buy One"
+    },
+    {
+      "type": "text",
+      "id": "title_line_2",
+      "label": "Heading, line 2",
+      "default": "Get One"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "Pick any Signature perfume and choose a second one on us."
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Button label",
+      "default": "Build your pair"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_paid",
+      "label": "Bottle image — the one you buy",
+      "info": "A bottle on a transparent background works best."
+    },
+    {
+      "type": "image_picker",
+      "id": "image_free",
+      "label": "Bottle image — the free one"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Perfumes to choose from",
+      "info": "Blank uses the free-gift qualifying collection (Signature Series)."
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Buy 1 Get 1"
+    }
+  ]
+}
+{% endschema %}

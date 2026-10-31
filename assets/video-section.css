@@ -394,3 +394,44 @@ body.template-index .announcement-bar-section {
   position: relative;
   z-index: 4;
 }
+
+/* ---------------------------------------------------------------------------
+   Hero with a separate desktop video (.video-section__hero--split)
+
+   The 16:9 desktop video plays in landscape windows 750px+ wide (see
+   sections/video.liquid). Covering windows of every other shape with it cut
+   a lot of the frame from the centre outward — on a 125%-scaled Windows laptop
+   (1536x730) the bottles ran off the bottom and the lamps off the top, and on
+   squarer screens (iPad landscape, 1280x950) the headline and the right-hand
+   bottle ran off the sides. So:
+   - the hero is never taller than the frame's own 16:9 height (56.25vw):
+     squarer landscape windows show the whole frame, nothing cropped, with the
+     next section peeking in below;
+   - wider-than-16:9 windows still get a full-screen hero, but the crop is
+     taken from the top (empty wall and lamp strings, under the header) rather
+     than evenly, so the bottles and boxes at the bottom stay whole.
+   Portrait tablets get the 9:16 video. They're wider than 9:16, so it's cut
+   at the top and bottom — taken mostly from the top here too, keeping the
+   bottles. Phones are unchanged.
+   --------------------------------------------------------------------------- */
+
+@media screen and (min-width: 750px) and (orientation: landscape) {
+  .video-section__hero--split,
+  body.template-index .video-section__hero--split {
+    min-height: 0;
+    height: min(calc(100vh - var(--aw-header-offset, 0px)), 56.25vw);
+    height: min(calc(100dvh - var(--aw-header-offset, 0px)), 56.25vw);
+  }
+
+  .video-section__hero--split .video-section__hero-poster,
+  .video-section__hero--split video {
+    object-position: 50% 90%;
+  }
+}
+
+@media screen and (min-width: 750px) and (orientation: portrait) {
+  .video-section__hero--split .video-section__hero-poster,
+  .video-section__hero--split video {
+    object-position: 50% 80%;
+  }
+}

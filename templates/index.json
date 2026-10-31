@@ -16,7 +16,7 @@
           "type": "buttons",
           "settings": {
             "button_label_1": "Buy Now",
-            "button_link_1": "shopify://products/oudh-eternal",
+            "button_link_1": "shopify://collections/signature-series",
             "button_style_secondary_1": true,
             "button_label_2": "",
             "button_link_2": "",
@@ -32,7 +32,8 @@
         "heading": "",
         "heading_size": "h2",
         "enable_video_looping": false,
-        "video": "shopify://files/videos/copy_ABFCE849-7C42-42EB-96FB-9E80185CBCA9.MOV",
+        "video": "shopify://files/videos/UI.mp4",
+        "video_desktop": "shopify://files/videos/Copy of UI.mp4",
         "video_url": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
         "description": "",
         "full_width": true,
@@ -630,21 +631,6 @@
         "accessibility_info": ""
       }
     },
-    "contact_form_tJcrJ4": {
-      "type": "contact-form",
-      "settings": {
-        "eyebrow": "",
-        "heading": "Get in touch",
-        "heading_size": "h2",
-        "description": "<p>Questions about our perfumes, an order you've placed, or a bespoke scent consultation? Send us a message.</p><p>Visited our Kurla West store? <a href=\"https://g.page/r/CU3Boruw6oDeEBM/review\">Leave us a Google review</a>.</p>",
-        "contact_phone": "",
-        "contact_email": "attarwalas110@gmail.com",
-        "contact_hours": "Mon – Sat: 11:00 AM – 8:00 PM",
-        "color_scheme": "scheme-1",
-        "padding_top": 64,
-        "padding_bottom": 64
-      }
-    },
     "aw_faq": {
       "type": "collapsible-content",
       "blocks": {
@@ -653,7 +639,8 @@
           "settings": {
             "heading": "What is ATTARWALAS?",
             "icon": "none",
-            "row_content": "<p>ATTARWALAS is a Mumbai fragrance house making handcrafted attars and long-lasting perfumes since 1998. You can shop online with delivery across India, or visit our store in Kurla West. <a href=\"/pages/about-us\">Read our story</a>.</p>"
+            "row_content": "<p>ATTARWALAS is a Mumbai fragrance house making handcrafted attars and long-lasting perfumes since 1998. You can shop online with delivery across India, or visit our store in Kurla West. <a href=\"/pages/about-us\">Read our story</a>.</p>",
+            "page": ""
           }
         },
         "faq_2": {
@@ -661,7 +648,8 @@
           "settings": {
             "heading": "Do you sell alcoholic or non-alcoholic perfumes?",
             "icon": "none",
-            "row_content": "<p>Both. Our <a href=\"/collections/attar-roll-ons\">attar roll-ons</a> are oil-based and alcohol-free, and we also make alcohol-based perfumes. With <a href=\"/products/customize-perfume-1\">Customize Perfume</a> you choose Alcoholic or Non-Alcoholic yourself. Not sure which suits you? <a href=\"/pages/contact\">Ask us</a>.</p>"
+            "row_content": "<p>Both. Our <a href=\"/collections/attar-roll-ons\">attar roll-ons</a> are oil-based and alcohol-free, and we also make alcohol-based perfumes. With <a href=\"/products/customize-perfume-1\">Customize Perfume</a> you choose Alcoholic or Non-Alcoholic yourself. Not sure which suits you? <a href=\"/pages/contact\">Ask us</a>.</p>",
+            "page": ""
           }
         },
         "faq_3": {
@@ -669,7 +657,8 @@
           "settings": {
             "heading": "What is the difference between attar and perfume?",
             "icon": "none",
-            "row_content": "<p>Attar is a concentrated fragrance oil you roll or dab onto the skin; it sits close and wears for a long time. Perfume is sprayed, so it projects further and covers more area. Our guide to <a href=\"/blogs/news/attar-vs-perfume-difference\">attar vs perfume</a> explains how to choose.</p>"
+            "row_content": "<p>Attar is a concentrated fragrance oil you roll or dab onto the skin; it sits close and wears for a long time. Perfume is sprayed, so it projects further and covers more area. Our guide to <a href=\"/blogs/news/attar-vs-perfume-difference\">attar vs perfume</a> explains how to choose.</p>",
+            "page": ""
           }
         },
         "faq_4": {
@@ -677,7 +666,8 @@
           "settings": {
             "heading": "What sizes do your perfumes and attars come in?",
             "icon": "none",
-            "row_content": "<p><a href=\"/collections/signature-series\">Signature Series</a> perfumes come in 50ml and 100ml, attar roll-ons in 6ml and 12ml, and our <a href=\"/collections/100ml-gift-set\">gift sets</a> in 35ml, 65ml and 100ml.</p>"
+            "row_content": "<p><a href=\"/collections/signature-series\">Signature Series</a> perfumes come in 50ml and 100ml, attar roll-ons in 6ml and 12ml, and our <a href=\"/collections/100ml-gift-set\">gift sets</a> in 35ml, 65ml and 100ml.</p>",
+            "page": ""
           }
         },
         "faq_5": {
@@ -685,7 +675,8 @@
           "settings": {
             "heading": "How do I choose a scent without smelling it first?",
             "icon": "none",
-            "row_content": "<p>Start with the <a href=\"/products/discovery-set\">Discovery Set</a>, which holds all six Signature scents so you can try them at home. Each product page lists its top, heart and base notes, and our guide on <a href=\"/blogs/news/how-to-choose-your-signature-scent\">finding your signature scent</a> walks you through it.</p>"
+            "row_content": "<p>Start with the <a href=\"/products/discovery-set\">Discovery Set</a>, which holds all six Signature scents so you can try them at home. Each product page lists its top, heart and base notes, and our guide on <a href=\"/blogs/news/how-to-choose-your-signature-scent\">finding your signature scent</a> walks you through it.</p>",
+            "page": ""
           }
         },
         "faq_6": {
@@ -693,7 +684,8 @@
           "settings": {
             "heading": "Do you deliver across India, and how do I track my order?",
             "icon": "none",
-            "row_content": "<p>Yes, we deliver across India. Once your order ships you can follow it on our <a href=\"https://attarwalas.shiprocket.co/tracking\">order tracking page</a>. See our <a href=\"/policies/shipping-policy\">Shipping Policy</a> for details.</p>"
+            "row_content": "<p>Yes, we deliver across India. Once your order ships you can follow it on our <a href=\"https://attarwalas.shiprocket.co/tracking\">order tracking page</a>. See our <a href=\"/policies/shipping-policy\">Shipping Policy</a> for details.</p>",
+            "page": ""
           }
         },
         "faq_7": {
@@ -701,7 +693,8 @@
           "settings": {
             "heading": "What makes a good perfume gift?",
             "icon": "none",
-            "row_content": "<p>Our <a href=\"/collections/100ml-gift-set\">gift sets</a> pair a perfume for him, a perfume for her and an attar roll-on, and a <a href=\"/collections/duo\">Duo</a> pairs a perfume with its matching attar. Our <a href=\"/blogs/news/perfume-gift-guide-eid-diwali-weddings\">gift guide</a> has ideas for Eid, Diwali, weddings and birthdays.</p>"
+            "row_content": "<p>Our <a href=\"/collections/100ml-gift-set\">gift sets</a> pair a perfume for him, a perfume for her and an attar roll-on, and a <a href=\"/collections/duo\">Duo</a> pairs a perfume with its matching attar. Our <a href=\"/blogs/news/perfume-gift-guide-eid-diwali-weddings\">gift guide</a> has ideas for Eid, Diwali, weddings and birthdays.</p>",
+            "page": ""
           }
         },
         "faq_8": {
@@ -709,7 +702,8 @@
           "settings": {
             "heading": "Can I visit your store in Mumbai?",
             "icon": "none",
-            "row_content": "<p>Yes. ATTARWALAS is at Shop No. 4, M.K. Heights, opposite BMC L Ward, Kurla West, Mumbai 400070, open Monday to Saturday, 11:00 AM to 8:00 PM.</p>"
+            "row_content": "<p>Yes. ATTARWALAS is at Shop No. 4, M.K. Heights, opposite BMC L Ward, Kurla West, Mumbai 400070, open Monday to Saturday, 11:00 AM to 8:00 PM.</p>",
+            "page": ""
           }
         }
       },
@@ -738,12 +732,44 @@
         "padding_top": 48,
         "padding_bottom": 48
       }
+    },
+    "contact_form_tJcrJ4": {
+      "type": "contact-form",
+      "settings": {
+        "eyebrow": "",
+        "heading": "Get in touch",
+        "heading_size": "h2",
+        "description": "<p>Questions about our perfumes, an order you've placed, or a bespoke scent consultation? Send us a message.</p><p>Visited our Kurla West store? <a href=\"https://g.page/r/CU3Boruw6oDeEBM/review\">Leave us a Google review</a>.</p>",
+        "contact_phone": "",
+        "contact_email": "attarwalas110@gmail.com",
+        "contact_hours": "Mon – Sat: 11:00 AM – 8:00 PM",
+        "color_scheme": "scheme-1",
+        "padding_top": 64,
+        "padding_bottom": 64
+      }
+    },
+    "bogo_offer": {
+      "type": "bogo-offer",
+      "settings": {
+        "eyebrow": "This Diwali",
+        "title_line_1": "Buy One",
+        "title_line_2": "Get One",
+        "subtext": "Pick any Signature perfume and choose a second one on us.",
+        "cta_label": "Build your pair",
+        "image_paid": "shopify://shop_images/IMG_6869.png",
+        "image_free": "shopify://shop_images/IMG_6866.png",
+        "collection": "",
+        "color_scheme": "scheme-1",
+        "padding_top": 48,
+        "padding_bottom": 48
+      }
     }
   },
   "order": [
     "video_AeBGJd",
     "featured_collection",
     "signature_carousel",
+    "bogo_offer",
     "offer_teaser",
     "shop_by_category",
     "product_carousel_duo_trio",

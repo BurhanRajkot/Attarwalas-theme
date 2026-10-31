@@ -16,13 +16,16 @@
   - The customer earns one slot per unit of a qualifying-collection product in
     the cart (default: signature-series, i.e. the full-size perfumes). 2
     perfumes = 2 slots, each pickable independently.
-  - The gift size a slot can be filled with depends on the bottle size that
-    earned it: a 50ml bottle earns a slot fillable only with a 10ml perfume; a
-    100ml bottle (or any size that isn't recognised as 50ml — covers every
-    perfume sold before the 50ml option existed) earns a slot fillable only
-    with a 35ml perfume. The two pools are tracked and rendered separately so
-    a mixed-size cart can't spend one size's earned slot on the other size's
-    gift.
+  - Buy 1 Get 1 (since 2026-10-31): the gift is the same size as the bottle
+    that earned it. A 100ml bottle (or one with no recognisable size — every
+    perfume sold before the 50ml option existed) earns a slot fillable with a
+    100ml perfume; any smaller bottle (a 50ml, or Customize Perfume's 50/80ml)
+    earns one fillable with a 50ml perfume. The two pools are tracked and
+    rendered separately so a mixed-size cart can't spend one size's earned
+    slot on the other size's gift. The offer discount function enforces the
+    same thing on its side: a gift is only free against a paid bottle at
+    least its size. (Before this, gifts were 10ml with a 50ml and 35ml with a
+    100ml; those gift-only sizes still exist and are still handled below.)
   - Every match against a variant's Size option (option1) is an **exact**
     equality check (`== '10ML'`), never `contains`. `contains '10'` was safe
     back when the gift pool was roll-ons (whose only sizes are 6/12/10/35ml),
@@ -41,10 +44,10 @@
     earned slot across every line marked `_free_gift`. This snippet never fakes
     the price: the "Free" badge only appears once a slot actually costs
     nothing, so a missing discount is visible instead of silent. The function
-    also re-checks that the line's own variant is genuinely a 10ml/35ml size
-    (not just that the product is in the qualifying collection) — necessary
-    now that gift and qualifying collection are the same, see the function's
-    own comments.
+    also matches each gift to a paid bottle at least its size (not just that
+    the product is in the qualifying collection) — necessary now that a gift
+    can be the very same variant as a paid bottle, see the function's own
+    comments.
   - "Change" on a claimed slot only removes that one unit, freeing the slot —
     it reappears as a picker row on the next render.
 
@@ -69,10 +72,12 @@
     assign qualifying_collection = collections['signature-series']
   endif
 
-  # Two separate pools, keyed by the bottle size that earns them: '50' for a
-  # 50ml bottle (fillable with a 10ml gift perfume), '100' for everything else
-  # (fillable with a 35ml gift perfume — also the safe default for any perfume
-  # variant title this doesn't recognise). claimed_* may briefly exceed
+  # Two separate pools, keyed by the bottle size that earns them: '100' for a
+  # 100ml bottle (fillable with a 100ml gift perfume — also the safe default
+  # for a bottle with no Size option), '50' for any smaller bottle (fillable
+  # with a 50ml gift). Size is read from the option *named* Size, not option1:
+  # Customize Perfume's option1 is the fragrance, which used to drop all of
+  # its bottles into the '100' pool. claimed_* may briefly exceed
   # qualifying_* if the customer bumps a qualifying item's quantity down
   # after claiming — free-gift.js trims the excess, per pool, on load.
   assign qualifying_50 = 0
@@ -82,11 +87,21 @@
   assign bogus_gift_line_keys = ''
 
   for item in cart.items
+    assign item_size = ''
+    for option in item.options_with_values
+      assign option_name = option.name | downcase
+      if option_name == 'size'
+        assign item_size = option.value | downcase
+        break
+      endif
+    endfor
+
     if item.properties._free_gift != blank
-      if item.variant.option1 == '10ML'
-        assign claimed_50 = claimed_50 | plus: item.quantity
-      else
+      # 35ml is the pre-Buy-1-Get-1 gift for a 100ml bottle.
+      if item_size == '100ml' or item_size == '35ml' or item_size == ''
         assign claimed_100 = claimed_100 | plus: item.quantity
+      else
+        assign claimed_50 = claimed_50 | plus: item.quantity
       endif
       continue
     endif
@@ -121,10 +136,10 @@
         # Flagged here and force-removed by free-gift.js / blocked at
         # checkout as a hard backstop — see sections/main-cart-footer.liquid.
         assign bogus_gift_line_keys = bogus_gift_line_keys | append: item.key | append: ','
-      elsif item.variant.option1 == '50ML'
-        assign qualifying_50 = qualifying_50 | plus: item.quantity
-      else
+      elsif item_size == '100ml' or item_size == ''
         assign qualifying_100 = qualifying_100 | plus: item.quantity
+      else
+        assign qualifying_50 = qualifying_50 | plus: item.quantity
       endif
     endif
   endfor
@@ -255,11 +270,22 @@
           {%- else -%}
             {%- assign has_priced_slot = true -%}
           {%- endif -%}
-          {%- if item.variant.option1 == '10ML' -%}
-            {%- assign row_bucket = '50' -%}
-          {%- else -%}
-            {%- assign row_bucket = '100' -%}
-          {%- endif -%}
+          {%- liquid
+            assign row_size = ''
+            for option in item.options_with_values
+              assign option_name = option.name | downcase
+              if option_name == 'size'
+                assign row_size = option.value | downcase
+                break
+              endif
+            endfor
+            # Same rule as the counting above (35ml = the old gift for a 100ml).
+            if row_size == '100ml' or row_size == '35ml' or row_size == ''
+              assign row_bucket = '100'
+            else
+              assign row_bucket = '50'
+            endif
+          -%}
           {%- for i in (1..item.quantity) -%}
             <div
               class="free-gift__claimed"
@@ -303,12 +329,12 @@
       {%- if remaining_50 > 0 -%}
         {%- for i in (1..remaining_50) -%}
           <div class="free-gift__options" data-free-gift-row data-free-gift-empty data-gift-bucket="50">
-            <p class="free-gift__slot-label">10ml perfume</p>
+            <p class="free-gift__slot-label">50ml perfume</p>
             <div class="free-gift__select-wrap">
               <select
                 class="free-gift__select"
                 data-free-gift-select
-                aria-label="10ml {{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
+                aria-label="50ml {{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
               >
                 <option value="" selected disabled>
                   {{- settings.free_gift_choose_label | default: 'Choose' -}} &hellip;
@@ -328,7 +354,7 @@
                   -%}
                   {%- assign gift_variant = blank -%}
                   {%- for v in gift.variants -%}
-                    {%- if v.option1 == '10ML' -%}
+                    {%- if v.option1 == '50ML' -%}
                       {%- assign gift_variant = v -%}
                       {%- break -%}
                     {%- endif -%}
@@ -360,12 +386,12 @@
       {%- if remaining_100 > 0 -%}
         {%- for i in (1..remaining_100) -%}
           <div class="free-gift__options" data-free-gift-row data-free-gift-empty data-gift-bucket="100">
-            <p class="free-gift__slot-label">35ml perfume</p>
+            <p class="free-gift__slot-label">100ml perfume</p>
             <div class="free-gift__select-wrap">
               <select
                 class="free-gift__select"
                 data-free-gift-select
-                aria-label="35ml {{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
+                aria-label="100ml {{ settings.free_gift_heading | default: 'Your free perfume' | escape }}"
               >
                 <option value="" selected disabled>
                   {{- settings.free_gift_choose_label | default: 'Choose' -}} &hellip;
@@ -382,7 +408,7 @@
                   -%}
                   {%- assign gift_variant = blank -%}
                   {%- for v in gift.variants -%}
-                    {%- if v.option1 == '35ML' -%}
+                    {%- if v.option1 == '100ML' -%}
                       {%- assign gift_variant = v -%}
                       {%- break -%}
                     {%- endif -%}

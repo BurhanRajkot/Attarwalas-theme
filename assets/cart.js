@@ -53,11 +53,26 @@ class CartItems extends HTMLElement {
 
   onCartUpdate() {
     if (this.tagName === 'CART-DRAWER-ITEMS') {
+      /* A product-page add publishes cartUpdate twice in quick succession —
+         once for the perfume, once more when product-gift-picker.js adds the
+         free gift — so two of these fetches race. Only the latest may write:
+         on a slow connection the first (pre-gift) response could land last
+         and put the "pick your free perfume" lock back over a cart that
+         already has its gift. Counted on the class because the element that
+         started a fetch is itself replaced below. */
+      const refreshId = (CartItems.drawerRefreshId = (CartItems.drawerRefreshId || 0) + 1);
       fetch(`${routes.cart_url}?section_id=cart-drawer`)
         .then((response) => response.text())
         .then((responseText) => {
+          if (refreshId !== CartItems.drawerRefreshId) return;
           const html = new DOMParser().parseFromString(responseText, 'text/html');
-          const selectors = ['cart-drawer-items', '.cart-drawer__footer'];
+          /* .cart__ctas holds the Check out button and the free-gift lock
+             note (snippets/cart-drawer.liquid). It sits outside
+             .cart-drawer__footer, so without it here checkout stayed
+             disabled under "Pick your free perfume above to continue" after
+             the product-page gift had already been added. Scoped to
+             #CartDrawer: the /cart page's own footer uses the same class. */
+          const selectors = ['cart-drawer-items', '.cart-drawer__footer', '#CartDrawer .cart__ctas'];
           for (const selector of selectors) {
             const targetElement = document.querySelector(selector);
             const sourceElement = html.querySelector(selector);

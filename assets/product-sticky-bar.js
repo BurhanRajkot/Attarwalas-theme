@@ -50,7 +50,7 @@ if (!customElements.get('product-sticky-bar')) {
           return;
         }
         if (!this.buyButtons) {
-          this.classList.add('is-visible');
+          this.setVisible(true);
           return;
         }
 
@@ -67,7 +67,7 @@ if (!customElements.get('product-sticky-bar')) {
               if (entry.isIntersecting) this.onScreen.add(entry.target);
               else this.onScreen.delete(entry.target);
             });
-            this.classList.toggle('is-visible', this.onScreen.size === 0);
+            this.setVisible(this.onScreen.size === 0);
           },
           { rootMargin: '0px 0px -10% 0px', threshold: 0 }
         );
@@ -85,6 +85,16 @@ if (!customElements.get('product-sticky-bar')) {
         ];
 
         this.button.addEventListener('click', this.onAddClick.bind(this));
+      }
+
+      /* The bar shows/hides from an IntersectionObserver callback, which
+         lands after the last scroll event — so snippets/floating-stack.liquid
+         (which lifts the chat/WhatsApp launchers clear of the bar) is told
+         directly instead of waiting for a scroll that may never come. */
+      setVisible(visible) {
+        if (this.classList.contains('is-visible') === visible) return;
+        this.classList.toggle('is-visible', visible);
+        window.dispatchEvent(new Event('aw:floating-change'));
       }
 
       onAddClick() {
